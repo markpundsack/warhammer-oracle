@@ -231,20 +231,28 @@ function describeDifferences(shown: Unit, other: Unit): string {
   }
 
   if (JSON.stringify(other.abilities) !== JSON.stringify(shown.abilities)) {
-    parts.push(other.abilities.length === 0 ? "no abilities" : "different abilities");
+    const shownNames = new Set(shown.abilities.map((a) => a.name));
+    const otherNames = new Set(other.abilities.map((a) => a.name));
+    const lost = [...shownNames].filter((n) => !otherNames.has(n));
+    const gained = [...otherNames].filter((n) => !shownNames.has(n));
+    if (lost.length + gained.length === 0 || lost.length + gained.length > 3) parts.push("different abilities");
+    else {
+      if (lost.length > 0) parts.push(`without ${lost.join(", ")}`);
+      if (gained.length > 0) parts.push(`with ${gained.join(", ")}`);
+    }
   }
   return parts.length > 0 ? parts.join(", ") : "different keywords";
 }
 
 function formatHomeDatasheetNote(resolution: HomeDatasheetResolution<Unit>): string {
-  const lines: string[] = [];
+  const lines = [`Shown from ${shortFaction(resolution.pick.faction)}, its home army.`];
   if (resolution.alsoFieldedBy.length > 0) {
-    lines.push(`Shown from ${shortFaction(resolution.pick.faction)}, its home army; ${listFactions(resolution.alsoFieldedBy)} field the same datasheet.`);
+    lines.push(`${listFactions(resolution.alsoFieldedBy)} field the same datasheet.`);
   }
-  for (const v of resolution.variants) {
-    const own = v.factions.length === 1 ? `${shortFaction(v.factions[0])} has its own version` : `${listFactions(v.factions)} have their own version`;
-    lines.push(`${own}: ${describeDifferences(resolution.pick, v.entry)}.`);
-  }
+  const others = resolution.variants.map(
+    (v) => `${listFactions(v.factions)} (${describeDifferences(resolution.pick, v.entry)})`,
+  );
+  lines.push(`Other versions: ${others.join("; ")}.`);
   lines.push("Re-run `lookup_unit` with `faction` for another army's version.");
   return `**Note:** ${lines.join(" ")}`;
 }

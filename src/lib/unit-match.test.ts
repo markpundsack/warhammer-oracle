@@ -289,6 +289,21 @@ describe("resolveHomeDatasheet", () => {
     expect(r?.variants).toEqual([{ entry: own, factions: ["World Eaters"] }]);
   });
 
+  it("judges dominance by datasheet family, so a home-only army rule does not split the shared copy", () => {
+    type A = U & { abilities: { name: string }[] };
+    const key = (u: A) => JSON.stringify([u.content, u.abilities]);
+    const rule = { name: "The Shadow of Chaos" };
+    const variants: A[] = [
+      { ...shared("Chaos Daemons"), abilities: [rule] },
+      ...daemonFactions.slice(1).map((f) => ({ ...shared(f), abilities: [] })),
+      { name: "Bloodletters", faction: "World Eaters", keywords: ["World Eaters"], content: "summoned", abilities: [] },
+    ];
+    const r = resolveHomeDatasheet(variants, key);
+    expect(r?.pick.faction).toBe("Chaos Daemons");
+    expect(r?.alsoFieldedBy).toEqual([]);
+    expect(r?.variants.map((v) => v.factions)).toEqual([daemonFactions.slice(1), ["World Eaters"]]);
+  });
+
   it("keeps a Sorcerer-style split (no lopsided shared version) ambiguous", () => {
     const csm = (faction: string): U => ({ name: "Sorcerer", faction, keywords: ["Heretic Astartes"], content: "csm" });
     const variants: U[] = [

@@ -185,9 +185,10 @@ export type HomeDatasheetResolution<T> = {
  * noise: the user means the shared datasheet, from its home catalogue.
  *
  * Resolves only when the answer is lopsided:
- * - the most widely fielded variant contains an identifiable home copy
- *   (`homeFactionRank` > 0), and
- * - it is fielded by at least twice as many factions as every other variant
+ * - the most widely fielded datasheet family (same content apart from
+ *   abilities, which catalogues switch per army) contains an identifiable
+ *   home copy (`homeFactionRank` > 0), and
+ * - it is fielded by at least twice as many factions as every other family
  *   combined.
  *
  * So the Sorcerer (one Chaos Space Marines datasheet shared by three
@@ -203,27 +204,32 @@ export function resolveHomeDatasheet<T extends NamedFactioned>(
   variants: T[],
   contentOf: (item: T) => string,
 ): HomeDatasheetResolution<T> | null {
-  const groups = new Map<string, T[]>();
-  for (const v of variants) {
-    const key = contentOf(v);
-    groups.set(key, [...(groups.get(key) ?? []), v]);
-  }
-  if (groups.size < 2) return null;
-
+  const groupBy = (keyOf: (v: T) => string) => {
+    const groups = new Map<string, T[]>();
+    for (const v of variants) groups.set(keyOf(v), [...(groups.get(keyOf(v)) ?? []), v]);
+    return [...groups.values()];
+  };
   const factionsOf = (g: T[]) => [...new Set(g.map((v) => v.faction))];
-  const ordered = [...groups.values()];
-  const best = ordered.reduce((a, b) => (factionsOf(b).length > factionsOf(a).length ? b : a));
-  const others = ordered.filter((g) => g !== best);
-  const otherCount = others.reduce((n, g) => n + factionsOf(g).length, 0);
+
+  // Dominance is judged per datasheet *family*: content apart from abilities.
+  // Catalogues switch army rules on per copy (the home Chaos Daemons copy carries
+  // The Shadow of Chaos, its imports don't), which must not split the family.
+  const families = groupBy((v) => contentOf({ ...v, abilities: [] }));
+  const best = families.reduce((a, b) => (factionsOf(b).length > factionsOf(a).length ? b : a));
+  const otherCount = families.filter((f) => f !== best).reduce((n, f) => n + factionsOf(f).length, 0);
   if (factionsOf(best).length < 2 * otherCount) return null;
 
   const pick = best.reduce((a, b) => (homeFactionRank(b) > homeFactionRank(a) ? b : a));
   if (homeFactionRank(pick) === 0) return null;
 
+  // Report by full content, so ability-only differences are still surfaced.
+  const groups = groupBy(contentOf);
+  if (groups.length < 2) return null;
+  const pickGroup = groups.find((g) => g.includes(pick))!;
   return {
     pick,
-    alsoFieldedBy: factionsOf(best).filter((f) => f !== pick.faction),
-    variants: others.map((g) => ({ entry: g[0], factions: factionsOf(g) })),
+    alsoFieldedBy: factionsOf(pickGroup).filter((f) => f !== pick.faction),
+    variants: groups.filter((g) => g !== pickGroup).map((g) => ({ entry: g[0], factions: factionsOf(g) })),
   };
 }
 
