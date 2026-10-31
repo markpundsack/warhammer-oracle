@@ -57,6 +57,47 @@ Add to your `claude_desktop_config.json`:
 claude mcp add warhammer-oracle -- npx -y warhammer-oracle
 ```
 
+### HTTP / Cloud Run
+
+The default `warhammer-oracle-11e` binary uses stdio for local MCP clients. For remote hosting, the package also includes a Streamable HTTP entry point:
+
+```bash
+npm run build
+npm run start:http
+```
+
+By default this listens on `0.0.0.0:8080` with the Streamable HTTP MCP endpoint at:
+
+```text
+http://localhost:8080/mcp
+```
+
+It also exposes the older HTTP+SSE transport for clients that have not moved to Streamable HTTP yet:
+
+```text
+http://localhost:8080/sse
+```
+
+Set `MCP_AUTH_TOKEN` to require a shared secret for MCP requests. Clients can send it as `Authorization: Bearer <token>`, or, for clients that only accept a server URL, append it as a query parameter:
+
+```text
+https://your-service-url.run.app/sse?token=<token>
+```
+
+Cloud Run sets the `PORT` environment variable automatically, and the Docker image runs the HTTP entry point:
+
+```bash
+printf '%s' '<token>' | gcloud secrets create warhammer-oracle-token --data-file=-
+
+gcloud run deploy warhammer-oracle \
+  --source . \
+  --region us-central1 \
+  --set-secrets MCP_AUTH_TOKEN=warhammer-oracle-token:latest \
+  --allow-unauthenticated
+```
+
+Use the deployed `/mcp` URL with MCP clients that support Streamable HTTP, or `/sse?token=<token>` with older SSE clients. The root path and `/healthz` return a simple health response. For private deployments with clients that can send Google identity tokens, omit `--allow-unauthenticated` and configure Cloud Run IAM instead.
+
 ## Tools
 
 ### `lookup_unit`
@@ -68,9 +109,7 @@ Look up a unit datasheet by name. Returns stat profiles, unit size (model count)
 "What are the stats for a Leman Russ Battle Tank?"
 ```
 
-When a name has different datasheets, the tool lists the matching factions. If a name and faction still have multiple datasheets, it also lists their IDs; pass the faction and one `datasheet_id` back to select it.
-
-**Parameters:** `unit_name` (required), `faction` (optional), `datasheet_id` (optional, exact ID shown for same-faction variants), `game_mode` (optional: `40k`/`40k_11e` (default, 11th Edition), `40k_10e`, `combat_patrol`, `kill_team`)
+**Parameters:** `unit_name` (required), `faction` (optional), `game_mode` (optional: `40k`/`40k_11e` (default, 11th Edition), `40k_10e`, `combat_patrol`, `kill_team`)
 
 ### `lookup_keyword`
 
