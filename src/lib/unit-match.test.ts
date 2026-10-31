@@ -1,5 +1,14 @@
 import { describe, it, expect } from "vitest";
-import { ambiguousFactionMatches, datasheetContentKey, isCanonicalFaction, rankUnitMatches } from "./unit-match.js";
+import {
+  ambiguousFactionMatches,
+  datasheetContentKey,
+  homeFactionRank,
+  isCanonicalFaction,
+  pickUnitMatch,
+  rankUnitMatches,
+  rankUnitMatchesWithFactionHint,
+  resolveHomeDatasheet,
+} from "./unit-match.js";
 
 // Trimmed-down stand-ins for `Unit` — rankUnitMatches only reads name/faction/keywords.
 const lemanRussAM = {
@@ -242,5 +251,97 @@ describe("ambiguousFactionMatches", () => {
     const contentOf = (u: (typeof units)[number]) => u.content;
     const matches = rankUnitMatches(units, "Great Unclean One", contentOf);
     expect(ambiguousFactionMatches(matches, "Great Unclean One", contentOf)).toHaveLength(2);
+  });
+});
+
+describe("homeFactionRank", () => {
+  it("ranks the canonical catalogue and a chapter's own units highest", () => {
+    expect(homeFactionRank({ name: "x", faction: "Grey Knights", keywords: ["Grey Knights"] })).toBe(2);
+    expect(
+      homeFactionRank({ name: "x", faction: "Adeptus Astartes - Space Wolves", keywords: ["Adeptus Astartes", "Space Wolves"] }),
+    ).toBe(2);
+  });
+
+  it("recognises catalogues whose faction keyword differs from their name", () => {
+    expect(homeFactionRank({ name: "x", faction: "Chaos Daemons", keywords: ["Legiones Daemonica"] })).toBe(1);
+    expect(homeFactionRank({ name: "x", faction: "Adeptus Astartes - Space Marines", keywords: ["Adeptus Astartes"] })).toBe(1);
+  });
+
+  it("does not treat an import as home", () => {
+    expect(homeFactionRank({ name: "x", faction: "World Eaters", keywords: ["Legiones Daemonica"] })).toBe(0);
+    expect(homeFactionRank({ name: "x", faction: "Adeptus Astartes - Ultramarines", keywords: ["Adeptus Astartes"] })).toBe(0);
+    // Heretic Astartes is shared by every Chaos Legion, so it cannot vouch for Chaos Space Marines.
+    expect(homeFactionRank({ name: "x", faction: "Chaos Space Marines", keywords: ["Heretic Astartes"] })).toBe(0);
+  });
+});
+
+describe("resolveHomeDatasheet", () => {
+  type U = { name: string; faction: string; keywords: string[]; content: string };
+  const contentOf = (u: U) => u.content;
+  const shared = (faction: string): U => ({ name: "Bloodletters", faction, keywords: ["Legiones Daemonica"], content: "shared" });
+  const daemonFactions = ["Chaos Daemons", "Chaos Knights", "Chaos Space Marines", "Death Guard", "World Eaters"];
+
+  it("answers with the home copy of a widely shared datasheet and lists the variant", () => {
+    const own: U = { name: "Bloodletters", faction: "World Eaters", keywords: ["World Eaters"], content: "summoned" };
+    const r = resolveHomeDatasheet([...daemonFactions.map(shared), own], contentOf);
+    expect(r?.pick.faction).toBe("Chaos Daemons");
+    expect(r?.alsoFieldedBy).toEqual(["Chaos Knights", "Chaos Space Marines", "Death Guard", "World Eaters"]);
+    expect(r?.variants).toEqual([{ entry: own, factions: ["World Eaters"] }]);
+  });
+
+  it("keeps a Sorcerer-style split (no lopsided shared version) ambiguous", () => {
+    const csm = (faction: string): U => ({ name: "Sorcerer", faction, keywords: ["Heretic Astartes"], content: "csm" });
+    const variants: U[] = [
+      csm("Chaos Daemons"),
+      csm("Chaos Knights"),
+      csm("Chaos Space Marines"),
+      { name: "Sorcerer", faction: "Emperor's Children", keywords: ["Emperor's Children"], content: "ec" },
+      { name: "Sorcerer", faction: "Thousand Sons", keywords: ["Thousand Sons"], content: "ts" },
+    ];
+    expect(resolveHomeDatasheet(variants, contentOf)).toBeNull();
+  });
+
+  it("does not resolve when the shared datasheet has no identifiable home", () => {
+    const imported = (faction: string): U => ({ name: "Termite", faction, keywords: ["Legends"], content: "shared" });
+    const variants: U[] = [
+      ...["A", "B", "C", "D", "E"].map(imported),
+      { name: "Termite", faction: "Imperial Knights", keywords: ["Imperial Knights"], content: "own" },
+    ];
+    expect(resolveHomeDatasheet(variants, contentOf)).toBeNull();
+  });
+
+  it("does not resolve same-faction variants", () => {
+    const variants: U[] = [
+      { name: "Great Unclean One", faction: "Death Guard", keywords: ["Legiones Daemonica"], content: "a" },
+      { name: "Great Unclean One", faction: "Death Guard", keywords: ["Death Guard"], content: "b" },
+    ];
+    expect(resolveHomeDatasheet(variants, contentOf)).toBeNull();
+  });
+});
+
+describe("rankUnitMatchesWithFactionHint / pickUnitMatch", () => {
+  const units = [
+    { name: "Boyz", faction: "Orks", keywords: ["Orks"] },
+    { name: "Beast Snagga Boyz", faction: "Orks", keywords: ["Orks"] },
+    { name: "Necron Warriors", faction: "Necrons", keywords: ["Necrons"] },
+    { name: "Assault Intercessors with Jump Packs", faction: "Adeptus Astartes - Black Templars", keywords: ["Adeptus Astartes"] },
+    { name: "Intercessor Squad", faction: "Adeptus Astartes - Black Templars", keywords: ["Adeptus Astartes"] },
+    { name: "Intercessor Squad", faction: "Adeptus Astartes - Space Marines", keywords: ["Adeptus Astartes"] },
+  ];
+
+  it("uses a leading faction word as a filter", () => {
+    expect(rankUnitMatchesWithFactionHint(units, "Ork Boyz")[0].name).toBe("Boyz");
+    expect(rankUnitMatchesWithFactionHint(units, "Space Marine Intercessors")[0].name).toBe("Intercessor Squad");
+  });
+
+  it("leaves a name that starts with a faction word alone", () => {
+    expect(rankUnitMatchesWithFactionHint(units, "Necron Warriors")[0].name).toBe("Necron Warriors");
+  });
+
+  it("ranks Intercessors to the Intercessor Squad and picks its home copy", () => {
+    const matches = rankUnitMatchesWithFactionHint(units, "Intercessors");
+    const pick = pickUnitMatch(matches, matches[0].name, () => "");
+    expect(pick?.name).toBe("Intercessor Squad");
+    expect(pick?.faction).toBe("Adeptus Astartes - Space Marines");
   });
 });
