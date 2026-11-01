@@ -232,10 +232,11 @@ describe("40K / Horus Heresy separation", () => {
     expect(text).not.toContain("Contemptor-Incaendius Dreadnought");
   });
 
-  it("lookup_keyword default mode is unchanged for a curated 40K keyword", async () => {
+  it("lookup_keyword default mode answers a curated 40K keyword, with a one-line Heresy hint", async () => {
     const text = await call("lookup_keyword", { keyword: "Deep Strike" });
     expect(text).toContain("Official Definition");
-    expect(text).not.toContain("Horus Heresy");
+    expect(text).not.toContain("[Mode: Horus Heresy");
+    expect(text).toContain('is also a Horus Heresy (3rd edition) special rule; ask with game_mode "heresy"');
   });
 
   it("Kill Team lookups are unaffected", async () => {

@@ -3,8 +3,10 @@ import { z } from "zod";
 import { KEYWORDS } from "../data/keywords.js";
 import { SHARED_RULES } from "../data/rules.js";
 import { HERESY_SPECIAL_RULES } from "../data/heresy-rules.js";
-import { fuzzySearch, normalizeName } from "../lib/search.js";
-import { findHeresyRules, formatHeresyRule, heresyStamp, splitRuleQuery, HERESY_LABEL } from "../lib/heresy-format.js";
+import { fuzzySearch, normalizeName, scoreName } from "../lib/search.js";
+import { shouldCrossOver, withCrossSystemNote } from "../lib/cross-system.js";
+import { formatModeStamp } from "../lib/format.js";
+import { findHeresyRules, formatHeresyRule, heresyStamp, scoreHeresyRule, splitRuleQuery, HERESY_LABEL } from "../lib/heresy-format.js";
 import type { KeywordDefinition, GameMode } from "../types.js";
 
 function formatCuratedKeyword(kw: KeywordDefinition): string {
@@ -38,21 +40,39 @@ function formatSharedRule(rule: { name: string; description: string }): string {
   return sections.join("\n\n");
 }
 
+/** A lookup's response, how well its best match names the query (0 when nothing matched), and that match's name. */
+type LookupResult = { text: string; score: number; closest?: string };
+
+/** "Feel No Pain (5+)" → "Feel No Pain": 40K keyword names carry no value. */
+function withoutValue(keyword: string): string {
+  return keyword.replace(/\s*\([^)]*\)\s*$/, "").trim();
+}
+
+/** Best match first; ties keep data order. */
+function byScore<T extends { name: string }>(items: T[], query: string): T[] {
+  return items
+    .map((item) => ({ item, score: scoreName(query, item.name) }))
+    .sort((a, b) => b.score - a.score)
+    .map((r) => r.item);
+}
+
 /**
  * Horus Heresy special rules, straight from BSData (full rule text). "Bulky
  * (6)", "bulky" and "Bulky (X)" all find "Bulky (X)"; a value in the query is
  * echoed back as X.
  */
-function lookupHeresyRule(keyword: string): string {
+function lookupHeresyRule(keyword: string): LookupResult {
   const matches = findHeresyRules(HERESY_SPECIAL_RULES, keyword);
   if (matches.length === 0) {
     const examples = ["Bulky (X)", "Rending (X)", "Deep Strike", "Feel No Pain (X)", "Breaching (X)"]
       .filter((n) => HERESY_SPECIAL_RULES.some((r) => r.name === n))
       .join(", ");
-    return (
-      `${heresyStamp()}\n\nNo ${HERESY_LABEL} special rule found matching "${keyword}".\n\n` +
-      `Try a different spelling or the rule's base name${examples ? ` (e.g. ${examples})` : ""}.`
-    );
+    return {
+      score: 0,
+      text:
+        `${heresyStamp()}\n\nNo ${HERESY_LABEL} special rule found matching "${keyword}".\n\n` +
+        `Try a different spelling or the rule's base name${examples ? ` (e.g. ${examples})` : ""}.`,
+    };
   }
   const top = matches[0];
   const topBase = normalizeName(top.name.replace(/\s*\([^)]*\)\s*$/, ""));
@@ -62,7 +82,58 @@ function lookupHeresyRule(keyword: string): string {
   if (KEYWORDS.some((kw) => normalizeName(kw.name) === base)) {
     text += `\n\n_"${top.name}" is also a 40K keyword; ask with game_mode "40k" for that rule._`;
   }
-  return text;
+  return { text, score: scoreHeresyRule(top, keyword), closest: top.name };
+}
+
+/** One-line pointer when a Horus Heresy rule of this name also exists. */
+function heresyRuleHint(name: string): string {
+  const [top] = findHeresyRules(HERESY_SPECIAL_RULES, name, 0.95);
+  return top ? `\n\n_"${name}" is also a ${HERESY_LABEL} special rule; ask with game_mode "heresy" for it._` : "";
+}
+
+function lookup40kKeyword(keyword: string, gameMode: GameMode | undefined): LookupResult {
+  // 1. Curated KEYWORDS first (substring match on name, best name match first).
+  //    A value in the query ("Feel No Pain (5+)") is dropped if the full text finds nothing.
+  let query = keyword;
+  let allCuratedMatches = byScore(fuzzySearch(KEYWORDS, query, ["name"]), query);
+  let ruleMatches = allCuratedMatches.length > 0 ? [] : byScore(fuzzySearch(SHARED_RULES, query, ["name"]), query);
+  if (allCuratedMatches.length === 0 && ruleMatches.length === 0 && withoutValue(keyword) && withoutValue(keyword) !== keyword) {
+    query = withoutValue(keyword);
+    allCuratedMatches = byScore(fuzzySearch(KEYWORDS, query, ["name"]), query);
+    ruleMatches = allCuratedMatches.length > 0 ? [] : byScore(fuzzySearch(SHARED_RULES, query, ["name"]), query);
+  }
+
+  if (allCuratedMatches.length > 0) {
+    // Apply game_mode filter if provided
+    const filtered = gameMode ? allCuratedMatches.filter((kw) => kw.gameModes.includes(gameMode)) : allCuratedMatches;
+    const top = filtered[0] ?? allCuratedMatches[0];
+    const score = scoreName(query, top.name);
+    if (filtered.length > 0) {
+      return { score, closest: top.name, text: formatCuratedKeyword(top) + heresyRuleHint(top.name) };
+    }
+    // Keyword exists in curated list but not for this game mode
+    return {
+      score,
+      closest: top.name,
+      text: `Keyword "${keyword}" was found but is not applicable to ${gameMode}.\n\nIt applies to: ${top.gameModes.join(", ")}.`,
+    };
+  }
+
+  // 2. Fall back to SHARED_RULES (no game_mode filter — rules data doesn't have mode info)
+  if (ruleMatches.length > 0) {
+    const top = ruleMatches[0];
+    return { score: scoreName(query, top.name), closest: top.name, text: formatSharedRule(top) + heresyRuleHint(top.name) };
+  }
+
+  // 3. Not found anywhere
+  return {
+    score: 0,
+    text:
+      `Keyword "${keyword}" not found in the curated keywords or rules data.\n\nTry a different spelling or a partial name. Some keywords include: Devastating Wounds, Lethal Hits, Feel No Pain, Deep Strike, Invulnerable Save.` +
+      (findHeresyRules(HERESY_SPECIAL_RULES, keyword, 0.82).length > 0
+        ? `\n\n_"${keyword}" matches a ${HERESY_LABEL} special rule; ask with game_mode "heresy" for it._`
+        : ""),
+  };
 }
 
 export function registerLookupKeyword(server: McpServer): void {
@@ -87,70 +158,30 @@ export function registerLookupKeyword(server: McpServer): void {
         ),
     },
     async ({ keyword, game_mode }) => {
+      const reply = (text: string) => ({ content: [{ type: "text" as const, text }] });
+
       if (game_mode === "heresy") {
-        return { content: [{ type: "text" as const, text: lookupHeresyRule(keyword) }] };
-      }
-
-      // 1. Search curated KEYWORDS first (fuzzy match on name)
-      const allCuratedMatches = fuzzySearch(KEYWORDS, keyword, ["name"]);
-
-      if (allCuratedMatches.length > 0) {
-        // Apply game_mode filter if provided
-        const filtered = game_mode
-          ? allCuratedMatches.filter((kw) =>
-              kw.gameModes.includes(game_mode as GameMode),
-            )
-          : allCuratedMatches;
-
-        if (filtered.length > 0) {
-          return {
-            content: [
-              {
-                type: "text" as const,
-                text: formatCuratedKeyword(filtered[0]),
-              },
-            ],
-          };
+        const heresy = lookupHeresyRule(keyword);
+        // No good Heresy match but a clear 40K one: answer from 40K.
+        const fortyK = lookup40kKeyword(keyword, undefined);
+        if (shouldCrossOver(heresy.score, fortyK.score)) {
+          const closest = heresy.score >= 0.55 ? ` Closest Horus Heresy rule: ${heresy.closest}.` : "";
+          const stamp = formatModeStamp("wh40k-11e");
+          return reply(withCrossSystemNote(`${stamp}\n\n${fortyK.text}`, stamp, `Found in 40K, not Horus Heresy.${closest}`));
         }
-
-        // Keyword exists in curated list but not for this game mode
-        return {
-          content: [
-            {
-              type: "text" as const,
-              text: `Keyword "${keyword}" was found but is not applicable to ${game_mode}.\n\nIt applies to: ${allCuratedMatches[0].gameModes.join(", ")}.`,
-            },
-          ],
-        };
+        return reply(heresy.text);
       }
 
-      // 2. Fall back to SHARED_RULES (no game_mode filter — rules data doesn't have mode info)
-      const ruleMatches = fuzzySearch(SHARED_RULES, keyword, ["name"]);
-
-      if (ruleMatches.length > 0) {
-        return {
-          content: [
-            {
-              type: "text" as const,
-              text: formatSharedRule(ruleMatches[0]),
-            },
-          ],
-        };
+      const fortyK = lookup40kKeyword(keyword, game_mode as GameMode | undefined);
+      // No game_mode: no good 40K match but a clear Heresy rule answers from Heresy.
+      if (game_mode === undefined) {
+        const heresy = lookupHeresyRule(keyword);
+        if (shouldCrossOver(fortyK.score, heresy.score)) {
+          const closest = fortyK.score >= 0.55 ? ` Closest 40K keyword: ${fortyK.closest}.` : "";
+          return reply(withCrossSystemNote(heresy.text, heresyStamp(), `Found in Horus Heresy, not 40K.${closest}`));
+        }
       }
-
-      // 3. Not found anywhere
-      return {
-        content: [
-          {
-            type: "text" as const,
-            text:
-              `Keyword "${keyword}" not found in the curated keywords or rules data.\n\nTry a different spelling or a partial name. Some keywords include: Devastating Wounds, Lethal Hits, Feel No Pain, Deep Strike, Invulnerable Save.` +
-              (findHeresyRules(HERESY_SPECIAL_RULES, keyword, 0.82).length > 0
-                ? `\n\n_"${keyword}" matches a ${HERESY_LABEL} special rule; ask with game_mode "heresy" for it._`
-                : ""),
-          },
-        ],
-      };
+      return reply(fortyK.text);
     },
   );
 }

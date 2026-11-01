@@ -274,16 +274,18 @@ function ruleBaseNames(rule: HeresySpecialRule): string[] {
   return [rule.name.replace(/\s*\([^)]*\)\s*$/, ""), ...rule.aliases].map(normalizeName).filter(Boolean);
 }
 
+/** How well `query` names `rule` (0..1, as `scoreName`): full name, or base name/alias with any "(X)" value ignored. */
+export function scoreHeresyRule(rule: HeresySpecialRule, query: string): number {
+  const { base } = splitRuleQuery(query);
+  if (!base) return 0;
+  return Math.max(scoreName(query, rule.name), ...ruleBaseNames(rule).map((b) => scoreName(base, b)));
+}
+
 /** Rules ranked by how well `query` names them (base name or alias; any "(X)" value ignored). */
 export function findHeresyRules(rules: HeresySpecialRule[], query: string, minScore = 0.3): HeresySpecialRule[] {
-  const { base } = splitRuleQuery(query);
-  if (!base) return [];
   return rules
-    .map((rule) => ({
-      rule,
-      score: Math.max(scoreName(query, rule.name), ...ruleBaseNames(rule).map((b) => scoreName(base, b))),
-    }))
-    .filter((r) => r.score >= minScore)
+    .map((rule) => ({ rule, score: scoreHeresyRule(rule, query) }))
+    .filter((r) => r.score > 0 && r.score >= minScore)
     .sort((a, b) => b.score - a.score)
     .map((r) => r.rule);
 }
