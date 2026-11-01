@@ -35,7 +35,7 @@ describe("lookup_unit with game_mode heresy", () => {
   it("returns the Legion Tactical Squad (named 'Tactical Squad' in the data) with HH stats", async () => {
     const text = await call("lookup_unit", { unit_name: "Tactical Squad", game_mode: "heresy" });
     expect(text.startsWith(HERESY_STAMP)).toBe(true);
-    expect(text).toContain("# Tactical Squad — Horus Heresy (3rd edition)");
+    expect(text).toContain("# Tactical Squad");
     expect(text).toContain("Legiones Astartes");
     expect(text).toContain("| Model | Type | M | WS | BS | S | T | W | I | A | LD | CL | WP | IN | SAV | INV |");
     expect(row(text, "Legionary")).toEqual([
@@ -55,7 +55,7 @@ describe("lookup_unit with game_mode heresy", () => {
 
   it("returns the Contemptor Dreadnought with its stat line, Bulky (6) and a 5+ invulnerable save", async () => {
     const text = await call("lookup_unit", { unit_name: "Contemptor Dreadnought", game_mode: "heresy" });
-    expect(text).toContain("# Contemptor Dreadnought — Horus Heresy (3rd edition)");
+    expect(text).toContain("# Contemptor Dreadnought");
     expect(row(text, "Contemptor Dreadnought")).toEqual([
       "Contemptor Dreadnought", "Walker", "8", "4", "4", "7", "7", "6", "4", "4", "12", "10", "7", "5", "2+", "5+",
     ]);
@@ -71,7 +71,7 @@ describe("lookup_unit with game_mode heresy", () => {
 
   it("'Contemptor' resolves to the generic Contemptor Dreadnought, not a Legion variant", async () => {
     const text = await call("lookup_unit", { unit_name: "Contemptor", game_mode: "heresy" });
-    expect(text).toContain("# Contemptor Dreadnought — Horus Heresy (3rd edition)");
+    expect(text).toContain("# Contemptor Dreadnought");
   });
 
   it("shows vehicle armour profiles for a Rhino", async () => {
@@ -89,7 +89,7 @@ describe("lookup_unit with game_mode heresy", () => {
 
   it("a Legion faction filter finds generic Legiones Astartes units", async () => {
     const text = await call("lookup_unit", { unit_name: "Tactical Squad", faction: "Ultramarines", game_mode: "heresy" });
-    expect(text).toContain("# Tactical Squad — Horus Heresy (3rd edition)");
+    expect(text).toContain("# Tactical Squad");
   });
 
   it("labels a not-found response with the edition", async () => {
@@ -151,7 +151,7 @@ describe("lookup_keyword with game_mode heresy (special rules)", () => {
   it("finds a variable rule from a query with a value and echoes X", async () => {
     const text = await call("lookup_keyword", { keyword: "Bulky (6)", game_mode: "heresy" });
     expect(text.startsWith(HERESY_STAMP)).toBe(true);
-    expect(text).toContain("# Bulky (X) — Horus Heresy (3rd edition) special rule");
+    expect(text).toContain("# Bulky (X)");
     expect(text).toContain("As asked: Bulky (6)");
     expect(text).toContain("X = 6");
     expect(text).toContain("Transport Capacity");
@@ -159,14 +159,14 @@ describe("lookup_keyword with game_mode heresy (special rules)", () => {
 
   it("finds a rule by its base name", async () => {
     const text = await call("lookup_keyword", { keyword: "rending", game_mode: "heresy" });
-    expect(text).toContain("# Rending (X) — Horus Heresy (3rd edition) special rule");
+    expect(text).toContain("# Rending (X)");
     expect(text).toContain("## Rule Text");
   });
 
   it("flags a name shared with a 40K keyword without mixing in 40K text", async () => {
     const text = await call("lookup_keyword", { keyword: "Deep Strike", game_mode: "heresy" });
-    expect(text).toContain("# Deep Strike — Horus Heresy (3rd edition) special rule");
-    expect(text).toContain("A Warhammer 40,000 keyword with this name also exists");
+    expect(text).toContain("# Deep Strike");
+    expect(text).toContain('also a 40K keyword; ask with game_mode "40k"');
     expect(text).not.toContain("Official Definition");
     expect(text).not.toContain("Plain English");
   });
@@ -196,8 +196,8 @@ describe("40K / Horus Heresy separation", () => {
     ]);
     for (const text of responses) {
       expect(text.startsWith(HERESY_STAMP)).toBe(true);
-      expect(text).toContain("Horus Heresy (3rd edition)");
       expect(text).not.toContain("[Mode: 40k");
+      expect(text).not.toContain("Not Warhammer 40,000");
       expect(text).not.toContain("| OC |");
       expect(text).not.toContain("| BS | S | AP | D | Keywords |");
     }

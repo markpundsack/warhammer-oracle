@@ -60,7 +60,7 @@ function lookupHeresyRule(keyword: string): string {
   let text = formatHeresyRule(top, keyword, related);
   const base = splitRuleQuery(top.name).base;
   if (KEYWORDS.some((kw) => normalizeName(kw.name) === base)) {
-    text += `\n\n_A Warhammer 40,000 keyword with this name also exists; it belongs to a different game. This is the ${HERESY_LABEL} rule._`;
+    text += `\n\n_"${top.name}" is also a 40K keyword; ask with game_mode "40k" for that rule._`;
   }
   return text;
 }
