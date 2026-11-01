@@ -3,9 +3,10 @@
  *
  * People rarely say which game they mean. With no game_mode, a lookup that
  * finds nothing good in 40K but a clear match in Horus Heresy answers from
- * Heresy (and the reverse for an explicit Heresy query), with the other
- * system's mode stamp and one line saying where it was found. A name that
- * exists in both stays with the requested (or default) system.
+ * Heresy, with Heresy's mode stamp and one line saying where it was found.
+ * A name that exists in both stays with 40K. With an explicit game_mode the
+ * other game is never substituted; the requested game's answer gets a
+ * one-line pointer (`otherGamePointer`) instead.
  *
  * Thresholds use `scoreName`'s tiers: 1 exact, 0.95 plural/singular,
  * 0.9/0.88 the query is the start of the name, 0.82 a whole-word run inside

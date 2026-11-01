@@ -122,7 +122,7 @@ Look up a weapon's stats by weapon name, ranged or melee. Collects the weapon fr
 
 Matching is on the weapon's own name, so "plasma gun" doesn't pull in "Twin plasma gun". If nothing matches exactly, the tool suggests close weapon names.
 
-**Parameters:** `weapon_name` (required), `faction` (optional, only that faction's datasheets), `game_mode` (optional: `40k`/`40k_11e` (default), `40k_10e`, `combat_patrol`, `kill_team`)
+**Parameters:** `weapon_name` (required), `faction` (optional, only that faction's datasheets), `game_mode` (optional: `40k`/`40k_11e` (default), `40k_10e`, `combat_patrol`, `kill_team`, `heresy`)
 
 ### `lookup_keyword`
 
@@ -271,19 +271,23 @@ Look up Crusade content (narrative play). Returns Crusade rules, relics, battle 
 
 ## Horus Heresy (3rd edition)
 
-Pass `game_mode: "heresy"` to `lookup_unit`, `search_units` or `lookup_keyword` for Horus Heresy 3rd edition ("30K") data. Heresy is kept separate from 40K: every Heresy response starts with `[Mode: Horus Heresy (3rd edition)]`, uses Heresy's own stat names, and never mixes in 40K content. When a 40K unit name is also a Heresy unit (or the reverse), the response ends with a one-line pointer to the other `game_mode`.
+Pass `game_mode: "heresy"` to `lookup_unit`, `lookup_weapon`, `search_units` or `lookup_keyword` for Horus Heresy 3rd edition ("30K") data. Heresy responses start with `[Mode: Horus Heresy (3rd edition)]`, as 40K responses start with `[Mode: 40k 11e]`, use Heresy's own stat names, and never mix in 40K content.
+
+**Which game?** People rarely say. With no `game_mode`, `lookup_unit`, `lookup_weapon` and `lookup_keyword` answer from 40K when 40K has a good match (exact, plural, or the start of the name), and otherwise from Horus Heresy when Heresy has one, with the Heresy stamp and one line: "Found in Horus Heresy, not 40K." A name in both games answers from 40K with a one-line pointer to `game_mode: "heresy"`. With an explicit `game_mode`, the other game is never substituted: a miss returns that game's not-found answer plus one line such as `Not in Warhammer 40,000; Horus Heresy has "Contemptor Dreadnought" (game_mode "heresy").`
 
 ```
 "What's the Toughness of a Tactical Squad in Horus Heresy?"   → lookup_unit, game_mode heresy
 "Show me Legion units with Deep Strike"                         → search_units, game_mode heresy
 "What does Bulky (6) do in the Heresy?"                         → lookup_keyword, game_mode heresy
+"What's the profile of a graviton gun?"                         → lookup_weapon (no game_mode: Heresy-only, so answered from Heresy)
 ```
 
 - **`lookup_unit`**: the full Heresy stat line (Type, M, WS, BS, S, T, W, I, A, LD, CL, WP, IN, SAV, INV), or armour profiles for Vehicles, Knights, Titans and fortifications; unit composition and size; special rules with their values (`Bulky (6)`, `Line (2)`); ranged weapons (R, FP, RS, AP, D, special rules, traits); melee weapons; wargear options with points; base points; traits; and the armies that can field the unit. Melee weapons in Heresy modify the bearer's characteristics, so they are written that way: a power fist is "Initiative user -3, Attacks as user, Strength user +4".
+- **`lookup_weapon`**: every profile of the weapon (a plasma gun's Maximal and Sustained), as R, FP, RS, AP, D, special rules and traits, or melee modifiers to the bearer.
 - **`search_units`**: matches unit names, factions (a Legion such as `Ultramarines` also finds the generic Legion units it can field), special rules, traits and weapon names.
 - **`lookup_keyword`**: Heresy special rules with their full text from the data. `Bulky (6)`, `bulky` and `Bulky (X)` all find `Bulky (X)`.
 - Generic Legion units (Tactical Squad, Contemptor Dreadnought, Rhino, ...) are listed once, under **Legiones Astartes**, with every Legion that can field them. Legion catalogue names are cleaned up (`XIII - Ultramarines` → `Ultramarines`, XIII Legion). Units are named as in the data: the Legion Tactical Squad is `Tactical Squad`.
-- **Not yet covered for Heresy:** `lookup_weapon`, `compare_units`, the wound calculator, phases/turn sequence, Reactions, Gambits, Rites of War and detachments. Rules and options that depend on army choices (a Rite of War, a particular Legion, an upgrade) are listed separately or left out; points are base costs before options.
+- **Not yet covered for Heresy:** `compare_units`, the wound calculator, phases/turn sequence, Reactions, Gambits, Rites of War and detachments. Rules and options that depend on army choices (a Rite of War, a particular Legion, an upgrade) are listed separately or left out. Points are base costs before options.
 
 ## Data
 
