@@ -2,7 +2,7 @@
  * Formatting and matching for Horus Heresy 3rd Edition (game_mode "heresy").
  *
  * Every Heresy response starts with the "[Mode: Horus Heresy (3rd edition)]"
- * stamp and names the edition in its heading, uses HH3's own stat names
+ * stamp, like 40K's "[Mode: 40k 11e]", uses HH3's own stat names
  * (WS/BS/S/T/W/I/A/LD/CL/WP/IN/SAV/INV; R/FP/RS/AP/D; IM/AM/SM), and never
  * mixes in 40K content. Melee weapons are spelled out as modifiers to the
  * bearer ("Strength: user +4"), because a voice assistant reading "S +4" or
@@ -20,9 +20,6 @@ import { formatModeStamp, formatUnitSize } from "./format.js";
 import { normalizeName, rankByName, scoreName } from "./search.js";
 
 export const HERESY_LABEL = "Horus Heresy (3rd edition)";
-
-export const HERESY_SOURCE_NOTE =
-  "> Horus Heresy (3rd edition) data from BSData/horus-heresy-3rd-edition. Not Warhammer 40,000 rules.";
 
 export function heresyStamp(): string {
   return formatModeStamp("horus-heresy-3e");
@@ -146,7 +143,7 @@ export function describeHeresyRanged(w: HeresyRangedWeapon): string {
  */
 export function formatHeresyWeapon(weapons: HeresyWeapon[]): string {
   const name = weapons[0]?.name ?? "";
-  const sections: string[] = [heresyStamp(), `# ${name} — ${HERESY_LABEL}`];
+  const sections: string[] = [heresyStamp(), `# ${name}`];
   for (const w of weapons) {
     const lines: string[] = [];
     if (weapons.length > 1) lines.push(`**Listed in:** ${w.source}`);
@@ -159,7 +156,6 @@ export function formatHeresyWeapon(weapons: HeresyWeapon[]): string {
     const melee = formatHeresyMeleeTable(w.melee);
     if (melee) sections.push(melee);
   }
-  sections.push(HERESY_SOURCE_NOTE);
   return sections.join("\n\n");
 }
 
@@ -213,7 +209,7 @@ export function formatHeresyUnit(unit: HeresyUnit, factions: HeresyFaction[], al
   const sections: string[] = [heresyStamp()];
   const availability = formatAvailability(unit, factions);
   const header = [
-    `# ${unit.name} — ${HERESY_LABEL}`,
+    `# ${unit.name}`,
     "",
     `**Faction:** ${factionLabel(unit, factions)}${formatPoints(unit)} | **Unit Size:** ${formatUnitSize(unit.unitSize)}`,
   ];
@@ -246,10 +242,6 @@ export function formatHeresyUnit(unit: HeresyUnit, factions: HeresyFaction[], al
   }
   if (unit.traits.length) sections.push(`### Traits\n\n${unit.traits.join(", ")}`);
   if (unit.reactions.length) sections.push(`### Reactions\n\n${unit.reactions.join(", ")}`);
-
-  sections.push(
-    `${HERESY_SOURCE_NOTE} Points are base costs before options; rules and options that depend on army choices are listed separately or omitted.`,
-  );
   return sections.join("\n\n");
 }
 
@@ -298,7 +290,7 @@ export function findHeresyRules(rules: HeresySpecialRule[], query: string, minSc
 
 export function formatHeresyRule(rule: HeresySpecialRule, query: string, related: HeresySpecialRule[] = []): string {
   const { value } = splitRuleQuery(query);
-  const sections: string[] = [heresyStamp(), `# ${rule.name} — ${HERESY_LABEL} special rule`];
+  const sections: string[] = [heresyStamp(), `# ${rule.name}`];
   if (value && /\(X\)/i.test(rule.name)) {
     sections.push(`**As asked: ${rule.name.replace(/\(X\)/i, `(${value})`)}** — X = ${value} in the text below.`);
   }
@@ -310,7 +302,6 @@ export function formatHeresyRule(rule: HeresySpecialRule, query: string, related
   if (related.length) {
     sections.push(`_Other Horus Heresy rules with a similar name:_ ${related.map((r) => r.name).join(", ")}`);
   }
-  sections.push(HERESY_SOURCE_NOTE);
   return sections.join("\n\n");
 }
 
