@@ -283,7 +283,7 @@ describe("lookup_unit tool", () => {
     const text = (result.content as Array<{ type: string; text: string }>)[0].text;
     expect(text).toContain("### Unit Profiles");
     expect(text).toContain("**Faction:** Chaos Daemons");
-    expect(text).toMatch(/Other versions:.*World Eaters \(90 pts, OC 1/);
+    expect(text).toContain("**Note:** Home: Chaos Daemons. Also fielded by 7 other armies. Variant: World Eaters (90 pts, OC 1).");
     expect(text).not.toContain("more than one datasheet");
   });
 
@@ -295,7 +295,7 @@ describe("lookup_unit tool", () => {
     const text = (result.content as Array<{ type: string; text: string }>)[0].text;
     expect(text).toContain("### Unit Profiles");
     expect(text).toContain("**Faction:** Adeptus Astartes - Space Marines");
-    expect(text).toMatch(/Other versions:.*Grey Knights \(220 pts/);
+    expect(text).toMatch(/Home: Space Marines\..*Variants?:.*Grey Knights \(220 pts/);
     expect(text).not.toContain("more than one datasheet");
   });
 
