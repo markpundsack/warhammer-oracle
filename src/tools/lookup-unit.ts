@@ -346,12 +346,11 @@ function differingWeapons<W extends { name: string }>(a: W[], b: W[]): string[] 
   return [...names.values()];
 }
 
-/** A short, speakable summary of what `other` changes relative to the shown datasheet. */
-function describeDifferences(shown: Unit, other: Unit): string {
+/** Material differences of `other` from the shown datasheet: points, size, stats, then weapons. Terse, for reading aloud. */
+function materialDifferences(shown: Unit, other: Unit): string[] {
   const parts: string[] = [];
   if (other.points !== shown.points) parts.push(other.points === null ? "no points listed" : `${other.points} pts`);
   if (JSON.stringify(other.unitSize) !== JSON.stringify(shown.unitSize)) parts.push(formatUnitSize(other.unitSize));
-
   if (other.profiles.length === shown.profiles.length) {
     const stats = new Set<string>();
     other.profiles.forEach((p, i) => {
@@ -363,40 +362,52 @@ function describeDifferences(shown: Unit, other: Unit): string {
   } else {
     parts.push("different stat lines");
   }
-
+  if (parts.length > 0) return parts;
   const weapons = differingWeapons(
     [...shown.rangedWeapons, ...shown.meleeWeapons],
     [...other.rangedWeapons, ...other.meleeWeapons],
   );
-  if (weapons.length > 0) {
-    const named = weapons.slice(0, 3).join(", ");
-    parts.push(`different ${named}${weapons.length > 3 ? ` and ${weapons.length - 3} more weapons` : ""}`);
-  }
-
-  if (JSON.stringify(other.abilities) !== JSON.stringify(shown.abilities)) {
-    const shownNames = new Set(shown.abilities.map((a) => a.name));
-    const otherNames = new Set(other.abilities.map((a) => a.name));
-    const lost = [...shownNames].filter((n) => !otherNames.has(n));
-    const gained = [...otherNames].filter((n) => !shownNames.has(n));
-    if (lost.length + gained.length === 0 || lost.length + gained.length > 3) parts.push("different abilities");
-    else {
-      if (lost.length > 0) parts.push(`without ${lost.join(", ")}`);
-      if (gained.length > 0) parts.push(`with ${gained.join(", ")}`);
-    }
-  }
-  return parts.length > 0 ? parts.join(", ") : "different keywords";
+  return weapons.length > 0 ? ["different weapons"] : [];
 }
 
+function abilityChanges(shown: Unit, other: Unit): { lost: string[]; gained: string[] } {
+  const shownNames = new Set(shown.abilities.map((a) => a.name));
+  const otherNames = new Set(other.abilities.map((a) => a.name));
+  return {
+    lost: [...shownNames].filter((n) => !otherNames.has(n)),
+    gained: [...otherNames].filter((n) => !shownNames.has(n)),
+  };
+}
+
+/** A short summary of what `other` changes relative to the shown datasheet. */
+function describeDifferences(shown: Unit, other: Unit): string {
+  const material = materialDifferences(shown, other);
+  if (material.length > 0) return material.join(", ");
+  const { lost, gained } = abilityChanges(shown, other);
+  if (lost.length + gained.length === 0) return "different keywords";
+  if (lost.length + gained.length > 2) return "different abilities";
+  return [...(gained.length ? [`with ${gained.join(", ")}`] : []), ...(lost.length ? [`without ${lost.join(", ")}`] : [])].join(", ");
+}
+
+/**
+ * e.g. "Home: Chaos Daemons. Also fielded by 7 other armies. Variant: World Eaters (90 pts, OC 1)."
+ * Copies that only lack the home army's own rules count as fielding the same datasheet.
+ */
 function formatHomeDatasheetNote(resolution: HomeDatasheetResolution<Unit>): string {
-  const lines = [`Shown from ${shortFaction(resolution.pick.faction)}, its home army.`];
-  if (resolution.alsoFieldedBy.length > 0) {
-    lines.push(`${listFactions(resolution.alsoFieldedBy)} field the same datasheet.`);
+  const pick = resolution.pick;
+  const sameSheet = (v: { entry: Unit }) => {
+    if (materialDifferences(pick, v.entry).length > 0) return false;
+    const { gained } = abilityChanges(pick, v.entry);
+    return gained.length === 0 && JSON.stringify(v.entry.keywords) === JSON.stringify(pick.keywords);
+  };
+  const also = [...resolution.alsoFieldedBy, ...resolution.variants.filter(sameSheet).flatMap((v) => v.factions)];
+  const variants = resolution.variants.filter((v) => !sameSheet(v));
+  const lines = [`Home: ${shortFaction(pick.faction)}.`];
+  if (also.length > 0) lines.push(`Also fielded by ${also.length} other ${also.length === 1 ? "army" : "armies"}.`);
+  if (variants.length > 0) {
+    const others = variants.map((v) => `${listFactions(v.factions)} (${describeDifferences(pick, v.entry)})`);
+    lines.push(`${variants.length === 1 ? "Variant" : "Variants"}: ${others.join("; ")}.`);
   }
-  const others = resolution.variants.map(
-    (v) => `${listFactions(v.factions)} (${describeDifferences(resolution.pick, v.entry)})`,
-  );
-  lines.push(`Other versions: ${others.join("; ")}.`);
-  lines.push("Re-run `lookup_unit` with `faction` for another army's version.");
   return `**Note:** ${lines.join(" ")}`;
 }
 
