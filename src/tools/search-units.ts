@@ -3,10 +3,12 @@ import { z } from "zod";
 import { UNITS } from "../data/units.js";
 import { UNITS_11E } from "../data/units-11e.js";
 import { KILL_TEAM_OPERATIVES } from "../data/kill-team-operatives.js";
+import { HERESY_UNITS } from "../data/heresy-units.js";
+import { formatHeresyCompactUnit, heresyStamp, HERESY_LABEL } from "../lib/heresy-format.js";
 import { fuzzySearch, scoreName } from "../lib/search.js";
 import { isCanonicalFaction } from "../lib/unit-match.js";
 import { formatModeStamp, formatUnitSize } from "../lib/format.js";
-import type { Unit, KillTeamOperative } from "../types.js";
+import type { Unit, KillTeamOperative, HeresyUnit } from "../types.js";
 
 const MAX_RESULTS = 10;
 
@@ -44,10 +46,49 @@ function formatCompactOperative(op: KillTeamOperative): string {
   return `**${op.name}** (${op.faction}) — ${stats} — Keywords: ${keywords}`;
 }
 
+/**
+ * Horus Heresy search: name, faction (including armies that can field the
+ * unit, so "Ultramarines" also finds generic Legiones Astartes units),
+ * special rules, traits and weapon names.
+ */
+function searchHeresyUnits(query: string, faction?: string, ability?: string, maxPoints?: number): string {
+  let candidates: HeresyUnit[] = [...HERESY_UNITS];
+  if (faction) candidates = fuzzySearch(candidates, faction, ["faction", "availableIn"]);
+  if (ability) candidates = fuzzySearch(candidates, ability, ["specialRules", "conditionalRules", "wargearRules"]);
+  const weaponNames = (u: HeresyUnit) => [...u.rangedWeapons.map((w) => w.name), ...u.meleeWeapons.map((w) => w.name)];
+  const lower = query.toLowerCase();
+  let matches = candidates
+    .map((item, index) => ({ item, index, score: scoreName(query, item.name) }))
+    .filter(
+      (r) =>
+        r.score > 0 ||
+        fuzzySearch([r.item], query, ["name", "faction", "specialRules", "traits"]).length > 0 ||
+        weaponNames(r.item).some((n) => n.toLowerCase().includes(lower)),
+    )
+    .sort((a, b) => b.score - a.score || a.index - b.index)
+    .map((r) => r.item);
+  if (maxPoints !== undefined) matches = matches.filter((u) => u.points !== null && u.points.base <= maxPoints);
+
+  if (matches.length === 0) {
+    const filters: string[] = [];
+    if (faction) filters.push(`faction: "${faction}"`);
+    if (ability) filters.push(`special rule: "${ability}"`);
+    if (maxPoints !== undefined) filters.push(`max points: ${maxPoints}`);
+    const filterStr = filters.length > 0 ? ` (filters: ${filters.join(", ")})` : "";
+    return `${heresyStamp()}\n\nNo ${HERESY_LABEL} units found matching "${query}"${filterStr}. Try a broader search term or different filters.`;
+  }
+  const lines = matches.slice(0, MAX_RESULTS).map(formatHeresyCompactUnit);
+  if (matches.length > MAX_RESULTS) {
+    lines.push(`\n_Showing ${MAX_RESULTS} of ${matches.length} results. Narrow your search for more specific results._`);
+  }
+  return `${heresyStamp()}\n\n${lines.join("\n")}`;
+}
+
 export function registerSearchUnits(server: McpServer): void {
   server.tool(
     "search_units",
-    "Search Warhammer 40K units or Kill Team operatives by name, faction, keywords, or ability text. Returns a compact list of matching results (max 10).",
+    "Search Warhammer 40K units, Kill Team operatives, or Horus Heresy (3rd edition, '30K') units by name, faction, keywords, " +
+      "or ability text. Returns a compact list of matching results (max 10). Use game_mode 'heresy' for Horus Heresy.",
     {
       query: z
         .string()
@@ -70,16 +111,23 @@ export function registerSearchUnits(server: McpServer): void {
       max_points: z
         .number()
         .optional()
-        .describe("Optional max points filter — only return units costing this many points or fewer (40K only)"),
+        .describe(
+          "Optional max points filter — only return units costing this many points or fewer (40K, and Horus Heresy base cost)",
+        ),
       game_mode: z
-        .enum(["40k", "40k_10e", "40k_11e", "combat_patrol", "kill_team"])
+        .enum(["40k", "40k_10e", "40k_11e", "combat_patrol", "kill_team", "heresy"])
         .optional()
         .describe(
           "Game mode/edition: defaults to '40k_11e'. Pass '40k_10e' for 10th Edition units, " +
-            "'40k'/'40k_11e' for 11th Edition (current default), or 'kill_team' for Kill Team operatives.",
+            "'40k'/'40k_11e' for 11th Edition (current default), 'kill_team' for Kill Team operatives, " +
+            "or 'heresy' for Horus Heresy 3rd edition (30K) units.",
         ),
     },
     async ({ query, faction, ability, max_points, game_mode }) => {
+      if (game_mode === "heresy") {
+        return { content: [{ type: "text" as const, text: searchHeresyUnits(query, faction, ability, max_points) }] };
+      }
+
       if (game_mode === "kill_team") {
         let candidates: KillTeamOperative[] = [...KILL_TEAM_OPERATIVES];
 

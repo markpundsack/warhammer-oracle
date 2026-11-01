@@ -1,8 +1,8 @@
 // === Game Modes ===
 
-export type GameMode = "40k" | "40k_10e" | "40k_11e" | "combat_patrol" | "kill_team";
+export type GameMode = "40k" | "40k_10e" | "40k_11e" | "combat_patrol" | "kill_team" | "heresy";
 
-export type GameSystem = "wh40k-10e" | "wh40k-11e" | "wh40k-killteam";
+export type GameSystem = "wh40k-10e" | "wh40k-11e" | "wh40k-killteam" | "horus-heresy-3e";
 
 // === Unit Data (from BSData .cat files) ===
 
@@ -122,6 +122,157 @@ export type KillTeamOperative = {
   abilities: Ability[];
   uniqueActions: Ability[];
   gameSystem: GameSystem;
+};
+
+// === Horus Heresy 3rd Edition (from BSData/horus-heresy-3rd-edition) ===
+//
+// A separate data model, like Kill Team's: HH3 stat lines share almost no
+// columns with 40K's (WS/BS/S/T/W/I/A/LD/CL/WP/IN/SAV/INV; weapons carry
+// R/FP/RS/AP/D or IM/AM/SM/AP/D), so forcing them into Unit/UnitProfile would
+// be lossy and invite reading one game's stats as the other's. Field values
+// are the data's own strings, unmodified.
+
+/** An infantry/walker/cavalry/character stat line (BSData profile type "Profile"). */
+export type HeresyModelProfile = {
+  name: string;
+  /** Model Type and Sub-Types, e.g. "Infantry (Sergeant)", "Walker". */
+  type: string;
+  movement: string;
+  weaponSkill: string;
+  ballisticSkill: string;
+  strength: string;
+  toughness: string;
+  wounds: string;
+  initiative: string;
+  attacks: string;
+  leadership: string;
+  cool: string;
+  willpower: string;
+  intelligence: string;
+  save: string;
+  invulnerableSave: string;
+};
+
+/**
+ * A Vehicle, Knight, Titan (Head/Carapace/Legs/Arms), Ordinatus or
+ * Battlefield fortification profile. These have different columns per kind
+ * (armour facings, HP, Transport Capacity...), so the characteristics are
+ * kept in the data's own order and naming.
+ */
+export type HeresyArmouredProfile = {
+  /** The BSData profile type, e.g. "Vehicle", "Knight", "Titan Head". */
+  kind: string;
+  name: string;
+  stats: { name: string; value: string }[];
+};
+
+export type HeresyRangedWeapon = {
+  name: string;
+  range: string;
+  firepower: string;
+  rangedStrength: string;
+  ap: string;
+  damage: string;
+  /** Weapon special rules with their values, e.g. ["Heavy (FP)", "Deflagrate (6)"]. */
+  specialRules: string[];
+  /** Weapon traits, e.g. ["Volkite"]. */
+  traits: string[];
+};
+
+/**
+ * HH3 melee weapons have no Strength/Attacks/Initiative of their own: IM, AM
+ * and SM modify the bearer's characteristic ("S" = the bearer's Strength,
+ * "+4" = the bearer's Strength +4).
+ */
+export type HeresyMeleeWeapon = {
+  name: string;
+  initiativeModifier: string;
+  attacksModifier: string;
+  strengthModifier: string;
+  ap: string;
+  damage: string;
+  specialRules: string[];
+  traits: string[];
+};
+
+export type HeresyCompositionEntry = { model: string; min: number; max: number };
+
+/** One model's (or the whole unit's) default wargear and options, as readable text. */
+export type HeresyModelWargear = {
+  model: string;
+  default: string[];
+  options: string[];
+};
+
+export type HeresyPoints = {
+  /** Cost of the unit at its minimum size, with no options. */
+  base: number;
+  /** Extra cost per additional model above the minimum, by model type. */
+  perExtraModel: { model: string; points: number }[];
+};
+
+export type HeresyUnit = {
+  id: string;
+  name: string;
+  /** The catalogue the datasheet is defined in, e.g. "Legiones Astartes", "Ultramarines", "Mechanicum". */
+  faction: string;
+  /** Armies (BSData roster catalogues) that can include this unit, other than `faction` itself. */
+  availableIn: string[];
+  models: HeresyModelProfile[];
+  armoured: HeresyArmouredProfile[];
+  composition: HeresyCompositionEntry[];
+  unitSize: UnitSize;
+  /** Special rules with their values, e.g. "Bulky (6)", "Line (2)"; "(Sergeant)" marks a rule only some models have. */
+  specialRules: string[];
+  /**
+   * Rules the data hides by default and shows only for some army options
+   * (a Rite of War, Blackshields, an upgrade...). Listed separately so a
+   * static lookup never presents them as always-on.
+   */
+  conditionalRules: string[];
+  /** Trait tags, e.g. "[Allegiance]", "[Legiones Astartes]", "Smokescreen". */
+  traits: string[];
+  /** Names of Reactions the unit grants (full Reaction text is not bundled yet). */
+  reactions: string[];
+  rangedWeapons: HeresyRangedWeapon[];
+  meleeWeapons: HeresyMeleeWeapon[];
+  wargear: HeresyModelWargear[];
+  /** Wargear items with rules text (e.g. a Vexilla, Augury scanner) the unit can have. */
+  wargearRules: { name: string; description: string }[];
+  points: HeresyPoints | null;
+  gameSystem: "horus-heresy-3e";
+};
+
+/** A weapon as listed in the data (one entry may have several profiles, e.g. plasma gun Maximal/Sustained). */
+export type HeresyWeapon = {
+  name: string;
+  /** Catalogue the weapon entry is defined in, e.g. "Weapons" (the shared armoury), "Mechanicum". */
+  source: string;
+  ranged: HeresyRangedWeapon[];
+  melee: HeresyMeleeWeapon[];
+  gameSystem: "horus-heresy-3e";
+};
+
+export type HeresySpecialRule = {
+  /** As written in the data, e.g. "Bulky (X)", "Deep Strike". */
+  name: string;
+  /** Alternate names from the data (e.g. "Bulky"). */
+  aliases: string[];
+  /** The rule's bold one-line summary, when the text starts with one. */
+  summary: string;
+  description: string;
+  /** Catalogue the rule is defined in, e.g. "Special Rules", "Horus Heresy 3rd Edition". */
+  source: string;
+  gameSystem: "horus-heresy-3e";
+};
+
+export type HeresyFaction = {
+  /** Cleaned catalogue name, e.g. "Ultramarines". */
+  name: string;
+  /** Legion number for the Legion catalogues, e.g. "XIII"; null otherwise. */
+  legion: string | null;
+  /** True for BSData library catalogues (not directly an army), e.g. "Legiones Astartes". */
+  library: boolean;
 };
 
 // === Rules Content (hand-curated) ===

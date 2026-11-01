@@ -16,7 +16,7 @@
 
 ---
 
-Ask your AI assistant about datasheets, stratagems, detachments, enhancements, keywords, phase sequences, wound math, and more. Covers Warhammer 40,000 (10th and 11th Edition), Combat Patrol, and Kill Team.
+Ask your AI assistant about datasheets, stratagems, detachments, enhancements, keywords, phase sequences, wound math, and more. Covers Warhammer 40,000 (10th and 11th Edition), Combat Patrol, Kill Team, and Horus Heresy (3rd edition).
 
 [![warhammer-oracle MCP server](https://glama.ai/mcp/servers/gregario/warhammer-oracle/badges/card.svg)](https://glama.ai/mcp/servers/gregario/warhammer-oracle)
 
@@ -109,7 +109,7 @@ Look up a unit datasheet by name. Returns stat profiles, unit size (model count)
 "What are the stats for a Leman Russ Battle Tank?"
 ```
 
-**Parameters:** `unit_name` (required), `faction` (optional), `game_mode` (optional: `40k`/`40k_11e` (default, 11th Edition), `40k_10e`, `combat_patrol`, `kill_team`)
+**Parameters:** `unit_name` (required), `faction` (optional), `datasheet_id` (optional, exact ID shown for same-faction variants), `game_mode` (optional: `40k`/`40k_11e` (default, 11th Edition), `40k_10e`, `combat_patrol`, `kill_team`, `heresy`)
 
 ### `lookup_weapon`
 
@@ -133,7 +133,7 @@ Look up a keyword or rule. Returns the official definition, a plain English expl
 "Explain the Feel No Pain keyword"
 ```
 
-**Parameters:** `keyword` (required), `game_mode` (optional)
+**Parameters:** `keyword` (required), `game_mode` (optional; `heresy` looks up Horus Heresy special rules instead — see [Horus Heresy](#horus-heresy-3rd-edition))
 
 ### `lookup_phase`
 
@@ -156,7 +156,7 @@ Search units by name, faction, keywords, or ability text. Returns a compact list
 "Show me units with Deep Strike"
 ```
 
-**Parameters:** `query` (required), `faction` (optional), `ability` (optional), `max_points` (optional), `game_mode` (optional: `40k`/`40k_11e` (default), `40k_10e`, `combat_patrol`, `kill_team`)
+**Parameters:** `query` (required), `faction` (optional), `ability` (optional), `max_points` (optional), `game_mode` (optional: `40k`/`40k_11e` (default), `40k_10e`, `combat_patrol`, `kill_team`, `heresy`)
 
 ### `compare_units`
 
@@ -269,6 +269,22 @@ Look up Crusade content (narrative play). Returns Crusade rules, relics, battle 
 
 **Parameters:** `query` (required), `faction` (optional)
 
+## Horus Heresy (3rd edition)
+
+Pass `game_mode: "heresy"` to `lookup_unit`, `search_units` or `lookup_keyword` for Horus Heresy 3rd edition ("30K") data. Heresy is kept separate from 40K: every Heresy response starts with `[Mode: Horus Heresy (3rd edition)]`, uses Heresy's own stat names, and never mixes in 40K content. When a 40K unit name is also a Heresy unit (or the reverse), the response ends with a one-line pointer to the other `game_mode`.
+
+```
+"What's the Toughness of a Tactical Squad in Horus Heresy?"   → lookup_unit, game_mode heresy
+"Show me Legion units with Deep Strike"                         → search_units, game_mode heresy
+"What does Bulky (6) do in the Heresy?"                         → lookup_keyword, game_mode heresy
+```
+
+- **`lookup_unit`**: the full Heresy stat line (Type, M, WS, BS, S, T, W, I, A, LD, CL, WP, IN, SAV, INV), or armour profiles for Vehicles, Knights, Titans and fortifications; unit composition and size; special rules with their values (`Bulky (6)`, `Line (2)`); ranged weapons (R, FP, RS, AP, D, special rules, traits); melee weapons; wargear options with points; base points; traits; and the armies that can field the unit. Melee weapons in Heresy modify the bearer's characteristics, so they are written that way: a power fist is "Initiative user -3, Attacks as user, Strength user +4".
+- **`search_units`**: matches unit names, factions (a Legion such as `Ultramarines` also finds the generic Legion units it can field), special rules, traits and weapon names.
+- **`lookup_keyword`**: Heresy special rules with their full text from the data. `Bulky (6)`, `bulky` and `Bulky (X)` all find `Bulky (X)`.
+- Generic Legion units (Tactical Squad, Contemptor Dreadnought, Rhino, ...) are listed once, under **Legiones Astartes**, with every Legion that can field them. Legion catalogue names are cleaned up (`XIII - Ultramarines` → `Ultramarines`, XIII Legion). Units are named as in the data: the Legion Tactical Squad is `Tactical Squad`.
+- **Not yet covered for Heresy:** `lookup_weapon`, `compare_units`, the wound calculator, phases/turn sequence, Reactions, Gambits, Rites of War and detachments. Rules and options that depend on army choices (a Rite of War, a particular Legion, an upgrade) are listed separately or left out; points are base costs before options.
+
 ## Data
 
 All data is embedded at build time — no network calls at runtime. Data is synced daily from BSData via GitHub Actions.
@@ -278,6 +294,8 @@ All data is embedded at build time — no network calls at runtime. Data is sync
 | 40K unit datasheets (11th Edition, default) | 2,695 | [BSData/wh40k-11e](https://github.com/BSData/wh40k-11e) |
 | 40K unit datasheets (10th Edition) | 2,666 | [BSData/wh40k-10e](https://github.com/BSData/wh40k-10e) |
 | Kill Team operatives | 519 | [BSData/wh40k-killteam](https://github.com/BSData/wh40k-killteam) |
+| Horus Heresy (3rd edition) units | 544 | [BSData/horus-heresy-3rd-edition](https://github.com/BSData/horus-heresy-3rd-edition) |
+| Horus Heresy weapons / special rules | 741 / 221 | BSData (auto-extracted) |
 | Detachments (11th / 10th Edition) | 259 / 208 | BSData (auto-extracted) |
 | Enhancements (11th / 10th Edition) | 895 / 827 | BSData (auto-extracted) |
 | Stratagems | 1,316 | Hand-curated (Core Rules + detachment-specific per faction) |
@@ -294,6 +312,7 @@ All data is embedded at build time — no network calls at runtime. Data is sync
 - **Warhammer 40,000, 10th Edition** (`40k_10e`) — full-scale battles, 10th Edition rules (permanently supported)
 - **Combat Patrol** (`combat_patrol`) — smaller, starter-friendly format
 - **Kill Team** (`kill_team`) — squad-level skirmish game
+- **Horus Heresy, 3rd edition** (`heresy`) — the 30K setting's own rules and datasheets (`lookup_unit`, `search_units`, `lookup_keyword`)
 
 10th Edition support isn't going away when a newer edition is added — every `game_mode` value, once added, keeps working.
 
@@ -312,8 +331,15 @@ npm run fetch-data
 npm run build
 ```
 
+To refresh only the Horus Heresy data (optionally from a local clone of the BSData repo):
+
+```bash
+npm run fetch-data -- --only=heresy
+npm run fetch-data -- --only=heresy --heresy-dir=/path/to/horus-heresy-3rd-edition
+```
+
 ## License
 
 MIT (for the MCP server code).
 
-Unit data sourced from the [BSData](https://github.com/BSData) community project — [wh40k-10e](https://github.com/BSData/wh40k-10e), [wh40k-11e](https://github.com/BSData/wh40k-11e), and [wh40k-killteam](https://github.com/BSData/wh40k-killteam). Game rules and army rules are the intellectual property of Games Workshop. This tool provides reference data for personal use during gameplay.
+Unit data sourced from the [BSData](https://github.com/BSData) community project — [wh40k-10e](https://github.com/BSData/wh40k-10e), [wh40k-11e](https://github.com/BSData/wh40k-11e), [wh40k-killteam](https://github.com/BSData/wh40k-killteam), and [horus-heresy-3rd-edition](https://github.com/BSData/horus-heresy-3rd-edition). Game rules and army rules (including Horus Heresy) are the intellectual property of Games Workshop. This tool provides reference data for personal use during gameplay.

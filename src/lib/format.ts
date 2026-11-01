@@ -4,6 +4,7 @@ const MODE_STAMPS: Record<GameSystem, string> = {
   "wh40k-10e": "[Mode: 40k 10e]",
   "wh40k-11e": "[Mode: 40k 11e]",
   "wh40k-killteam": "[Mode: Kill Team]",
+  "horus-heresy-3e": "[Mode: Horus Heresy (3rd edition)]",
 };
 
 /**

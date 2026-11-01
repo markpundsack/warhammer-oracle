@@ -3,7 +3,9 @@ import { z } from "zod";
 import { UNITS } from "../data/units.js";
 import { UNITS_11E } from "../data/units-11e.js";
 import { KILL_TEAM_OPERATIVES } from "../data/kill-team-operatives.js";
-import { fuzzySearch } from "../lib/search.js";
+import { HERESY_UNITS, HERESY_FACTIONS } from "../data/heresy-units.js";
+import { fuzzySearch, normalizeName, rankByName } from "../lib/search.js";
+import { formatHeresyUnit, heresyContentKey, heresyStamp, HERESY_LABEL } from "../lib/heresy-format.js";
 import {
   rankUnitMatches,
   ambiguousFactionMatches,
@@ -13,6 +15,7 @@ import {
 import type { AbilityVariantException } from "../lib/unit-match.js";
 import { formatCompositionSection, formatModeStamp, formatUnitSize, formatWargearSection } from "../lib/format.js";
 import type {
+  HeresyUnit,
   Unit,
   UnitProfile,
   RangedWeapon,
@@ -193,31 +196,97 @@ function formatAbilityVariantNote(exceptions: AbilityVariantException[]): string
   );
 }
 
+// === Horus Heresy ===
+
+const HERESY_UNIT_NAMES = new Set(HERESY_UNITS.map((u) => normalizeName(u.name)));
+const UNIT_NAMES_40K = new Set([...UNITS_11E, ...UNITS].map((u) => normalizeName(u.name)));
+
+/** A one-line pointer to the other game, only when a datasheet of exactly this name exists there. */
+function heresyHint(name: string): string {
+  return HERESY_UNIT_NAMES.has(normalizeName(name))
+    ? `\n\n_"${name}" is also a ${HERESY_LABEL} unit; ask with game_mode "heresy" for that datasheet._`
+    : "";
+}
+
+function fortyKHint(name: string): string {
+  return UNIT_NAMES_40K.has(normalizeName(name))
+    ? `\n\n_"${name}" is also a Warhammer 40,000 unit name; ask with game_mode "40k" for the 40K datasheet._`
+    : "";
+}
+
+function lookupHeresyUnit(unitName: string, faction?: string, datasheetId?: string): string {
+  let candidates: HeresyUnit[] = [...HERESY_UNITS];
+  // A Legion name also finds the generic Legiones Astartes units it can field.
+  if (faction) candidates = fuzzySearch(candidates, faction, ["faction", "availableIn"]);
+  if (datasheetId) candidates = candidates.filter((u) => u.id === datasheetId);
+
+  // Among equal name scores, the shortest name is the closest match
+  // ("Contemptor" → "Contemptor Dreadnought", not "Contemptor-Incaendius Dreadnought").
+  const ranked = rankByName(candidates, unitName, (u) => u.name, 0.3).sort(
+    (a, b) => b.score - a.score || a.item.name.length - b.item.name.length,
+  );
+  if (ranked.length === 0) {
+    return (
+      `${heresyStamp()}\n\nNo ${HERESY_LABEL} unit found matching "${unitName}".` +
+      `${faction ? ` (faction filter: "${faction}")` : ""}${datasheetId ? ` (datasheet_id: "${datasheetId}")` : ""}\n\n` +
+      `Try a partial name or check the spelling. Note: Legion units are named without "Legion" (e.g. "Tactical Squad").` +
+      fortyKHint(unitName)
+    );
+  }
+
+  // Same-name datasheets: identical copies (e.g. each Legion's own "Inductii
+  // Squad") collapse to one; genuinely different ones need a faction.
+  const top = ranked[0].item;
+  const sameName = ranked.map((r) => r.item).filter((u) => normalizeName(u.name) === normalizeName(top.name));
+  const contents = new Map<string, HeresyUnit[]>();
+  for (const u of sameName) contents.set(heresyContentKey(u), [...(contents.get(heresyContentKey(u)) ?? []), u]);
+  if (contents.size > 1 && ranked[0].score >= 0.9) {
+    const options = [...contents.values()].map((group) => group[0]);
+    const lines = options.map((o) => `- **${o.name}** (${o.faction}) — datasheet_id: \`${o.id}\``);
+    return (
+      `${heresyStamp()}\n\n"${top.name}" is more than one ${HERESY_LABEL} datasheet with different stats, weapons, rules or points. ` +
+      `Re-run \`lookup_unit\` with game_mode "heresy" and the \`faction\` (or \`datasheet_id\`) set to one of:\n\n${lines.join("\n")}`
+    );
+  }
+  const alsoIn = (contents.get(heresyContentKey(top)) ?? []).filter((u) => u !== top).map((u) => u.faction);
+  return formatHeresyUnit(top, HERESY_FACTIONS, alsoIn) + fortyKHint(top.name);
+}
+
 // === Tool Registration ===
 
 export function registerLookupUnit(server: McpServer): void {
   server.tool(
     "lookup_unit",
-    "Look up a Warhammer 40K unit or Kill Team operative datasheet by name. Returns stats, weapons, abilities, and keywords; for 40K units also the unit composition (how many of each model) and wargear options (default loadout and what each model can take).",
+    "Look up a Warhammer 40K unit, Kill Team operative, or Horus Heresy (3rd edition, '30K') unit datasheet by name. " +
+      "Returns stats, weapons, abilities/special rules, and keywords; for 40K units also the unit composition (how many " +
+      "of each model) and wargear options (default loadout and what each model can take). Use game_mode 'heresy' for Horus Heresy.",
     {
       unit_name: z.string().describe("Name or partial name of the unit to search for"),
       faction: z
         .string()
         .optional()
-        .describe("Optional faction name to narrow results (e.g. 'Chaos Space Marines', 'Astartes')"),
+        .describe(
+          "Optional faction name to narrow results (e.g. 'Chaos Space Marines', 'Astartes'; for Horus Heresy a Legion " +
+            "such as 'Ultramarines', 'Solar Auxilia', 'Mechanicum')",
+        ),
       datasheet_id: z
         .string()
         .optional()
         .describe("Optional exact datasheet ID shown for variants that share a name and faction; pass with faction"),
       game_mode: z
-        .enum(["40k", "40k_10e", "40k_11e", "combat_patrol", "kill_team"])
+        .enum(["40k", "40k_10e", "40k_11e", "combat_patrol", "kill_team", "heresy"])
         .optional()
         .describe(
           "Game mode/edition: defaults to '40k_11e'. Pass '40k_10e' for 10th Edition units, " +
-            "'40k'/'40k_11e' for 11th Edition (current default), or 'kill_team' for Kill Team operatives.",
+            "'40k'/'40k_11e' for 11th Edition (current default), 'kill_team' for Kill Team operatives, " +
+            "or 'heresy' for Horus Heresy 3rd edition (30K) units.",
         ),
     },
     async ({ unit_name, faction, datasheet_id, game_mode }) => {
+      if (game_mode === "heresy") {
+        return { content: [{ type: "text" as const, text: lookupHeresyUnit(unit_name, faction, datasheet_id) }] };
+      }
+
       if (game_mode === "kill_team") {
         let candidates: KillTeamOperative[] = [...KILL_TEAM_OPERATIVES];
 
@@ -280,7 +349,7 @@ export function registerLookupUnit(server: McpServer): void {
           content: [
             {
               type: "text" as const,
-              text: `No unit found matching "${unit_name}".${faction ? ` (faction filter: "${faction}")` : ""}${datasheet_id ? ` (datasheet_id: "${datasheet_id}")` : ""}\n\n${suggestion}`,
+              text: `No unit found matching "${unit_name}".${faction ? ` (faction filter: "${faction}")` : ""}${datasheet_id ? ` (datasheet_id: "${datasheet_id}")` : ""}\n\n${suggestion}${heresyHint(unit_name)}`,
             },
           ],
         };
@@ -311,7 +380,7 @@ export function registerLookupUnit(server: McpServer): void {
         content: [
           {
             type: "text" as const,
-            text: `${formatModeStamp(gameSystem)}\n\n${formatUnit(unit)}`,
+            text: `${formatModeStamp(gameSystem)}\n\n${formatUnit(unit)}${heresyHint(unit.name) || heresyHint(unit_name)}`,
           },
         ],
       };
