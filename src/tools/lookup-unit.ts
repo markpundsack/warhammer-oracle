@@ -14,7 +14,7 @@ import {
   resolveHomeDatasheet,
 } from "../lib/unit-match.js";
 import type { AbilityVariantException, HomeDatasheetResolution } from "../lib/unit-match.js";
-import { shouldCrossOver, stripCatalogueTag, scoreTaggedName, withCrossSystemNote } from "../lib/cross-system.js";
+import { otherGamePointer, shouldCrossOver, stripCatalogueTag, scoreTaggedName, withCrossSystemNote } from "../lib/cross-system.js";
 import { formatCompositionSection, formatModeStamp, formatUnitSize, formatWargearSection } from "../lib/format.js";
 import type {
   HeresyUnit,
@@ -240,8 +240,7 @@ function lookupHeresyUnit(unitName: string, faction?: string, datasheetId?: stri
       text:
         `${heresyStamp()}\n\nNo ${HERESY_LABEL} unit found matching "${unitName}".` +
         `${faction ? ` (faction filter: "${faction}")` : ""}${datasheetId ? ` (datasheet_id: "${datasheetId}")` : ""}\n\n` +
-        `Try a partial name or check the spelling. Note: Legion units are named without "Legion" (e.g. "Tactical Squad").` +
-        fortyKHint(unitName),
+        `Try a partial name or check the spelling. Note: Legion units are named without "Legion" (e.g. "Tactical Squad").`,
     };
   }
   const score = ranked[0].score;
@@ -285,7 +284,7 @@ function lookup40kUnit(
       : `Try a partial name or check the spelling.`;
     return {
       score: 0,
-      text: `No unit found matching "${unitName}".${faction ? ` (faction filter: "${faction}")` : ""}${datasheetId ? ` (datasheet_id: "${datasheetId}")` : ""}\n\n${suggestion}${heresyHint(unitName)}`,
+      text: `No unit found matching "${unitName}".${faction ? ` (faction filter: "${faction}")` : ""}${datasheetId ? ` (datasheet_id: "${datasheetId}")` : ""}\n\n${suggestion}`,
     };
   }
   const score = scoreTaggedName(unitName, matches[0].name);
@@ -434,14 +433,11 @@ export function registerLookupUnit(server: McpServer): void {
     async ({ unit_name, faction, datasheet_id, game_mode }) => {
       if (game_mode === "heresy") {
         const heresy = lookupHeresyUnit(unit_name, faction, datasheet_id);
-        // No good Heresy match but a clear 40K one: answer from 40K.
+        // Explicit game_mode: never substitute 40K, but point at a clear 40K match.
         if (!datasheet_id) {
           const fortyK = lookup40kUnit(unit_name, faction, undefined, "wh40k-11e");
           if (shouldCrossOver(heresy.score, fortyK.score)) {
-            const closest = heresy.score >= 0.55 ? ` Closest Horus Heresy unit: ${heresy.closest}.` : "";
-            return reply(
-              withCrossSystemNote(fortyK.text, formatModeStamp("wh40k-11e"), `Found in 40K, not Horus Heresy.${closest}`),
-            );
+            return reply(withCrossSystemNote(heresy.text, heresyStamp(), otherGamePointer("40k", fortyK.closest!)));
           }
         }
         return reply(heresy.text);
@@ -493,12 +489,16 @@ export function registerLookupUnit(server: McpServer): void {
       // Default: 40K units (11th Edition unless 10th Edition is explicitly requested)
       const gameSystem = game_mode === "40k_10e" ? "wh40k-10e" : "wh40k-11e";
       const fortyK = lookup40kUnit(unit_name, faction, datasheet_id, gameSystem);
-      // No game_mode: a name with no good 40K match but a clear Heresy one answers from Heresy.
-      if (game_mode === undefined && !datasheet_id) {
+      if (!datasheet_id) {
         const heresy = lookupHeresyUnit(unit_name, faction);
         if (shouldCrossOver(fortyK.score, heresy.score)) {
-          const closest = fortyK.score >= 0.55 ? ` Closest 40K unit: ${fortyK.closest}.` : "";
-          return reply(withCrossSystemNote(heresy.text, heresyStamp(), `Found in Horus Heresy, not 40K.${closest}`));
+          // No game_mode: a name with no good 40K match but a clear Heresy one answers from Heresy.
+          if (game_mode === undefined) {
+            const closest = fortyK.score >= 0.55 ? ` Closest 40K unit: ${fortyK.closest}.` : "";
+            return reply(withCrossSystemNote(heresy.text, heresyStamp(), `Found in Horus Heresy, not 40K.${closest}`));
+          }
+          // Explicit 40K mode: keep the 40K answer, add a pointer.
+          return reply(withCrossSystemNote(fortyK.text, formatModeStamp(gameSystem), otherGamePointer("heresy", heresy.closest!)));
         }
       }
       return reply(fortyK.text);

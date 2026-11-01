@@ -47,6 +47,10 @@ export type WeaponNameMatch = {
   closest: boolean;
   /** Display names of the best near-misses, for "did you mean". */
   suggestions: string[];
+  /** `scoreName` of the best-matching weapon name, 0 when nothing matched. */
+  score: number;
+  /** Display name of the best-matching weapon, if any. */
+  best?: string;
 };
 
 /**
@@ -127,14 +131,16 @@ export function matchWeaponName(
   const suggestions = ranked
     .slice(0, maxSuggestions)
     .map((r) => mostCommon(spellings.get(r.item) ?? [r.item]));
-  if (ranked.length === 0) return { names: new Set(), closest: false, suggestions };
+  if (ranked.length === 0) return { names: new Set(), closest: false, suggestions, score: 0 };
 
   const top = ranked[0].score;
+  const best = mostCommon(spellings.get(ranked[0].item) ?? [ranked[0].item]);
   const topTier = ranked.filter((r) => Math.abs(r.score - top) < 1e-9).map((r) => r.item);
-  if (top >= 0.95) return { names: new Set(topTier), closest: false, suggestions: [] };
+  if (top >= 0.95) return { names: new Set(topTier), closest: false, suggestions: [], score: top, best };
   // Below the substring tier (0.55) the score is pure trigram similarity: a misspelling.
-  if (top < 0.55 && topTier.length === 1) return { names: new Set(topTier), closest: true, suggestions: [] };
-  return { names: new Set(), closest: false, suggestions };
+  if (top < 0.55 && topTier.length === 1)
+    return { names: new Set(topTier), closest: true, suggestions: [], score: top, best };
+  return { names: new Set(), closest: false, suggestions, score: top, best };
 }
 
 /**

@@ -38,3 +38,13 @@ export function withCrossSystemNote(text: string, stamp: string, note: string): 
   const line = `_${note}_`;
   return stamp && text.startsWith(stamp) ? `${stamp}\n\n${line}${text.slice(stamp.length)}` : `${line}\n\n${text}`;
 }
+
+/**
+ * With an explicit game_mode, the other game's result is never substituted:
+ * the requested game's answer (often "not found") gets this one line instead.
+ */
+export function otherGamePointer(other: "heresy" | "40k", name: string): string {
+  return other === "heresy"
+    ? `Not in Warhammer 40,000; Horus Heresy has "${name}" (game_mode "heresy").`
+    : `Not in Horus Heresy; Warhammer 40,000 has "${name}" (game_mode "40k").`;
+}

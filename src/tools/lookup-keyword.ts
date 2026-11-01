@@ -4,8 +4,7 @@ import { KEYWORDS } from "../data/keywords.js";
 import { SHARED_RULES } from "../data/rules.js";
 import { HERESY_SPECIAL_RULES } from "../data/heresy-rules.js";
 import { fuzzySearch, normalizeName, scoreName } from "../lib/search.js";
-import { shouldCrossOver, withCrossSystemNote } from "../lib/cross-system.js";
-import { formatModeStamp } from "../lib/format.js";
+import { otherGamePointer, shouldCrossOver, withCrossSystemNote } from "../lib/cross-system.js";
 import { findHeresyRules, formatHeresyRule, heresyStamp, scoreHeresyRule, splitRuleQuery, HERESY_LABEL } from "../lib/heresy-format.js";
 import type { KeywordDefinition, GameMode } from "../types.js";
 
@@ -129,10 +128,7 @@ function lookup40kKeyword(keyword: string, gameMode: GameMode | undefined): Look
   return {
     score: 0,
     text:
-      `Keyword "${keyword}" not found in the curated keywords or rules data.\n\nTry a different spelling or a partial name. Some keywords include: Devastating Wounds, Lethal Hits, Feel No Pain, Deep Strike, Invulnerable Save.` +
-      (findHeresyRules(HERESY_SPECIAL_RULES, keyword, 0.82).length > 0
-        ? `\n\n_"${keyword}" matches a ${HERESY_LABEL} special rule; ask with game_mode "heresy" for it._`
-        : ""),
+      `Keyword "${keyword}" not found in the curated keywords or rules data.\n\nTry a different spelling or a partial name. Some keywords include: Devastating Wounds, Lethal Hits, Feel No Pain, Deep Strike, Invulnerable Save.`,
   };
 }
 
@@ -162,24 +158,24 @@ export function registerLookupKeyword(server: McpServer): void {
 
       if (game_mode === "heresy") {
         const heresy = lookupHeresyRule(keyword);
-        // No good Heresy match but a clear 40K one: answer from 40K.
+        // Explicit game_mode: never substitute 40K, but point at a clear 40K match.
         const fortyK = lookup40kKeyword(keyword, undefined);
         if (shouldCrossOver(heresy.score, fortyK.score)) {
-          const closest = heresy.score >= 0.55 ? ` Closest Horus Heresy rule: ${heresy.closest}.` : "";
-          const stamp = formatModeStamp("wh40k-11e");
-          return reply(withCrossSystemNote(`${stamp}\n\n${fortyK.text}`, stamp, `Found in 40K, not Horus Heresy.${closest}`));
+          return reply(withCrossSystemNote(heresy.text, heresyStamp(), otherGamePointer("40k", fortyK.closest!)));
         }
         return reply(heresy.text);
       }
 
       const fortyK = lookup40kKeyword(keyword, game_mode as GameMode | undefined);
-      // No game_mode: no good 40K match but a clear Heresy rule answers from Heresy.
-      if (game_mode === undefined) {
-        const heresy = lookupHeresyRule(keyword);
-        if (shouldCrossOver(fortyK.score, heresy.score)) {
+      const heresy = lookupHeresyRule(keyword);
+      if (shouldCrossOver(fortyK.score, heresy.score)) {
+        // No game_mode: no good 40K match but a clear Heresy rule answers from Heresy.
+        if (game_mode === undefined) {
           const closest = fortyK.score >= 0.55 ? ` Closest 40K keyword: ${fortyK.closest}.` : "";
           return reply(withCrossSystemNote(heresy.text, heresyStamp(), `Found in Horus Heresy, not 40K.${closest}`));
         }
+        // Explicit 40K mode: keep the 40K answer, add a pointer.
+        if (game_mode === "40k") return reply(withCrossSystemNote(fortyK.text, "", otherGamePointer("heresy", heresy.closest!)));
       }
       return reply(fortyK.text);
     },
