@@ -7,6 +7,7 @@ import { HERESY_UNITS, HERESY_FACTIONS } from "../data/heresy-units.js";
 import { fuzzySearch, normalizeName, rankByName } from "../lib/search.js";
 import { formatHeresyUnit, heresyContentKey, heresyStamp, HERESY_LABEL } from "../lib/heresy-format.js";
 import { rankUnitMatches, ambiguousFactionMatches, datasheetContentKey } from "../lib/unit-match.js";
+import { otherGamePointer, shouldCrossOver, stripCatalogueTag, scoreTaggedName, withCrossSystemNote } from "../lib/cross-system.js";
 import { formatModeStamp, formatUnitSize } from "../lib/format.js";
 import type {
   HeresyUnit,
@@ -171,12 +172,12 @@ function formatFactionDisambiguation(
 // === Horus Heresy ===
 
 const HERESY_UNIT_NAMES = new Set(HERESY_UNITS.map((u) => normalizeName(u.name)));
-const UNIT_NAMES_40K = new Set([...UNITS_11E, ...UNITS].map((u) => normalizeName(u.name)));
+const UNIT_NAMES_40K = new Set([...UNITS_11E, ...UNITS].map((u) => normalizeName(stripCatalogueTag(u.name))));
 
 /** A one-line pointer to the other game, only when a datasheet of exactly this name exists there. */
 function heresyHint(name: string): string {
-  return HERESY_UNIT_NAMES.has(normalizeName(name))
-    ? `\n\n_"${name}" is also a ${HERESY_LABEL} unit; ask with game_mode "heresy" for that datasheet._`
+  return HERESY_UNIT_NAMES.has(normalizeName(stripCatalogueTag(name)))
+    ? `\n\n_"${stripCatalogueTag(name)}" is also a ${HERESY_LABEL} unit; ask with game_mode "heresy" for that datasheet._`
     : "";
 }
 
@@ -186,7 +187,14 @@ function fortyKHint(name: string): string {
     : "";
 }
 
-function lookupHeresyUnit(unitName: string, faction?: string, datasheetId?: string): string {
+/** A lookup's response, how well its best match names the query (0 when nothing matched), and that match's name. */
+type LookupResult = { text: string; score: number; closest?: string };
+
+function reply(text: string) {
+  return { content: [{ type: "text" as const, text }] };
+}
+
+function lookupHeresyUnit(unitName: string, faction?: string, datasheetId?: string): LookupResult {
   let candidates: HeresyUnit[] = [...HERESY_UNITS];
   // A Legion name also finds the generic Legiones Astartes units it can field.
   if (faction) candidates = fuzzySearch(candidates, faction, ["faction", "availableIn"]);
@@ -198,13 +206,16 @@ function lookupHeresyUnit(unitName: string, faction?: string, datasheetId?: stri
     (a, b) => b.score - a.score || a.item.name.length - b.item.name.length,
   );
   if (ranked.length === 0) {
-    return (
-      `${heresyStamp()}\n\nNo ${HERESY_LABEL} unit found matching "${unitName}".` +
-      `${faction ? ` (faction filter: "${faction}")` : ""}${datasheetId ? ` (datasheet_id: "${datasheetId}")` : ""}\n\n` +
-      `Try a partial name or check the spelling. Note: Legion units are named without "Legion" (e.g. "Tactical Squad").` +
-      fortyKHint(unitName)
-    );
+    return {
+      score: 0,
+      text:
+        `${heresyStamp()}\n\nNo ${HERESY_LABEL} unit found matching "${unitName}".` +
+        `${faction ? ` (faction filter: "${faction}")` : ""}${datasheetId ? ` (datasheet_id: "${datasheetId}")` : ""}\n\n` +
+        `Try a partial name or check the spelling. Note: Legion units are named without "Legion" (e.g. "Tactical Squad").`,
+    };
   }
+  const score = ranked[0].score;
+  const closest = ranked[0].item.name;
 
   // Same-name datasheets: identical copies (e.g. each Legion's own "Inductii
   // Squad") collapse to one; genuinely different ones need a faction.
@@ -212,16 +223,50 @@ function lookupHeresyUnit(unitName: string, faction?: string, datasheetId?: stri
   const sameName = ranked.map((r) => r.item).filter((u) => normalizeName(u.name) === normalizeName(top.name));
   const contents = new Map<string, HeresyUnit[]>();
   for (const u of sameName) contents.set(heresyContentKey(u), [...(contents.get(heresyContentKey(u)) ?? []), u]);
-  if (contents.size > 1 && ranked[0].score >= 0.9) {
+  if (contents.size > 1 && score >= 0.9) {
     const options = [...contents.values()].map((group) => group[0]);
     const lines = options.map((o) => `- **${o.name}** (${o.faction}) — datasheet_id: \`${o.id}\``);
-    return (
-      `${heresyStamp()}\n\n"${top.name}" is more than one ${HERESY_LABEL} datasheet with different stats, weapons, rules or points. ` +
-      `Re-run \`lookup_unit\` with game_mode "heresy" and the \`faction\` (or \`datasheet_id\`) set to one of:\n\n${lines.join("\n")}`
-    );
+    return {
+      score,
+      closest,
+      text:
+        `${heresyStamp()}\n\n"${top.name}" is more than one ${HERESY_LABEL} datasheet with different stats, weapons, rules or points. ` +
+        `Re-run \`lookup_unit\` with game_mode "heresy" and the \`faction\` (or \`datasheet_id\`) set to one of:\n\n${lines.join("\n")}`,
+    };
   }
   const alsoIn = (contents.get(heresyContentKey(top)) ?? []).filter((u) => u !== top).map((u) => u.faction);
-  return formatHeresyUnit(top, HERESY_FACTIONS, alsoIn) + fortyKHint(top.name);
+  return { score, closest, text: formatHeresyUnit(top, HERESY_FACTIONS, alsoIn) + fortyKHint(top.name) };
+}
+
+function lookup40kUnit(
+  unitName: string,
+  faction: string | undefined,
+  datasheetId: string | undefined,
+  gameSystem: "wh40k-10e" | "wh40k-11e",
+): LookupResult {
+  let candidates: Unit[] = [...(gameSystem === "wh40k-10e" ? UNITS : UNITS_11E)];
+  if (faction) candidates = fuzzySearch(candidates, faction, ["faction"]);
+  if (datasheetId) candidates = candidates.filter((unit) => unit.id === datasheetId);
+
+  const matches = rankUnitMatches(candidates, unitName, datasheetContentKey);
+  if (matches.length === 0) {
+    const suggestion = faction
+      ? `Try a different faction or check the spelling.`
+      : `Try a partial name or check the spelling.`;
+    return {
+      score: 0,
+      text: `No unit found matching "${unitName}".${faction ? ` (faction filter: "${faction}")` : ""}${datasheetId ? ` (datasheet_id: "${datasheetId}")` : ""}\n\n${suggestion}`,
+    };
+  }
+  const score = scoreTaggedName(unitName, matches[0].name);
+  const closest = matches[0].name;
+  const hint = heresyHint(matches[0].name) || heresyHint(unitName);
+
+  const ambiguous = ambiguousFactionMatches(matches, unitName, datasheetContentKey);
+  if (ambiguous) {
+    return { score, closest, text: `${formatFactionDisambiguation(matches[0].name, ambiguous)}${hint}` };
+  }
+  return { score, closest, text: `${formatModeStamp(gameSystem)}\n\n${formatUnit(matches[0])}${hint}` };
 }
 
 // === Tool Registration ===
@@ -255,7 +300,15 @@ export function registerLookupUnit(server: McpServer): void {
     },
     async ({ unit_name, faction, datasheet_id, game_mode }) => {
       if (game_mode === "heresy") {
-        return { content: [{ type: "text" as const, text: lookupHeresyUnit(unit_name, faction, datasheet_id) }] };
+        const heresy = lookupHeresyUnit(unit_name, faction, datasheet_id);
+        // Explicit game_mode: never substitute 40K, but point at a clear 40K match.
+        if (!datasheet_id) {
+          const fortyK = lookup40kUnit(unit_name, faction, undefined, "wh40k-11e");
+          if (shouldCrossOver(heresy.score, fortyK.score)) {
+            return reply(withCrossSystemNote(heresy.text, heresyStamp(), otherGamePointer("40k", fortyK.closest!)));
+          }
+        }
+        return reply(heresy.text);
       }
 
       if (game_mode === "kill_team") {
@@ -303,47 +356,20 @@ export function registerLookupUnit(server: McpServer): void {
 
       // Default: 40K units (11th Edition unless 10th Edition is explicitly requested)
       const gameSystem = game_mode === "40k_10e" ? "wh40k-10e" : "wh40k-11e";
-      let candidates: Unit[] = [...(gameSystem === "wh40k-10e" ? UNITS : UNITS_11E)];
-
-      if (faction) {
-        candidates = fuzzySearch(candidates, faction, ["faction"]);
+      const fortyK = lookup40kUnit(unit_name, faction, datasheet_id, gameSystem);
+      if (!datasheet_id) {
+        const heresy = lookupHeresyUnit(unit_name, faction);
+        if (shouldCrossOver(fortyK.score, heresy.score)) {
+          // No game_mode: a name with no good 40K match but a clear Heresy one answers from Heresy.
+          if (game_mode === undefined) {
+            const closest = fortyK.score >= 0.55 ? ` Closest 40K unit: ${fortyK.closest}.` : "";
+            return reply(withCrossSystemNote(heresy.text, heresyStamp(), `Found in Horus Heresy, not 40K.${closest}`));
+          }
+          // Explicit 40K mode: keep the 40K answer, add a pointer.
+          return reply(withCrossSystemNote(fortyK.text, formatModeStamp(gameSystem), otherGamePointer("heresy", heresy.closest!)));
+        }
       }
-      if (datasheet_id) candidates = candidates.filter((unit) => unit.id === datasheet_id);
-
-      const matches = rankUnitMatches(candidates, unit_name, datasheetContentKey);
-
-      if (matches.length === 0) {
-        const suggestion = faction
-          ? `Try a different faction or check the spelling.`
-          : `Try a partial name or check the spelling.`;
-        return {
-          content: [
-            {
-              type: "text" as const,
-              text: `No unit found matching "${unit_name}".${faction ? ` (faction filter: "${faction}")` : ""}${datasheet_id ? ` (datasheet_id: "${datasheet_id}")` : ""}\n\n${suggestion}${heresyHint(unit_name)}`,
-            },
-          ],
-        };
-      }
-
-      const ambiguous = ambiguousFactionMatches(matches, unit_name, datasheetContentKey);
-      if (ambiguous) {
-        return {
-          content: [
-            { type: "text" as const, text: formatFactionDisambiguation(matches[0].name, ambiguous) },
-          ],
-        };
-      }
-
-      const unit = matches[0];
-      return {
-        content: [
-          {
-            type: "text" as const,
-            text: `${formatModeStamp(gameSystem)}\n\n${formatUnit(unit)}${heresyHint(unit.name) || heresyHint(unit_name)}`,
-          },
-        ],
-      };
+      return reply(fortyK.text);
     },
   );
 }
