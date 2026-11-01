@@ -335,4 +335,50 @@ describe("lookup_unit tool", () => {
     expect(text).not.toContain("### Unit Composition");
     expect(text).not.toContain("### Wargear Options");
   });
+
+  // Field test rows A1/E2: a bare name shared by many armies answered "which army?".
+  it("answers Bloodletters directly from Chaos Daemons and notes the World Eaters version", async () => {
+    const result = await client.callTool({
+      name: "lookup_unit",
+      arguments: { unit_name: "Bloodletters", game_mode: "40k_11e" },
+    });
+    const text = (result.content as Array<{ type: string; text: string }>)[0].text;
+    expect(text).toContain("### Unit Profiles");
+    expect(text).toContain("**Faction:** Chaos Daemons");
+    expect(text).toMatch(/Other versions:.*World Eaters \(90 pts, OC 1/);
+    expect(text).not.toContain("more than one datasheet");
+  });
+
+  it("answers Land Raider directly from Space Marines and notes the Grey Knights version", async () => {
+    const result = await client.callTool({
+      name: "lookup_unit",
+      arguments: { unit_name: "Land Raider", game_mode: "40k_11e" },
+    });
+    const text = (result.content as Array<{ type: string; text: string }>)[0].text;
+    expect(text).toContain("### Unit Profiles");
+    expect(text).toContain("**Faction:** Adeptus Astartes - Space Marines");
+    expect(text).toMatch(/Other versions:.*Grey Knights \(220 pts/);
+    expect(text).not.toContain("more than one datasheet");
+  });
+
+  it("still disambiguates units whose legion versions genuinely differ (Helbrute)", async () => {
+    const result = await client.callTool({
+      name: "lookup_unit",
+      arguments: { unit_name: "Helbrute", game_mode: "40k_11e" },
+    });
+    const text = (result.content as Array<{ type: string; text: string }>)[0].text;
+    expect(text).toContain("more than one datasheet");
+    expect(text).toContain("**Helbrute** (World Eaters)");
+    expect(text).not.toContain("### Unit Profiles");
+  });
+
+  it("still offers both World Eaters Bloodletters when the faction is given", async () => {
+    const result = await client.callTool({
+      name: "lookup_unit",
+      arguments: { unit_name: "Bloodletters", faction: "World Eaters", game_mode: "40k_11e" },
+    });
+    const text = (result.content as Array<{ type: string; text: string }>)[0].text;
+    expect(text).toContain("datasheet_id");
+    expect(text).not.toContain("### Unit Profiles");
+  });
 });
