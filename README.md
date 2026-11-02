@@ -282,6 +282,7 @@ Pass `game_mode: "heresy"` to `lookup_unit`, `lookup_weapon`, `search_units`, `l
 "How does Return Fire work?" / "What does Pinned do?"           → lookup_keyword, game_mode heresy
 "What's in a Crusade Primary Detachment?"                      → lookup_keyword, game_mode heresy
 "What happens in the Assault Phase?"                            → lookup_phase, game_mode heresy
+"What's the Night Lords Rite of War?"                           → lookup_keyword, game_mode heresy
 "What's the profile of a graviton gun?"                         → lookup_weapon (no game_mode: Heresy-only, so answered from Heresy)
 ```
 
@@ -292,9 +293,10 @@ Pass `game_mode: "heresy"` to `lookup_unit`, `lookup_weapon`, `search_units`, `l
   - special rules from BSData (`Bulky (6)`, `bulky` and `Bulky (X)` all find `Bulky (X)`);
   - from BSData profiles: Reactions and Gambits (including Legion and unit ones, with what grants them), psychic powers and psychic reactions, wargear, battlefield assets, and the detachments of the Crusade Force Organisation Chart with their slots;
   - from the core rulebook (via [Wahapedia](https://wahapedia.ru/heresy3/the-rules/core-rules/), since BSData has no core rules): the turn sequence and every sub-phase, Statuses (Pinned, Suppressed, Stunned, Routed), core and advanced Reactions, Reaction Allotments, challenges and the core Gambits, principles of combat (tests, saves, vehicles, flyers, transports, terrain, psychic powers and Perils of the Warp), army building and detachment types, and the core missions (deployment maps, objectives, mission special rules). Each answer links the Wahapedia section.
+  - from each army list (Wahapedia faction pages): every Legion's Rite of War and Legion Tactica (`Night Lords Rite of War` and `Night Lords Legion Tactica` both work), Legion Advanced Reactions and extra detachments, armouries and wargear lists, Prime Advantages, Solar Auxilia Cohort Doctrines, and the Mechanicum, Militia, Knight, Titan, Custodes, Daemon and Cult army rules.
 - **`lookup_phase` / `game_flow`**: the Heresy turn sequence (Start, Movement, Shooting, Assault, End) with each phase's sub-phases and the Core Reaction the Reactive Player may use in it, generated from the core rules data.
 - Generic Legion units (Tactical Squad, Contemptor Dreadnought, Rhino, ...) are listed once, under **Legiones Astartes**, with every Legion that can field them. Legion catalogue names are cleaned up (`XIII - Ultramarines` → `Ultramarines`, XIII Legion). Units are named as in the data: the Legion Tactical Squad is `Tactical Squad`.
-- **Not yet covered for Heresy:** `compare_units`, the wound calculator, and Rites of War / Legion army rules. Rules and options that depend on army choices (a Rite of War, a particular Legion, an upgrade) are listed separately or left out. Points are base costs before options.
+- **Not yet covered for Heresy:** `compare_units` and the wound calculator. Rules and options that depend on army choices (a Rite of War, a particular Legion, an upgrade) are listed separately or left out. Points are base costs before options.
 
 ## Data
 
@@ -309,6 +311,7 @@ All data is embedded at build time — no network calls at runtime. Data is sync
 | Horus Heresy weapons / special rules | 741 / 221 | BSData (auto-extracted) |
 | Horus Heresy Reactions, Gambits, powers, wargear, assets, detachments | 356 | BSData profiles (auto-extracted) |
 | Horus Heresy core rules sections | 365 | [Wahapedia](https://wahapedia.ru/heresy3/the-rules/core-rules/) (`scripts/fetch-heresy-core-rules.ts`) |
+| Horus Heresy army list rules (Rites of War, Doctrines, armouries, …) | 994 | Wahapedia faction pages (same script) |
 | Detachments (11th / 10th Edition) | 259 / 208 | BSData (auto-extracted) |
 | Enhancements (11th / 10th Edition) | 895 / 827 | BSData (auto-extracted) |
 | Stratagems | 1,316 | Hand-curated (Core Rules + detachment-specific per faction) |
@@ -349,7 +352,7 @@ To refresh only the Horus Heresy data (optionally from a local clone of the BSDa
 ```bash
 npm run fetch-data -- --only=heresy
 npm run fetch-data -- --only=heresy --heresy-dir=/path/to/horus-heresy-3rd-edition
-npx tsx scripts/fetch-heresy-core-rules.ts          # the Heresy core rules, from Wahapedia
+npx tsx scripts/fetch-heresy-core-rules.ts          # the Heresy core rules and army list rules, from Wahapedia
 ```
 
 ## License

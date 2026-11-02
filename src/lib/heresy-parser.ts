@@ -1105,9 +1105,11 @@ export function parseHeresyProfileRules(files: HeresySourceFile[]): HeresySpecia
         if (seen.has(key)) continue;
         seen.add(key);
         const context = [...ancestors].reverse().find((a) => a !== name && !GENERIC_CONTEXT.test(a)) ?? "";
+        // "Auxiliary - Deathwing Conclave" / "Apex - Iron Phalanx": players say the name without the slot type
+        const short = kind === "detachment" ? name.match(/^(?:auxiliary|apex|primary|mech)\s+-\s+(.+)$/i)?.[1] : undefined;
         out.push({
           name,
-          aliases: [],
+          aliases: short ? [short] : [],
           summary,
           description: description || summary,
           source,

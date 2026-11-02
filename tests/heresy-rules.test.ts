@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll } from "vitest";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { createServer } from "../src/server.js";
+import { HERESY_ARMY_RULES } from "../src/data/heresy-army-rules.js";
 import { HERESY_CORE_RULES } from "../src/data/heresy-core-rules.js";
 import { HERESY_PROFILE_RULES } from "../src/data/heresy-profile-rules.js";
 import { PHASES_HERESY } from "../src/data/phases-heresy.js";
@@ -131,6 +132,33 @@ describe("lookup_keyword with game_mode heresy (rules beyond special rules)", ()
   it("does not pull a generic 40K question over to Heresy core rules when no game_mode is given", async () => {
     const text = await call("lookup_keyword", { keyword: "Line of Sight" });
     expect(text).not.toContain("Found in Horus Heresy");
+  });
+});
+
+describe("Heresy army list rules (Wahapedia faction pages)", () => {
+  it("has every Legion's Rite of War and Solar Auxilia's Cohort Doctrines", () => {
+    const rites = HERESY_ARMY_RULES.filter((r) => r.kind === "rite of war").map((r) => r.name);
+    expect(rites.length).toBeGreaterThanOrEqual(18);
+    expect(rites).toContain("Rite of War: Legiones Astartes Night Lords");
+    expect(HERESY_ARMY_RULES.some((r) => r.name === "Cohort Doctrine: Solar Pattern Cohort")).toBe(true);
+  });
+
+  it("keeps answers voice-sized and skips the duplicated Special Rules dump", () => {
+    for (const r of HERESY_ARMY_RULES) expect(r.description.length, r.name).toBeLessThanOrEqual(8200);
+    expect(HERESY_ARMY_RULES.some((r) => r.name === "Special Rules")).toBe(false);
+  });
+
+  it("lookup_keyword finds a Rite of War by the name players say", async () => {
+    const text = await call("lookup_keyword", { keyword: "Night Lords Rite of War", game_mode: "heresy" });
+    expect(text).toContain("# Rite of War: Legiones Astartes Night Lords");
+    expect(text).toContain("**Type:** Rite of War");
+    expect(text).toContain("A Talent for Murder");
+  });
+
+  it("lookup_keyword answers a Legion detachment with its slots (BSData) over Wahapedia's image-only entry", async () => {
+    const text = await call("lookup_keyword", { keyword: "Deathwing Conclave", game_mode: "heresy" });
+    expect(text).toContain("# Auxiliary - Deathwing Conclave");
+    expect(text).toContain("1 Retinue (1 Prime)");
   });
 });
 

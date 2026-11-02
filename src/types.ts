@@ -283,7 +283,9 @@ export type HeresyRuleKind =
   | "detachment"
   | "status"
   | "core rule"
-  | "mission";
+  | "mission"
+  | "rite of war"
+  | "army rule";
 
 export type HeresyFaction = {
   /** Cleaned catalogue name, e.g. "Ultramarines". */

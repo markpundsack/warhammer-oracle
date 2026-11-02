@@ -3,11 +3,13 @@
  * special rules and the profile-based rules (Reactions, Gambits, psychic
  * powers, wargear, assets, detachments) from BSData, plus the core rulebook
  * sections (turn sequence, statuses, core Reactions and Gambits, missions,
- * the Crusade Force Organisation Chart) from Wahapedia.
+ * the Crusade Force Organisation Chart) and each army list's rules (Rites of
+ * War, Legion Advanced Reactions, detachments, armouries) from Wahapedia.
  *
  * Order matters on a tied score: a special rule beats a profile rule beats a
  * core rules section of the same name.
  */
+import { HERESY_ARMY_RULES } from "../data/heresy-army-rules.js";
 import { HERESY_CORE_RULES } from "../data/heresy-core-rules.js";
 import { HERESY_PROFILE_RULES } from "../data/heresy-profile-rules.js";
 import { HERESY_SPECIAL_RULES } from "../data/heresy-rules.js";
@@ -16,6 +18,7 @@ import type { HeresySpecialRule } from "../types.js";
 export const HERESY_RULE_CORPUS: HeresySpecialRule[] = [
   ...HERESY_SPECIAL_RULES,
   ...HERESY_PROFILE_RULES,
+  ...HERESY_ARMY_RULES,
   ...HERESY_CORE_RULES,
 ];
 

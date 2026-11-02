@@ -8,8 +8,10 @@
  * the core rulebook, so this is the one Heresy source outside BSData (the 40K
  * stratagem baselines already cite Wahapedia the same way).
  *
+ * Also writes src/data/heresy-army-rules.ts from the army list pages (ARMY_RULE_PAGES).
+ *
  * Usage: npx tsx scripts/fetch-heresy-core-rules.ts
- *        npx tsx scripts/fetch-heresy-core-rules.ts --html-dir=/path/to/saved/pages   (offline: <page>.html files)
+ *        npx tsx scripts/fetch-heresy-core-rules.ts --html-dir=/path/to/saved/pages   (offline: <page>.html, factions/<slug>.html)
  *
  * Wahapedia's robots.txt allows /heresy3/ (it disallows /heresy3_/). Pages are
  * fetched one at a time with a pause between them.
@@ -21,11 +23,32 @@ import type { HeresyRuleKind, HeresySpecialRule } from "../src/types.js";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const BASE = "https://wahapedia.ru/heresy3/the-rules";
+const FACTIONS_BASE = "https://wahapedia.ru/heresy3/factions";
 
 export const CORE_RULE_PAGES = [
   { slug: "the-rules-of-battle", title: "The Rules of Battle" },
   { slug: "principles-of-combat", title: "Principles of Combat" },
   { slug: "battles-in-the-age-of-darkness", title: "Battles in the Age of Darkness" },
+] as const;
+
+/**
+ * Army list pages: each faction's army rules (Rites of War and Legion
+ * Tacticas, Legion Advanced Reactions, extra detachments, Prime Advantages,
+ * armouries and wargear lists). The datasheets are on separate pages and come
+ * from BSData instead.
+ */
+export const ARMY_RULE_PAGES = [
+  { slug: "legiones-astartes", title: "Legiones Astartes" },
+  { slug: "solar-auxilia", title: "Solar Auxilia" },
+  { slug: "the-imperialis-militia", title: "Imperialis Militia" },
+  { slug: "forces-of-the-taghmata", title: "Mechanicum (Forces of the Taghmata)" },
+  { slug: "skitarii-conclaves", title: "Skitarii Conclaves" },
+  { slug: "forces-of-the-emperor", title: "Forces of the Emperor" },
+  { slug: "questoris-familia", title: "Questoris Familia" },
+  { slug: "legio-titanicus", title: "Legio Titanicus" },
+  { slug: "daemons-of-the-ruinstorm", title: "Daemons of the Ruinstorm" },
+  { slug: "cults-abominatio", title: "Cults Abominatio" },
+  { slug: "battlefield-fortifications", title: "Battlefield Fortifications" },
 ] as const;
 
 // === HTML → sections ===
@@ -199,11 +222,34 @@ function aliasesFor(title: string): string[] {
   if (numbered) out.add(numbered[1]);
   const the = title.match(/^The\s+(.+)$/i);
   if (the) out.add(the[1]);
+  // "Rite of War: Legiones Astartes Night Lords" → "Night Lords Rite of War", "Night Lords Legion Tactica"
+  const rite = title.match(/^Rite of War: Legiones (Astartes|Hereticus) (.+)$/);
+  if (rite) {
+    const legion = rite[2].replace(/’/g, "'");
+    if (rite[1] === "Astartes") out.add(`${legion} Rite of War`).add(`${legion} Legion Tactica`);
+    else out.add(`${legion} Hereticus Rite of War`).add(`${legion} Legiones Hereticus`);
+  }
   out.delete(title);
   return [...out];
 }
 
+function armyKindFor(path: string[], title: string): HeresyRuleKind {
+  const p = path.map((x) => x.toLowerCase());
+  const t = title.toLowerCase();
+  const parent = p[p.length - 1] ?? "";
+  if (/^rite of war/.test(t)) return "rite of war";
+  // parents may carry a " — <Legion>" qualifier (GENERIC_TITLES)
+  if (/advanced reactions?( —|$)/.test(parent) || /^advanced reaction/.test(t)) return "reaction";
+  if (/detachments?( —|$)/.test(parent) || /detachments?$/.test(t)) return "detachment";
+  if (p.some((x) => /^armoury of|^wargear lists?$/.test(x))) return "wargear";
+  return "army rule";
+}
+
+/** Section titles that repeat under every Legion: qualified with their parent ("Advanced Reaction — Rite of War: …"). */
+const GENERIC_TITLES = /^(advanced reactions?|additional detachments?|faq|wargear lists?|additional prime advantages?)$/i;
+
 function kindFor(page: string, path: string[], title: string): HeresyRuleKind {
+  if (ARMY_RULE_PAGES.some((a) => a.slug === page)) return armyKindFor(path, title);
   const p = path.map((x) => x.toLowerCase());
   const t = title.toLowerCase();
   if (p.includes("tactical statuses") || /\bstatus$/.test(t)) return "status";
@@ -225,7 +271,12 @@ function leadingBold(text: string): string {
   return m[1].replace(/\s+/g, " ").trim();
 }
 
-export function sectionsToRules(slug: string, pageTitle: string, sections: RawSection[]): HeresySpecialRule[] {
+export function sectionsToRules(
+  slug: string,
+  pageTitle: string,
+  sections: RawSection[],
+  { base = BASE, source = "Horus Heresy 3rd Edition core rules" }: { base?: string; source?: string } = {},
+): HeresySpecialRule[] {
   const out: HeresySpecialRule[] = [];
   const stack: { level: number; title: string; rule: HeresySpecialRule | null }[] = [];
   for (const raw of sections) {
@@ -233,8 +284,9 @@ export function sectionsToRules(slug: string, pageTitle: string, sections: RawSe
     // Resolution Sub-Phases under it: a sub-phase always sits one level under its phase.
     const s = /sub-phase$/i.test(raw.title) && raw.level === 2 ? { ...raw, level: 3 } : raw;
     while (stack.length && stack[stack.length - 1].level >= s.level) stack.pop();
-    const title = titleCase(s.title);
     const path = stack.map((x) => x.title);
+    const plainTitle = titleCase(s.title);
+    const title = GENERIC_TITLES.test(plainTitle) ? `${plainTitle} — ${path[path.length - 1] ?? pageTitle}` : plainTitle;
     const kind = kindFor(slug, path, title);
     const summary = leadingBold(s.text);
     const rule: HeresySpecialRule = {
@@ -242,11 +294,11 @@ export function sectionsToRules(slug: string, pageTitle: string, sections: RawSe
       aliases: aliasesFor(title),
       summary,
       description: s.text,
-      source: "Horus Heresy 3rd Edition core rules",
+      source,
       gameSystem: "horus-heresy-3e",
       kind,
       context: [pageTitle, ...path].join(" > "),
-      url: `${BASE}/${slug}/#${s.anchor}`,
+      url: `${base}/${slug}/#${s.anchor}`,
     };
     // a parent section lists what it covers, so "the Charge Sub-Phase" answers with its steps
     const parent = stack[stack.length - 1]?.rule;
@@ -283,38 +335,73 @@ function cliOption(name: string): string | undefined {
   return process.argv.find((a) => a.startsWith(prefix))?.slice(prefix.length);
 }
 
-async function fetchPage(slug: string): Promise<string> {
-  const res = await fetch(`${BASE}/${slug}/`, { headers: { "User-Agent": "warhammer-oracle (rules reference; github.com/gregario/warhammer-oracle)" } });
-  if (!res.ok) throw new Error(`${slug}: HTTP ${res.status}`);
+async function fetchPage(url: string): Promise<string> {
+  const res = await fetch(url, { headers: { "User-Agent": "warhammer-oracle (rules reference; github.com/gregario/warhammer-oracle)" } });
+  if (!res.ok) throw new Error(`${url}: HTTP ${res.status}`);
   return res.text();
 }
 
-async function main() {
-  const htmlDir = cliOption("html-dir");
-  const rules: HeresySpecialRule[] = [];
-  for (const [i, page] of CORE_RULE_PAGES.entries()) {
-    if (!htmlDir && i > 0) await new Promise((r) => setTimeout(r, 3000));
-    const html = htmlDir ? readFileSync(join(htmlDir, `${page.slug}.html`), "utf-8") : await fetchPage(page.slug);
-    const pageRules = sectionsToRules(page.slug, page.title, splitSections(html));
-    console.log(`${page.slug}: ${pageRules.length} sections`);
-    rules.push(...pageRules);
-  }
-  const path = join(ROOT, "src", "data", "heresy-core-rules.ts");
+/** A voice answer can't use a 10,000-character rule; past this, point at the page. */
+const MAX_RULE_CHARS = 8000;
+
+function capLength(r: HeresySpecialRule): HeresySpecialRule {
+  if (r.description.length <= MAX_RULE_CHARS) return r;
+  const cut = r.description.lastIndexOf("\n", MAX_RULE_CHARS);
+  return { ...r, description: `${r.description.slice(0, cut > 0 ? cut : MAX_RULE_CHARS).trim()}\n\n_(Continues: ${r.url})_` };
+}
+
+function writeData(file: string, constName: string, comment: string, rules: HeresySpecialRule[]): void {
+  const path = join(ROOT, "src", "data", file);
   writeFileSync(
     path,
     [
       "// Auto-generated by scripts/fetch-heresy-core-rules.ts — do not edit manually",
       `// Generated: ${new Date().toISOString()}`,
-      `// Source: ${BASE}/ (Wahapedia; the core rulebook is not in BSData)`,
+      `// Source: ${comment}`,
       "",
       'import type { HeresySpecialRule } from "../types.js";',
       "",
-      `export const HERESY_CORE_RULES: HeresySpecialRule[] = ${JSON.stringify(rules, null, 2)};`,
+      `export const ${constName}: HeresySpecialRule[] = ${JSON.stringify(rules, null, 2)};`,
       "",
     ].join("\n"),
     "utf-8",
   );
-  console.log(`Wrote ${path} (${rules.length} core rule sections)`);
+  console.log(`Wrote ${path} (${rules.length} sections)`);
+}
+
+async function main() {
+  const htmlDir = cliOption("html-dir");
+  let first = true;
+  const load = async (url: string, file: string): Promise<string> => {
+    if (htmlDir) return readFileSync(join(htmlDir, file), "utf-8");
+    if (!first) await new Promise((r) => setTimeout(r, 3000));
+    first = false;
+    return fetchPage(url);
+  };
+
+  const core: HeresySpecialRule[] = [];
+  for (const page of CORE_RULE_PAGES) {
+    const html = await load(`${BASE}/${page.slug}/`, `${page.slug}.html`);
+    const pageRules = sectionsToRules(page.slug, page.title, splitSections(html)).map(capLength);
+    console.log(`${page.slug}: ${pageRules.length} sections`);
+    core.push(...pageRules);
+  }
+  writeData("heresy-core-rules.ts", "HERESY_CORE_RULES", `${BASE}/ (Wahapedia; the core rulebook is not in BSData)`, core);
+
+  const army: HeresySpecialRule[] = [];
+  for (const page of ARMY_RULE_PAGES) {
+    const html = await load(`${FACTIONS_BASE}/${page.slug}/`, join("factions", `${page.slug}.html`));
+    const pageRules = sectionsToRules(page.slug, page.title, splitSections(html), {
+      base: FACTIONS_BASE,
+      source: `${page.title} army list`,
+    })
+      // "Rulebook: Liber Astartes" is a book listing; "Special Rules" repeats BSData's special rules (40,000+ characters)
+      .filter((r) => !/^(rulebook:|special rules$)/i.test(r.name))
+      .map(capLength);
+    console.log(`${page.slug}: ${pageRules.length} sections`);
+    army.push(...pageRules);
+  }
+  writeData("heresy-army-rules.ts", "HERESY_ARMY_RULES", `${FACTIONS_BASE}/ (Wahapedia army list pages)`, army);
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
