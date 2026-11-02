@@ -124,6 +124,18 @@ describe("lookup_keyword with game_mode heresy (rules beyond special rules)", ()
     expect(await call("lookup_keyword", { keyword: "Seize the Initiative", game_mode: "heresy" })).toContain(HERESY_STAMP);
   });
 
+  it("falls back to the rule whose text uses a term that names no rule", async () => {
+    const text = await call("lookup_keyword", { keyword: "snap shots", game_mode: "heresy" });
+    expect(text.startsWith(HERESY_STAMP)).toBe(true);
+    expect(text).toContain('No Heresy rule is named "snap shots"');
+    expect(text.toLowerCase()).toContain("snap shots");
+  });
+
+  it("prefers the core rule over one army list's copy of a generic name", async () => {
+    const text = await call("lookup_keyword", { keyword: "Deploy Objectives", game_mode: "heresy" });
+    expect(text).toContain("Battles in the Age of Darkness");
+  });
+
   it("still prefers the special rule over a same-named section", async () => {
     const text = await call("lookup_keyword", { keyword: "Deep Strike", game_mode: "heresy" });
     expect(text).not.toContain("**Type:**");

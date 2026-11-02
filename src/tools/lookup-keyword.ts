@@ -4,7 +4,7 @@ import { KEYWORDS } from "../data/keywords.js";
 import { SHARED_RULES } from "../data/rules.js";
 import { HERESY_SPECIAL_RULES } from "../data/heresy-rules.js";
 import { STRATAGEMS } from "../data/stratagems.js";
-import { HERESY_NAMED_RULES, HERESY_RULE_CORPUS } from "../lib/heresy-corpus.js";
+import { findHeresyRuleMentioning, HERESY_NAMED_RULES, HERESY_RULE_CORPUS } from "../lib/heresy-corpus.js";
 import { fuzzySearch, normalizeName, scoreName } from "../lib/search.js";
 import { otherGamePointer, shouldCrossOver, withCrossSystemNote } from "../lib/cross-system.js";
 import { findHeresyRules, formatHeresyRule, heresyStamp, scoreHeresyRule, splitRuleQuery, HERESY_LABEL } from "../lib/heresy-format.js";
@@ -64,6 +64,18 @@ function byScore<T extends { name: string }>(items: T[], query: string): T[] {
  */
 function lookupHeresyRule(keyword: string, corpus = HERESY_RULE_CORPUS): LookupResult {
   const matches = findHeresyRules(corpus, keyword);
+  if (matches.length === 0 && corpus === HERESY_RULE_CORPUS) {
+    // Explicit Heresy mode only: a term that's used in rule text but isn't a rule's name ("snap shots").
+    const mentioning = findHeresyRuleMentioning(keyword);
+    if (mentioning) {
+      const text = formatHeresyRule(mentioning, keyword);
+      return {
+        text: withCrossSystemNote(text, heresyStamp(), `No Heresy rule is named "${keyword}"; this is the rule that mentions it most. Check it answers the question.`),
+        score: 0.5,
+        closest: mentioning.name,
+      };
+    }
+  }
   if (matches.length === 0) {
     const examples = ["Bulky (X)", "Rending (X)", "Deep Strike", "Feel No Pain (X)", "Breaching (X)"]
       .filter((n) => HERESY_SPECIAL_RULES.some((r) => r.name === n))
