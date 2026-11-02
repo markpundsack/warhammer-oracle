@@ -8,6 +8,7 @@ import { fuzzySearch, normalizeName, rankByName } from "../lib/search.js";
 import { formatHeresyUnit, heresyContentKey, heresyStamp, HERESY_LABEL } from "../lib/heresy-format.js";
 import {
   rankUnitMatches,
+  matchUnitsWithFactionHint,
   ambiguousFactionMatches,
   datasheetContentKey,
   resolveAbilityOnlyAmbiguity,
@@ -277,7 +278,8 @@ function lookup40kUnit(
   if (faction) candidates = fuzzySearch(candidates, faction, ["faction"]);
   if (datasheetId) candidates = candidates.filter((unit) => unit.id === datasheetId);
 
-  const matches = rankUnitMatches(candidates, unitName, datasheetContentKey);
+  // "Grey Knight Paladins" → Paladin Squad: a leading army name narrows the search.
+  const { matches, query } = matchUnitsWithFactionHint(candidates, unitName, datasheetContentKey);
   if (matches.length === 0) {
     const suggestion = faction
       ? `Try a different faction or check the spelling.`
@@ -287,12 +289,12 @@ function lookup40kUnit(
       text: `No unit found matching "${unitName}".${faction ? ` (faction filter: "${faction}")` : ""}${datasheetId ? ` (datasheet_id: "${datasheetId}")` : ""}\n\n${suggestion}`,
     };
   }
-  const score = scoreTaggedName(unitName, matches[0].name);
+  const score = scoreTaggedName(query, matches[0].name);
   const closest = matches[0].name;
   const stamp = formatModeStamp(gameSystem);
   const hint = heresyHint(matches[0].name) || heresyHint(unitName);
 
-  const ambiguous = ambiguousFactionMatches(matches, unitName, datasheetContentKey);
+  const ambiguous = ambiguousFactionMatches(matches, query, datasheetContentKey);
   // Same datasheet apart from per-army rules (#13): answer with the copy most armies share.
   const abilityOnly = ambiguous ? resolveAbilityOnlyAmbiguity(ambiguous, datasheetContentKey) : null;
   if (abilityOnly) {
