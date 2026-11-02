@@ -93,16 +93,17 @@ describe("KEYWORDS", () => {
 // === Turn Sequences Tests ===
 
 describe("TURN_SEQUENCES", () => {
-  it("exports an array with sequences for all three game modes", () => {
+  it("exports an array with sequences for all four game modes", () => {
     expect(Array.isArray(TURN_SEQUENCES)).toBe(true);
     const modes = TURN_SEQUENCES.map((s) => s.gameMode);
     expect(modes).toContain("40k");
     expect(modes).toContain("combat_patrol");
     expect(modes).toContain("kill_team");
+    expect(modes).toContain("heresy");
   });
 
-  it("has exactly 3 sequences", () => {
-    expect(TURN_SEQUENCES).toHaveLength(3);
+  it("has exactly 4 sequences", () => {
+    expect(TURN_SEQUENCES).toHaveLength(4);
   });
 
   describe("40k sequence", () => {

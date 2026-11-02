@@ -943,6 +943,21 @@ function writeHeresyData(result: HeresyParseResult): void {
     "utf-8",
   );
   console.log(`Wrote ${rulesPath} (${result.rules.length} special rules)`);
+
+  const profileRulesPath = join(ROOT, "src", "data", "heresy-profile-rules.ts");
+  writeFileSync(
+    profileRulesPath,
+    [
+      ...header,
+      "// Reactions, Gambits, psychic powers, wargear, battlefield assets and detachments: rules the data stores as profiles.",
+      'import type { HeresySpecialRule } from "../types.js";',
+      "",
+      `export const HERESY_PROFILE_RULES: HeresySpecialRule[] = ${JSON.stringify(result.profileRules, null, 2)};`,
+      "",
+    ].join("\n"),
+    "utf-8",
+  );
+  console.log(`Wrote ${profileRulesPath} (${result.profileRules.length} profile-based rules)`);
 }
 
 // ── Main ─────────────────────────────────────────────────────────────────

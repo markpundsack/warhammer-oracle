@@ -1,4 +1,5 @@
 import type { TurnSequence, Phase } from "../types.js";
+import { PHASES_HERESY } from "./phases-heresy.js";
 
 const PHASES_40K: Phase[] = [
   {
@@ -232,5 +233,9 @@ export const TURN_SEQUENCES: TurnSequence[] = [
   {
     gameMode: "kill_team",
     phases: PHASES_KILL_TEAM,
+  },
+  {
+    gameMode: "heresy",
+    phases: PHASES_HERESY,
   },
 ];

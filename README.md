@@ -133,7 +133,7 @@ Look up a keyword or rule. Returns the official definition, a plain English expl
 "Explain the Feel No Pain keyword"
 ```
 
-**Parameters:** `keyword` (required), `game_mode` (optional; `heresy` looks up Horus Heresy special rules instead — see [Horus Heresy](#horus-heresy-3rd-edition))
+**Parameters:** `keyword` (required), `game_mode` (optional; `heresy` looks up Horus Heresy rules instead — special rules, Reactions, Gambits, Statuses, phases, detachments, missions; see [Horus Heresy](#horus-heresy-3rd-edition))
 
 ### `lookup_phase`
 
@@ -271,7 +271,7 @@ Look up Crusade content (narrative play). Returns Crusade rules, relics, battle 
 
 ## Horus Heresy (3rd edition)
 
-Pass `game_mode: "heresy"` to `lookup_unit`, `lookup_weapon`, `search_units` or `lookup_keyword` for Horus Heresy 3rd edition ("30K") data. Heresy responses start with `[Mode: Horus Heresy (3rd edition)]`, as 40K responses start with `[Mode: 40k 11e]`, use Heresy's own stat names, and never mix in 40K content.
+Pass `game_mode: "heresy"` to `lookup_unit`, `lookup_weapon`, `search_units`, `lookup_keyword`, `lookup_phase` or `game_flow` for Horus Heresy 3rd edition ("30K") data. Heresy responses start with `[Mode: Horus Heresy (3rd edition)]`, as 40K responses start with `[Mode: 40k 11e]`, use Heresy's own stat names, and never mix in 40K content.
 
 **Which game?** People rarely say. With no `game_mode`, `lookup_unit`, `lookup_weapon` and `lookup_keyword` answer from 40K when 40K has a good match (exact, plural, or the start of the name), and otherwise from Horus Heresy when Heresy has one, with the Heresy stamp and one line: "Found in Horus Heresy, not 40K." A name in both games answers from 40K with a one-line pointer to `game_mode: "heresy"`. With an explicit `game_mode`, the other game is never substituted: a miss returns that game's not-found answer plus one line such as `Not in Warhammer 40,000; Horus Heresy has "Contemptor Dreadnought" (game_mode "heresy").`
 
@@ -279,15 +279,22 @@ Pass `game_mode: "heresy"` to `lookup_unit`, `lookup_weapon`, `search_units` or 
 "What's the Toughness of a Tactical Squad in Horus Heresy?"   → lookup_unit, game_mode heresy
 "Show me Legion units with Deep Strike"                         → search_units, game_mode heresy
 "What does Bulky (6) do in the Heresy?"                         → lookup_keyword, game_mode heresy
+"How does Return Fire work?" / "What does Pinned do?"           → lookup_keyword, game_mode heresy
+"What's in a Crusade Primary Detachment?"                      → lookup_keyword, game_mode heresy
+"What happens in the Assault Phase?"                            → lookup_phase, game_mode heresy
 "What's the profile of a graviton gun?"                         → lookup_weapon (no game_mode: Heresy-only, so answered from Heresy)
 ```
 
 - **`lookup_unit`**: the full Heresy stat line (Type, M, WS, BS, S, T, W, I, A, LD, CL, WP, IN, SAV, INV), or armour profiles for Vehicles, Knights, Titans and fortifications; unit composition and size; special rules with their values (`Bulky (6)`, `Line (2)`); ranged weapons (R, FP, RS, AP, D, special rules, traits); melee weapons; wargear options with points; base points; traits; and the armies that can field the unit. Melee weapons in Heresy modify the bearer's characteristics, so they are written that way: a power fist is "Initiative user -3, Attacks as user, Strength user +4".
 - **`lookup_weapon`**: every profile of the weapon (a plasma gun's Maximal and Sustained), as R, FP, RS, AP, D, special rules and traits, or melee modifiers to the bearer.
 - **`search_units`**: matches unit names, factions (a Legion such as `Ultramarines` also finds the generic Legion units it can field), special rules, traits and weapon names.
-- **`lookup_keyword`**: Heresy special rules with their full text from the data. `Bulky (6)`, `bulky` and `Bulky (X)` all find `Bulky (X)`.
+- **`lookup_keyword`**: any Heresy rule by name, with its full text:
+  - special rules from BSData (`Bulky (6)`, `bulky` and `Bulky (X)` all find `Bulky (X)`);
+  - from BSData profiles: Reactions and Gambits (including Legion and unit ones, with what grants them), psychic powers and psychic reactions, wargear, battlefield assets, and the detachments of the Crusade Force Organisation Chart with their slots;
+  - from the core rulebook (via [Wahapedia](https://wahapedia.ru/heresy3/the-rules/core-rules/), since BSData has no core rules): the turn sequence and every sub-phase, Statuses (Pinned, Suppressed, Stunned, Routed), core and advanced Reactions, Reaction Allotments, challenges and the core Gambits, principles of combat (tests, saves, vehicles, flyers, transports, terrain, psychic powers and Perils of the Warp), army building and detachment types, and the core missions (deployment maps, objectives, mission special rules). Each answer links the Wahapedia section.
+- **`lookup_phase` / `game_flow`**: the Heresy turn sequence (Start, Movement, Shooting, Assault, End) with each phase's sub-phases and the Core Reaction the Reactive Player may use in it, generated from the core rules data.
 - Generic Legion units (Tactical Squad, Contemptor Dreadnought, Rhino, ...) are listed once, under **Legiones Astartes**, with every Legion that can field them. Legion catalogue names are cleaned up (`XIII - Ultramarines` → `Ultramarines`, XIII Legion). Units are named as in the data: the Legion Tactical Squad is `Tactical Squad`.
-- **Not yet covered for Heresy:** `compare_units`, the wound calculator, phases/turn sequence, Reactions, Gambits, Rites of War and detachments. Rules and options that depend on army choices (a Rite of War, a particular Legion, an upgrade) are listed separately or left out. Points are base costs before options.
+- **Not yet covered for Heresy:** `compare_units`, the wound calculator, and Rites of War / Legion army rules. Rules and options that depend on army choices (a Rite of War, a particular Legion, an upgrade) are listed separately or left out. Points are base costs before options.
 
 ## Data
 
@@ -300,6 +307,8 @@ All data is embedded at build time — no network calls at runtime. Data is sync
 | Kill Team operatives | 519 | [BSData/wh40k-killteam](https://github.com/BSData/wh40k-killteam) |
 | Horus Heresy (3rd edition) units | 544 | [BSData/horus-heresy-3rd-edition](https://github.com/BSData/horus-heresy-3rd-edition) |
 | Horus Heresy weapons / special rules | 741 / 221 | BSData (auto-extracted) |
+| Horus Heresy Reactions, Gambits, powers, wargear, assets, detachments | 356 | BSData profiles (auto-extracted) |
+| Horus Heresy core rules sections | 365 | [Wahapedia](https://wahapedia.ru/heresy3/the-rules/core-rules/) (`scripts/fetch-heresy-core-rules.ts`) |
 | Detachments (11th / 10th Edition) | 259 / 208 | BSData (auto-extracted) |
 | Enhancements (11th / 10th Edition) | 895 / 827 | BSData (auto-extracted) |
 | Stratagems | 1,316 | Hand-curated (Core Rules + detachment-specific per faction) |
@@ -340,6 +349,7 @@ To refresh only the Horus Heresy data (optionally from a local clone of the BSDa
 ```bash
 npm run fetch-data -- --only=heresy
 npm run fetch-data -- --only=heresy --heresy-dir=/path/to/horus-heresy-3rd-edition
+npx tsx scripts/fetch-heresy-core-rules.ts          # the Heresy core rules, from Wahapedia
 ```
 
 ## License

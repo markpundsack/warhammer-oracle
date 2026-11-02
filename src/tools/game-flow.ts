@@ -2,6 +2,13 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { TURN_SEQUENCES } from "../data/phases.js";
 import type { GameMode, Phase } from "../types.js";
+import { heresyStamp } from "../lib/heresy-format.js";
+
+function rulesFooter(gameMode: GameMode): string {
+  if (gameMode === "kill_team") return "";
+  if (gameMode === "heresy") return "> Horus Heresy 3rd Edition core rules. Each Player Turn: Start, Movement, Shooting, Assault, End.";
+  return "> Reflects the Warhammer 40,000 11th Edition Core Rules.";
+}
 
 /** Brief one-line summary of a phase for the overview listing. */
 function phaseSummary(phase: Phase): string {
@@ -31,6 +38,7 @@ function findPhaseIndex(phaseName: string, phases: Phase[]): number {
 
 function formatOverview(phases: Phase[], gameMode: GameMode): string {
   const lines: string[] = [];
+  if (gameMode === "heresy") lines.push(heresyStamp(), "");
   lines.push(`# Turn Sequence — ${gameMode}`);
   lines.push("");
 
@@ -40,9 +48,8 @@ function formatOverview(phases: Phase[], gameMode: GameMode): string {
     lines.push("");
   }
 
-  if (gameMode !== "kill_team") {
-    lines.push("> Reflects the Warhammer 40,000 11th Edition Core Rules.");
-  }
+  const footer = rulesFooter(gameMode);
+  if (footer) lines.push(footer);
 
   return lines.join("\n");
 }
@@ -53,6 +60,7 @@ function formatCurrentPhase(
   gameMode: GameMode,
 ): string {
   const lines: string[] = [];
+  if (gameMode === "heresy") lines.push(heresyStamp(), "");
   lines.push(`# Turn Sequence — ${gameMode}`);
   lines.push("");
 
@@ -79,9 +87,8 @@ function formatCurrentPhase(
     );
   }
 
-  if (gameMode !== "kill_team") {
-    lines.push("> Reflects the Warhammer 40,000 11th Edition Core Rules.");
-  }
+  const footer = rulesFooter(gameMode);
+  if (footer) lines.push(footer);
 
   return lines.join("\n");
 }
@@ -98,11 +105,11 @@ export function registerGameFlow(server: McpServer): void {
           "Name of the phase you're currently in (e.g. 'Shooting', 'Command'). If omitted, shows the full turn sequence overview.",
         ),
       game_mode: z
-        .enum(["40k", "combat_patrol", "kill_team"])
+        .enum(["40k", "combat_patrol", "kill_team", "heresy"])
         .optional()
         .default("40k")
         .describe(
-          "Game mode (default: 40k). Use kill_team for Kill Team phases.",
+          "Game mode (default: 40k). Use kill_team for Kill Team phases, heresy for Horus Heresy (3rd edition).",
         ),
     },
     async ({ current_phase, game_mode }) => {
@@ -114,7 +121,7 @@ export function registerGameFlow(server: McpServer): void {
           content: [
             {
               type: "text" as const,
-              text: `Unknown game mode "${mode}". Available modes: 40k, combat_patrol, kill_team.`,
+              text: `Unknown game mode "${mode}". Available modes: 40k, combat_patrol, kill_team, heresy.`,
             },
           ],
         };

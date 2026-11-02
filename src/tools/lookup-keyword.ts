@@ -3,6 +3,7 @@ import { z } from "zod";
 import { KEYWORDS } from "../data/keywords.js";
 import { SHARED_RULES } from "../data/rules.js";
 import { HERESY_SPECIAL_RULES } from "../data/heresy-rules.js";
+import { HERESY_NAMED_RULES, HERESY_RULE_CORPUS } from "../lib/heresy-corpus.js";
 import { fuzzySearch, normalizeName, scoreName } from "../lib/search.js";
 import { otherGamePointer, shouldCrossOver, withCrossSystemNote } from "../lib/cross-system.js";
 import { findHeresyRules, formatHeresyRule, heresyStamp, scoreHeresyRule, splitRuleQuery, HERESY_LABEL } from "../lib/heresy-format.js";
@@ -60,8 +61,8 @@ function byScore<T extends { name: string }>(items: T[], query: string): T[] {
  * (6)", "bulky" and "Bulky (X)" all find "Bulky (X)"; a value in the query is
  * echoed back as X.
  */
-function lookupHeresyRule(keyword: string): LookupResult {
-  const matches = findHeresyRules(HERESY_SPECIAL_RULES, keyword);
+function lookupHeresyRule(keyword: string, corpus = HERESY_RULE_CORPUS): LookupResult {
+  const matches = findHeresyRules(corpus, keyword);
   if (matches.length === 0) {
     const examples = ["Bulky (X)", "Rending (X)", "Deep Strike", "Feel No Pain (X)", "Breaching (X)"]
       .filter((n) => HERESY_SPECIAL_RULES.some((r) => r.name === n))
@@ -69,7 +70,7 @@ function lookupHeresyRule(keyword: string): LookupResult {
     return {
       score: 0,
       text:
-        `${heresyStamp()}\n\nNo ${HERESY_LABEL} special rule found matching "${keyword}".\n\n` +
+        `${heresyStamp()}\n\nNo ${HERESY_LABEL} rule found matching "${keyword}".\n\n` +
         `Try a different spelling or the rule's base name${examples ? ` (e.g. ${examples})` : ""}.`,
     };
   }
@@ -135,22 +136,26 @@ function lookup40kKeyword(keyword: string, gameMode: GameMode | undefined): Look
 export function registerLookupKeyword(server: McpServer): void {
   server.tool(
     "lookup_keyword",
-    "Look up a Warhammer 40K keyword or rule, or a Horus Heresy (3rd edition, '30K') special rule with game_mode 'heresy'. " +
+    "Look up a Warhammer 40K keyword or rule, or any Horus Heresy (3rd edition, '30K') rule with game_mode 'heresy': " +
+      "special rules, Reactions (core and advanced), Gambits and challenges, Statuses (Pinned, Suppressed, Stunned, Routed), " +
+      "phases and sub-phases, psychic powers, wargear, battlefield assets, detachments and the Crusade Force Organisation Chart, " +
+      "and the core missions (deployment maps, objectives, mission special rules). " +
       "Returns the official definition, a plain English explanation, examples, and applicable game modes " +
-      "(Horus Heresy: the rule's full text from the data).",
+      "(Horus Heresy: the rule's full text).",
     {
       keyword: z
         .string()
         .describe(
           "Name or partial name of the keyword to look up (e.g. 'Devastating Wounds', 'Feel No Pain'; " +
-            "Horus Heresy: 'Bulky (6)', 'Rending', 'Deep Strike')",
+            "Horus Heresy: 'Bulky (6)', 'Rending', 'Deep Strike', 'Return Fire', 'Pinned', 'Flurry of Blows', 'Charge Sub-Phase', " +
+            "'Crusade Primary Detachment', 'Hammer and Anvil')",
         ),
       game_mode: z
         .enum(["40k", "combat_patrol", "kill_team", "heresy"])
         .optional()
         .describe(
           "Optional game mode filter — only show keywords applicable to this mode. " +
-            "'heresy' looks up Horus Heresy 3rd edition special rules instead of 40K keywords.",
+            "'heresy' looks up Horus Heresy 3rd edition rules instead of 40K keywords.",
         ),
     },
     async ({ keyword, game_mode }) => {
@@ -167,7 +172,7 @@ export function registerLookupKeyword(server: McpServer): void {
       }
 
       const fortyK = lookup40kKeyword(keyword, game_mode as GameMode | undefined);
-      const heresy = lookupHeresyRule(keyword);
+      const heresy = lookupHeresyRule(keyword, HERESY_NAMED_RULES);
       if (shouldCrossOver(fortyK.score, heresy.score)) {
         // No game_mode: no good 40K match but a clear Heresy rule answers from Heresy.
         if (game_mode === undefined) {

@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { TURN_SEQUENCES } from "../data/phases.js";
 import type { Phase, GameMode } from "../types.js";
+import { heresyStamp } from "../lib/heresy-format.js";
 
 function findPhase(phaseName: string, gameMode: GameMode): Phase | undefined {
   const sequence = TURN_SEQUENCES.find((s) => s.gameMode === gameMode);
@@ -35,6 +36,7 @@ function getAvailablePhases(gameMode: GameMode): string[] {
 function formatPhase(phase: Phase): string {
   const sections: string[] = [];
 
+  if (phase.gameMode === "heresy") sections.push(heresyStamp());
   sections.push(`# ${phase.name} Phase`);
   sections.push(`**Game Mode:** ${phase.gameMode}`);
 
@@ -48,7 +50,11 @@ function formatPhase(phase: Phase): string {
     sections.push(`## Tips\n\n${tips.join("\n")}`);
   }
 
-  if (phase.gameMode !== "kill_team") {
+  if (phase.gameMode === "heresy") {
+    sections.push(
+      "> Horus Heresy 3rd Edition core rules. For a sub-phase's full rules, a Reaction or a Status, use lookup_keyword with game_mode \"heresy\" (e.g. \"Charge Sub-Phase\", \"Return Fire\", \"Pinned\").",
+    );
+  } else if (phase.gameMode !== "kill_team") {
     sections.push("> Reflects the Warhammer 40,000 11th Edition Core Rules.");
   }
 
@@ -63,13 +69,13 @@ export function registerLookupPhase(server: McpServer): void {
       phase_name: z
         .string()
         .describe(
-          "Name or partial name of the phase to look up (e.g. 'Shooting', 'Command', 'Firefight')",
+          "Name or partial name of the phase to look up (e.g. 'Shooting', 'Command', 'Firefight'; Horus Heresy: 'Start', 'Movement', 'Assault', 'End')",
         ),
       game_mode: z
-        .enum(["40k", "combat_patrol", "kill_team"])
+        .enum(["40k", "combat_patrol", "kill_team", "heresy"])
         .optional()
         .default("40k")
-        .describe("Game mode (default: 40k). Use kill_team for Kill Team phases."),
+        .describe("Game mode (default: 40k). Use kill_team for Kill Team phases, heresy for Horus Heresy (3rd edition) phases."),
     },
     async ({ phase_name, game_mode }) => {
       const mode = game_mode as GameMode;

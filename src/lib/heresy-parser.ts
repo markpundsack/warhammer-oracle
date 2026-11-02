@@ -23,6 +23,7 @@ import type {
   HeresyModelWargear,
   HeresyPoints,
   HeresyRangedWeapon,
+  HeresyRuleKind,
   HeresySpecialRule,
   HeresyUnit,
   HeresyWeapon,
@@ -94,6 +95,8 @@ export type HeresyParseResult = {
   units: HeresyUnit[];
   weapons: HeresyWeapon[];
   rules: HeresySpecialRule[];
+  /** Reactions, Gambits, psychic powers, wargear, assets and detachments (profile-based rules). */
+  profileRules: HeresySpecialRule[];
   factions: HeresyFaction[];
 };
 
@@ -1040,6 +1043,92 @@ export function parseHeresyRules(index: HeresyIndex): HeresySpecialRule[] {
   return out.sort((a, b) => a.name.localeCompare(b.name));
 }
 
+// === Profile-based rules: Reactions, Gambits, psychic powers, wargear, assets, detachments ===
+
+/**
+ * Profile typeName → rule kind. These are rules the data stores as profiles
+ * (Summary/Trigger/Cost/Target/Process columns) rather than as sharedRules:
+ * the 72 Reactions, 61 Gambits, psychic powers and reactions, standalone
+ * wargear, battlefield assets and the force organisation detachments.
+ */
+const PROFILE_RULE_KINDS: Record<string, HeresyRuleKind> = {
+  Reaction: "reaction",
+  "Psychic Reaction": "psychic reaction",
+  Gambit: "gambit",
+  "Psychic Power": "psychic power",
+  Wargear: "wargear",
+  Asset: "asset",
+  "Detachment Description": "detachment",
+};
+
+/** Group labels that say what a profile is, not who grants it ("Advanced Reaction", "Gambit"). */
+const GENERIC_CONTEXT = /^(advanced reactions?|reactions?|gambits?|psychic (powers?|reactions?|disciplines?)|wargear|options?|rite of war|warlord|detachments?|\d+\).*)$/i;
+
+/** "Detachment Composition" lines → one bullet each; other columns as "**Name:** value" paragraphs. */
+function profileText(p: Node): { summary: string; description: string } {
+  let summary = "";
+  const parts: string[] = [];
+  for (const c of arr(p.characteristics)) {
+    const label = clean(c.name).replace(/:$/, "");
+    const value = tidyRuleText(str(c.$text ?? c["#text"] ?? ""));
+    if (!value) continue;
+    if (label === "Summary") summary = clean(value);
+    else if (label === "Description") parts.push(value);
+    else if (label === "Detachment Composition") parts.push(value.split(/\n+/).map((l) => `- ${l.trim()}`).filter((l) => l !== "- ").join("\n"));
+    else parts.push(`**${label}:** ${value}`);
+  }
+  return { summary, description: parts.join("\n\n") };
+}
+
+/**
+ * Every profile-based rule in the data, deduplicated by name + text. Walks
+ * each file's tree so a Reaction or Gambit can name what grants it (its
+ * nearest unit, upgrade or Rite of War ancestor).
+ */
+export function parseHeresyProfileRules(files: HeresySourceFile[]): HeresySpecialRule[] {
+  const out: HeresySpecialRule[] = [];
+  const seen = new Set<string>();
+  for (const file of files) {
+    const root: Node | undefined = file.data?.catalogue ?? file.data?.gameSystem;
+    if (!root?.id) continue;
+    const source = cleanCatalogueName(str(root.name)).name;
+    const visit = (n: Node, ancestors: string[], depth: number): void => {
+      if (depth > 40 || !n || typeof n !== "object") return;
+      for (const p of arr(n.profiles)) {
+        const kind = PROFILE_RULE_KINDS[str(p?.typeName)];
+        if (!kind || p.hidden === true) continue;
+        const name = clean(p.name);
+        if (!name || name === "New Profile") continue;
+        const { summary, description } = profileText(p);
+        if (!description && !summary) continue;
+        const key = `${kind}::${name.toLowerCase()}::${description}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        const context = [...ancestors].reverse().find((a) => a !== name && !GENERIC_CONTEXT.test(a)) ?? "";
+        out.push({
+          name,
+          aliases: [],
+          summary,
+          description: description || summary,
+          source,
+          gameSystem: "horus-heresy-3e",
+          kind,
+          ...(context ? { context } : {}),
+        });
+      }
+      const here = n === root ? [] : [...ancestors, clean(n.name)].filter(Boolean);
+      // forceEntries: the game system's force organisation charts, which hold the Detachment Descriptions
+      for (const key of ["sharedSelectionEntries", "sharedSelectionEntryGroups", "selectionEntries", "selectionEntryGroups", "forceEntries"]) {
+        for (const child of arr(n[key])) visit(child, here, depth + 1);
+      }
+      // sharedProfiles live directly on the root: give them a pass of their own
+      if (n === root) for (const p of arr(n.sharedProfiles)) visit({ profiles: [p] }, [], depth + 1);
+    };
+    visit(root, [], 0);
+  }
+  return out.sort((a, b) => a.name.localeCompare(b.name) || a.source.localeCompare(b.source));
+}
+
 export function parseHeresyFactions(index: HeresyIndex): HeresyFaction[] {
   return [...index.catalogues.values()]
     .filter((c) => !c.gameSystem)
@@ -1055,6 +1144,7 @@ export function parseHeresyData(files: HeresySourceFile[]): HeresyParseResult {
     units: parseHeresyUnits(index),
     weapons: parseHeresyWeapons(index),
     rules: parseHeresyRules(index),
+    profileRules: parseHeresyProfileRules(files),
     factions: parseHeresyFactions(index),
   };
 }

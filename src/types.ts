@@ -264,7 +264,26 @@ export type HeresySpecialRule = {
   /** Catalogue the rule is defined in, e.g. "Special Rules", "Horus Heresy 3rd Edition". */
   source: string;
   gameSystem: "horus-heresy-3e";
+  /** What kind of rule this is; absent = a special rule (the original corpus). */
+  kind?: HeresyRuleKind;
+  /** Where it comes from inside the source, e.g. the unit or Rite of War that grants a Reaction, or "Principles of Combat > Tactical Statuses". */
+  context?: string;
+  /** Public page with the full rule, when there is one (the Wahapedia core rules). */
+  url?: string;
 };
+
+export type HeresyRuleKind =
+  | "special rule"
+  | "reaction"
+  | "psychic reaction"
+  | "gambit"
+  | "psychic power"
+  | "wargear"
+  | "asset"
+  | "detachment"
+  | "status"
+  | "core rule"
+  | "mission";
 
 export type HeresyFaction = {
   /** Cleaned catalogue name, e.g. "Ultramarines". */

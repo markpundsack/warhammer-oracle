@@ -12,6 +12,7 @@ import type {
   HeresyFaction,
   HeresyMeleeWeapon,
   HeresyRangedWeapon,
+  HeresyRuleKind,
   HeresySpecialRule,
   HeresyUnit,
   HeresyWeapon,
@@ -290,15 +291,42 @@ export function findHeresyRules(rules: HeresySpecialRule[], query: string, minSc
     .map((r) => r.rule);
 }
 
+const KIND_LABEL: Record<HeresyRuleKind, string> = {
+  "special rule": "Special Rule",
+  reaction: "Reaction",
+  "psychic reaction": "Psychic Reaction",
+  gambit: "Gambit",
+  "psychic power": "Psychic Power",
+  wargear: "Wargear",
+  asset: "Battlefield Asset",
+  detachment: "Detachment",
+  status: "Status",
+  "core rule": "Core Rule",
+  mission: "Mission Rule",
+};
+
+export function heresyRuleKindLabel(rule: HeresySpecialRule): string {
+  return KIND_LABEL[rule.kind ?? "special rule"];
+}
+
 export function formatHeresyRule(rule: HeresySpecialRule, query: string, related: HeresySpecialRule[] = []): string {
   const { value } = splitRuleQuery(query);
   const sections: string[] = [heresyStamp(), `# ${rule.name}`];
+  if (rule.kind && rule.kind !== "special rule") {
+    // Core-rules sections carry a "Page > Section" breadcrumb; BSData profiles name what grants them.
+    const where = rule.context ? (rule.url ? ` — ${rule.context}` : ` — from ${rule.context}`) : "";
+    sections.push(`**Type:** ${KIND_LABEL[rule.kind]}${where}`);
+  }
   if (value && /\(X\)/i.test(rule.name)) {
     sections.push(`**As asked: ${rule.name.replace(/\(X\)/i, `(${value})`)}** — X = ${value} in the text below.`);
   }
   if (rule.summary) sections.push(`**Summary:** ${rule.summary}`);
-  sections.push(`## Rule Text\n\n${rule.description}`);
+  // The text usually opens with the summary in bold; don't read it out twice.
+  const lead = `**${rule.summary}**`;
+  const body = rule.summary && rule.description.startsWith(lead) ? rule.description.slice(lead.length).trim() : rule.description;
+  sections.push(`## Rule Text\n\n${body || rule.description}`);
   const meta: string[] = [`**Source:** ${rule.source}`];
+  if (rule.url) meta.push(`**Full rule:** ${rule.url}`);
   if (rule.aliases.length) meta.push(`**Also called:** ${rule.aliases.join(", ")}`);
   sections.push(meta.join(" | "));
   if (related.length) {

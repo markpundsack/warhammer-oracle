@@ -1,0 +1,153 @@
+import { describe, it, expect, beforeAll } from "vitest";
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
+import { createServer } from "../src/server.js";
+import { HERESY_CORE_RULES } from "../src/data/heresy-core-rules.js";
+import { HERESY_PROFILE_RULES } from "../src/data/heresy-profile-rules.js";
+import { PHASES_HERESY } from "../src/data/phases-heresy.js";
+import { splitSections, sectionsToRules } from "../scripts/fetch-heresy-core-rules.js";
+
+let client: Client;
+
+beforeAll(async () => {
+  const server = createServer();
+  client = new Client({ name: "test-client", version: "1.0.0" });
+  const [ct, st] = InMemoryTransport.createLinkedPair();
+  await Promise.all([client.connect(ct), server.connect(st)]);
+});
+
+async function call(name: string, args: Record<string, unknown>): Promise<string> {
+  const result = await client.callTool({ name, arguments: args });
+  return (result.content as Array<{ type: string; text: string }>)[0].text;
+}
+
+const HERESY_STAMP = "[Mode: Horus Heresy (3rd edition)]";
+
+describe("Heresy rules data", () => {
+  it("has the profile-based rules from BSData", () => {
+    const kinds = new Set(HERESY_PROFILE_RULES.map((r) => r.kind));
+    for (const k of ["reaction", "gambit", "psychic power", "psychic reaction", "wargear", "asset", "detachment"]) {
+      expect(kinds.has(k as never), k).toBe(true);
+    }
+    expect(HERESY_PROFILE_RULES.filter((r) => r.kind === "reaction").length).toBeGreaterThan(50);
+    expect(HERESY_PROFILE_RULES.filter((r) => r.kind === "gambit").length).toBeGreaterThan(40);
+    const primary = HERESY_PROFILE_RULES.find((r) => r.name === "Crusade Primary Detachment");
+    expect(primary?.description).toContain("- 4 Troops (1 Prime)");
+  });
+
+  it("has the core rules: statuses, core Reactions and Gambits, phases, missions", () => {
+    const names = new Set(HERESY_CORE_RULES.map((r) => r.name));
+    for (const n of ["Pinned", "Suppressed", "Stunned", "Routed", "Movement Phase: Reposition", "Shooting Phase: Return Fire",
+      "Assault Phase: Overwatch", "Flurry of Blows", "Seize the Initiative", "Charge Sub-Phase", "Core Mission Primary Objectives"]) {
+      expect(names.has(n), n).toBe(true);
+    }
+    for (const r of HERESY_CORE_RULES) {
+      expect(r.url).toMatch(/^https:\/\/wahapedia\.ru\/heresy3\/the-rules\//);
+      expect(r.description).not.toMatch(/[\u0001-\u0003]/); // tokenizer markers never leak
+    }
+    // Trigger / Cost / Target are separate paragraphs, not run together with the summary
+    const reposition = HERESY_CORE_RULES.find((r) => r.name === "Movement Phase: Reposition")!;
+    expect(reposition.summary).not.toContain("Trigger");
+    expect(reposition.description).toMatch(/\n\n\*\*Cost:\*\* /);
+  });
+
+  it("nests every sub-phase under its phase (incl. the Challenge Sub-Phase)", () => {
+    const assault = PHASES_HERESY.find((p) => p.name === "Assault")!;
+    expect(assault.steps.map((s) => s.split(":")[0])).toEqual([
+      "Charge Sub-Phase",
+      "Challenge Sub-Phase",
+      "Fight Sub-Phase",
+      "Resolution Sub-Phase",
+    ]);
+    expect(PHASES_HERESY.map((p) => p.name)).toEqual(["Start", "Movement", "Shooting", "Assault", "End"]);
+    for (const p of PHASES_HERESY) expect(p.steps.length, p.name).toBeGreaterThan(0);
+  });
+});
+
+describe("fetch-heresy-core-rules HTML parsing", () => {
+  const html =
+    '<body><a name="Tactical-Statuses"></a><h2 id="Tactical-Statuses">Tactical Statuses</h2>Intro.' +
+    '<div class="tooltip_templates"><span>glossary text</span></div>' +
+    '<a name="Pinned"></a><h4 id="Pinned">Pinned</h4><b>Summary line.</b><br><br><b>Trigger:</b> when shot.<b>Cost:</b> 1 point.' +
+    '<p class="ShowFluff legend2">Flavour.</p><ul><li>one</li><li>two</li></ul>' +
+    '<table><tr><td>1-2</td><td>A</td></tr><tr><td>3-4</td><td>B</td></tr></table></body>';
+  const rules = sectionsToRules("principles-of-combat", "Principles of Combat", splitSections(html));
+
+  it("drops tooltips and flavour, keeps lists and table rows, separates bold labels", () => {
+    const pinned = rules.find((r) => r.name === "Pinned")!;
+    expect(pinned.kind).toBe("status");
+    expect(pinned.summary).toBe("Summary line.");
+    expect(pinned.description).not.toContain("glossary");
+    expect(pinned.description).not.toContain("Flavour");
+    expect(pinned.description).toContain("**Trigger:** when shot.\n\n**Cost:** 1 point.");
+    expect(pinned.description).toContain("- one\n- two");
+    expect(pinned.description).toMatch(/1-2 \| A\n+3-4 \| B/);
+    expect(pinned.context).toBe("Principles of Combat > Tactical Statuses");
+  });
+
+  it("lists a parent section's children", () => {
+    expect(rules.find((r) => r.name === "Tactical Statuses")!.description).toContain("**Covers:**\n- Pinned");
+  });
+});
+
+describe("lookup_keyword with game_mode heresy (rules beyond special rules)", () => {
+  it("answers a core Reaction by its short name", async () => {
+    const text = await call("lookup_keyword", { keyword: "Return Fire", game_mode: "heresy" });
+    expect(text.startsWith(HERESY_STAMP)).toBe(true);
+    expect(text).toContain("# Shooting Phase: Return Fire");
+    expect(text).toContain("**Type:** Reaction");
+    expect(text).toContain("Reaction Allotment");
+    expect(text).toContain("https://wahapedia.ru/heresy3/the-rules/principles-of-combat/#");
+  });
+
+  it("answers a Status", async () => {
+    const text = await call("lookup_keyword", { keyword: "Pinned", game_mode: "heresy" });
+    expect(text).toContain("# Pinned");
+    expect(text).toContain("**Type:** Status");
+  });
+
+  it("answers a core Gambit and a Legion Gambit", async () => {
+    expect(await call("lookup_keyword", { keyword: "Flurry of Blows", game_mode: "heresy" })).toContain("**Type:** Gambit");
+    const legion = await call("lookup_keyword", { keyword: "Paragon of Excellence", game_mode: "heresy" });
+    expect(legion).toContain("**Type:** Gambit — from Legiones Astartes Emperor's Children");
+  });
+
+  it("answers a detachment from the force organisation chart", async () => {
+    const text = await call("lookup_keyword", { keyword: "Crusade Primary Detachment", game_mode: "heresy" });
+    expect(text).toContain("**Type:** Detachment");
+    expect(text).toContain("1 High Command");
+  });
+
+  it("answers a mission rule and a deployment map", async () => {
+    expect(await call("lookup_keyword", { keyword: "Hammer and Anvil", game_mode: "heresy" })).toContain("**Type:** Mission Rule");
+    expect(await call("lookup_keyword", { keyword: "Seize the Initiative", game_mode: "heresy" })).toContain(HERESY_STAMP);
+  });
+
+  it("still prefers the special rule over a same-named section", async () => {
+    const text = await call("lookup_keyword", { keyword: "Deep Strike", game_mode: "heresy" });
+    expect(text).not.toContain("**Type:**");
+  });
+
+  it("does not pull a generic 40K question over to Heresy core rules when no game_mode is given", async () => {
+    const text = await call("lookup_keyword", { keyword: "Line of Sight" });
+    expect(text).not.toContain("Found in Horus Heresy");
+  });
+});
+
+describe("lookup_phase / game_flow with game_mode heresy", () => {
+  it("lookup_phase returns the Heresy Assault Phase with its sub-phases and Core Reaction", async () => {
+    const text = await call("lookup_phase", { phase_name: "Assault", game_mode: "heresy" });
+    expect(text.startsWith(HERESY_STAMP)).toBe(true);
+    expect(text).toContain("# Assault Phase");
+    expect(text).toContain("Challenge Sub-Phase");
+    expect(text).toContain("Overwatch");
+    expect(text).not.toContain("11th Edition");
+  });
+
+  it("game_flow lists the five Heresy phases", async () => {
+    const text = await call("game_flow", { game_mode: "heresy" });
+    expect(text.startsWith(HERESY_STAMP)).toBe(true);
+    for (const p of ["Start", "Movement", "Shooting", "Assault", "End"]) expect(text).toContain(`${p} Phase`);
+    expect(text).not.toContain("11th Edition");
+  });
+});
