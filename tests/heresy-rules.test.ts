@@ -129,6 +129,19 @@ describe("lookup_keyword with game_mode heresy (rules beyond special rules)", ()
     expect(text).not.toContain("**Type:**");
   });
 
+  it("with no game_mode, answers a Heresy-only Reaction from Heresy", async () => {
+    const text = await call("lookup_keyword", { keyword: "Return Fire" });
+    expect(text).toContain("Found in Horus Heresy");
+    expect(text).toContain("# Shooting Phase: Return Fire");
+  });
+
+  it("with no game_mode, keeps a 40K stratagem term (Overwatch) in 40K and points at both", async () => {
+    const text = await call("lookup_keyword", { keyword: "Overwatch" });
+    expect(text).not.toContain("Found in Horus Heresy");
+    expect(text).toContain('"Fire Overwatch" stratagem');
+    expect(text).toContain('game_mode "heresy"');
+  });
+
   it("does not pull a generic 40K question over to Heresy core rules when no game_mode is given", async () => {
     const text = await call("lookup_keyword", { keyword: "Line of Sight" });
     expect(text).not.toContain("Found in Horus Heresy");

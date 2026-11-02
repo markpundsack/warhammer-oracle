@@ -3,6 +3,7 @@ import { z } from "zod";
 import { KEYWORDS } from "../data/keywords.js";
 import { SHARED_RULES } from "../data/rules.js";
 import { HERESY_SPECIAL_RULES } from "../data/heresy-rules.js";
+import { STRATAGEMS } from "../data/stratagems.js";
 import { HERESY_NAMED_RULES, HERESY_RULE_CORPUS } from "../lib/heresy-corpus.js";
 import { fuzzySearch, normalizeName, scoreName } from "../lib/search.js";
 import { otherGamePointer, shouldCrossOver, withCrossSystemNote } from "../lib/cross-system.js";
@@ -133,6 +134,19 @@ function lookup40kKeyword(keyword: string, gameMode: GameMode | undefined): Look
   };
 }
 
+/**
+ * A 40K stratagem whose name contains the query as whole words ("Overwatch" →
+ * "Fire Overwatch", "Heroic Intervention"). Those are 40K questions even
+ * though lookup_keyword has no 40K keyword for them, so a no-game_mode
+ * question must not be answered from Heresy.
+ */
+function fortyKStratagemNamed(keyword: string): string | undefined {
+  const q = normalizeName(keyword);
+  if (!q) return undefined;
+  const re = new RegExp(`(^| )${q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}( |$)`);
+  return STRATAGEMS.find((s) => re.test(normalizeName(s.name)))?.name;
+}
+
 export function registerLookupKeyword(server: McpServer): void {
   server.tool(
     "lookup_keyword",
@@ -176,6 +190,16 @@ export function registerLookupKeyword(server: McpServer): void {
       if (shouldCrossOver(fortyK.score, heresy.score)) {
         // No game_mode: no good 40K match but a clear Heresy rule answers from Heresy.
         if (game_mode === undefined) {
+          const stratagem = fortyKStratagemNamed(keyword);
+          if (stratagem) {
+            return reply(
+              withCrossSystemNote(
+                fortyK.text,
+                "",
+                `In 40K this is the "${stratagem}" stratagem (lookup_stratagem). Horus Heresy has "${heresy.closest}" (game_mode "heresy").`,
+              ),
+            );
+          }
           const closest = fortyK.score >= 0.55 ? ` Closest 40K keyword: ${fortyK.closest}.` : "";
           return reply(withCrossSystemNote(heresy.text, heresyStamp(), `Found in Horus Heresy, not 40K.${closest}`));
         }

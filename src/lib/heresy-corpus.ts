@@ -22,9 +22,17 @@ export const HERESY_RULE_CORPUS: HeresySpecialRule[] = [
   ...HERESY_CORE_RULES,
 ];
 
+/** Rulebook entries with a distinctive game-term name, as opposed to section prose ("Line of Sight", "Measuring"). */
+const NAMED_KINDS = new Set(["reaction", "gambit", "status", "rite of war"]);
+
 /**
  * The named rules only (no core rules prose or missions). Used when no
  * game_mode was given: generic section titles like "Line of Sight" or
- * "Movement Phase" must not pull a 40K question over to Heresy.
+ * "Movement Phase" must not pull a 40K question over to Heresy, but "Return
+ * Fire", "Flurry of Blows" or "Pinned" (Heresy-only terms) should.
  */
-export const HERESY_NAMED_RULES: HeresySpecialRule[] = [...HERESY_SPECIAL_RULES, ...HERESY_PROFILE_RULES];
+export const HERESY_NAMED_RULES: HeresySpecialRule[] = [
+  ...HERESY_SPECIAL_RULES,
+  ...HERESY_PROFILE_RULES,
+  ...[...HERESY_ARMY_RULES, ...HERESY_CORE_RULES].filter((r) => NAMED_KINDS.has(r.kind ?? "")),
+];
