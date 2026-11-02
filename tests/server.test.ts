@@ -19,6 +19,7 @@ const EXPECTED_TOOLS = [
   "determine_primary_mission",
   "lookup_crusade",
   "lookup_weapon",
+  "heresy_attack_calculator",
 ] as const;
 
 describe("server integration", () => {
@@ -36,9 +37,9 @@ describe("server integration", () => {
     expect(server).toBeDefined();
   });
 
-  it("registers exactly 15 tools", async () => {
+  it("registers exactly 16 tools", async () => {
     const { tools } = await client.listTools();
-    expect(tools).toHaveLength(15);
+    expect(tools).toHaveLength(16);
   });
 
   it("registers all expected tool names", async () => {

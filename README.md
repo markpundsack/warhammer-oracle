@@ -247,6 +247,17 @@ Calculate expected damage output for an attack profile against a target. Handles
 
 **Parameters:** `attacks`, `hit_skill`, `strength`, `toughness`, `armour_save`, `damage` (all required); `armour_penetration`, `invulnerable_save`, `feel_no_pain`, `reroll_hits`, `reroll_wounds`, `weapon_keywords`, `wounds_per_model`, `game_mode` (all optional)
 
+### `heresy_attack_calculator`
+
+The Horus Heresy (3rd edition) counterpart: expected hits, wounds, saves and damage from Heresy's own tables — the Ranged Hit Test Table (BS, including the CX+ Critical Hit and Automatic entries and Snap Shots), the Melee Hit Table (WS vs WS) and the Wound Table (S vs T) — or Armour Penetration Tests (Glancing / Penetrating Hits) against a vehicle facing. AP denies an Armour Save when it is equal to or lower than the save; one best Saving Throw per wound; Cover only against shooting.
+
+```
+"10 bolter shots at Legionaries in the Heresy — how many die?"
+"Power fist against a Cataphractii Terminator?"
+```
+
+**Parameters:** `attack_type` (`ranged`/`melee`), `attacks`, `strength`, `damage` (required); `ballistic_skill`, `snap_shots`, `weapon_skill`, `target_weapon_skill`, `toughness` or `target_armour`, `ap`, `armour_save`, `invulnerable_save`, `cover_save`, `damage_mitigation`, `wounds_per_model` (optional). Special rules (Rending, Breaching, Critical Hit effects), modifiers and re-rolls are not modelled.
+
 ### `determine_primary_mission`
 
 Determine each player's Primary Mission from their Force Dispositions (11th Edition Matched Play). Each player's mission is looked up from their *opponent's* Force Disposition — in a non-mirror matchup, the two players get different missions. Returns mission names only, not full scoring/objective text.
@@ -296,7 +307,8 @@ Pass `game_mode: "heresy"` to `lookup_unit`, `lookup_weapon`, `search_units`, `l
   - from each army list (Wahapedia faction pages): every Legion's Rite of War and Legion Tactica (`Night Lords Rite of War` and `Night Lords Legion Tactica` both work), Legion Advanced Reactions and extra detachments, armouries and wargear lists, Prime Advantages, Solar Auxilia Cohort Doctrines, and the Mechanicum, Militia, Knight, Titan, Custodes, Daemon and Cult army rules.
 - **`lookup_phase` / `game_flow`**: the Heresy turn sequence (Start, Movement, Shooting, Assault, End) with each phase's sub-phases and the Core Reaction the Reactive Player may use in it, generated from the core rules data.
 - Generic Legion units (Tactical Squad, Contemptor Dreadnought, Rhino, ...) are listed once, under **Legiones Astartes**, with every Legion that can field them. Legion catalogue names are cleaned up (`XIII - Ultramarines` → `Ultramarines`, XIII Legion). Units are named as in the data: the Legion Tactical Squad is `Tactical Squad`.
-- **Not yet covered for Heresy:** `compare_units` and the wound calculator. Rules and options that depend on army choices (a Rite of War, a particular Legion, an upgrade) are listed separately or left out. Points are base costs before options.
+- **`heresy_attack_calculator`**: Heresy attack maths (see above).
+- **Not yet covered for Heresy:** `compare_units`. Rules and options that depend on army choices (a Rite of War, a particular Legion, an upgrade) are listed separately or left out. Points are base costs before options.
 
 ## Data
 
