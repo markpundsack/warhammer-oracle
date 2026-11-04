@@ -282,7 +282,7 @@ Look up Crusade content (narrative play). Returns Crusade rules, relics, battle 
 
 ## Horus Heresy (3rd edition)
 
-Pass `game_mode: "heresy"` to `lookup_unit`, `lookup_weapon`, `search_units`, `lookup_keyword`, `lookup_phase` or `game_flow` for Horus Heresy 3rd edition ("30K") data. Heresy responses start with `[Mode: Horus Heresy (3rd edition)]`, as 40K responses start with `[Mode: 40k 11e]`, use Heresy's own stat names, and never mix in 40K content.
+Pass `game_mode: "heresy"` to `lookup_unit`, `lookup_weapon`, `search_units`, `compare_units`, `lookup_keyword`, `lookup_phase` or `game_flow` for Horus Heresy 3rd edition ("30K") data. Heresy responses start with `[Mode: Horus Heresy (3rd edition)]`, as 40K responses start with `[Mode: 40k 11e]`, use Heresy's own stat names, and never mix in 40K content.
 
 **Which game?** People rarely say. With no `game_mode`, `lookup_unit`, `lookup_weapon` and `lookup_keyword` answer from 40K when 40K has a good match (exact, plural, or the start of the name), and otherwise from Horus Heresy when Heresy has one, with the Heresy stamp and one line: "Found in Horus Heresy, not 40K." A name in both games answers from 40K with a one-line pointer to `game_mode: "heresy"`. With an explicit `game_mode`, the other game is never substituted: a miss returns that game's not-found answer plus one line such as `Not in Warhammer 40,000; Horus Heresy has "Contemptor Dreadnought" (game_mode "heresy").`
 
@@ -308,7 +308,9 @@ Pass `game_mode: "heresy"` to `lookup_unit`, `lookup_weapon`, `search_units`, `l
 - **`lookup_phase` / `game_flow`**: the Heresy turn sequence (Start, Movement, Shooting, Assault, End) with each phase's sub-phases and the Core Reaction the Reactive Player may use in it, generated from the core rules data.
 - Generic Legion units (Tactical Squad, Contemptor Dreadnought, Rhino, ...) are listed once, under **Legiones Astartes**, with every Legion that can field them. Legion catalogue names are cleaned up (`XIII - Ultramarines` → `Ultramarines`, XIII Legion). Units are named as in the data: the Legion Tactical Squad is `Tactical Squad`.
 - **`heresy_attack_calculator`**: Heresy attack maths (see above).
-- **Not yet covered for Heresy:** `compare_units`. Rules and options that depend on army choices (a Rite of War, a particular Legion, an upgrade) are listed separately or left out. Points are base costs before options.
+- **`compare_units`**: 2–4 Heresy units with one stat table across every model, points and size, armour profiles for vehicles, and each unit's special rules and weapons.
+- **Model names find their unit** in `lookup_unit` and `compare_units` when no unit is named that: "Legionaries" → the Tactical Squad (the unit fielding the most Legionaries), with a note listing the other units that field the model.
+- **Army-dependent rules:** Rules and options that depend on army choices (a Rite of War, a particular Legion, an upgrade) are listed separately or left out. Points are base costs before options.
 
 ## Data
 

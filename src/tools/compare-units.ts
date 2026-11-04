@@ -5,7 +5,11 @@ import { UNITS_11E } from "../data/units-11e.js";
 import { KILL_TEAM_OPERATIVES } from "../data/kill-team-operatives.js";
 import { datasheetContentKey, pickUnitMatch, rankUnitMatchesWithFactionHint } from "../lib/unit-match.js";
 import { formatCompositionInline, formatModeStamp, formatUnitSize } from "../lib/format.js";
+import { HERESY_FACTIONS } from "../data/heresy-units.js";
+import { formatHeresyComparison, heresyStamp, HERESY_LABEL } from "../lib/heresy-format.js";
+import { findHeresyUnit, modelMatchNote } from "../lib/heresy-unit-match.js";
 import type {
+  HeresyUnit,
   Unit,
   UnitProfile,
   RangedWeapon,
@@ -178,12 +182,52 @@ function resolveNames<T extends { id: string; name: string; faction: string; key
   return { found, notFound, duplicates };
 }
 
+// === Horus Heresy ===
+
+function compareHeresy(names: string[]) {
+  const found: HeresyUnit[] = [];
+  const notes: string[] = [];
+  const notFound: string[] = [];
+  for (const name of names) {
+    const m = findHeresyUnit(name);
+    if (!m) {
+      notFound.push(name);
+      continue;
+    }
+    if (found.some((u) => u.id === m.unit.id)) {
+      notes.push(`"${name}" matched ${m.unit.name} again, so it is shown once.`);
+      continue;
+    }
+    if (m.kind === "model") notes.push(modelMatchNote(m, name).replace(/^_|_$/g, "").replace(" below", ""));
+    else if (m.variants.length > 1) {
+      notes.push(
+        `"${m.unit.name}" has ${m.variants.length} different datasheets (${m.variants.map((v) => v.faction).join(", ")}); showing ${m.unit.faction}'s. ` +
+          `Use lookup_unit with a faction for another.`,
+      );
+    }
+    found.push(m.unit);
+  }
+  if (notFound.length) notes.unshift(`**Units not found:** ${notFound.map((n) => `"${n}"`).join(", ")}.`);
+  if (found.length === 0) {
+    return {
+      isError: true,
+      content: [
+        {
+          type: "text" as const,
+          text: `${heresyStamp()}\n\nNo ${HERESY_LABEL} units found for any of: ${names.map((n) => `"${n}"`).join(", ")}.\n\nTry partial names; Legion units are named without "Legion" (e.g. "Tactical Squad").`,
+        },
+      ],
+    };
+  }
+  return { content: [{ type: "text" as const, text: formatHeresyComparison(found, HERESY_FACTIONS, notes) }] };
+}
+
 // === Tool Registration ===
 
 export function registerCompareUnits(server: McpServer): void {
   server.tool(
     "compare_units",
-    "Compare 2-4 Warhammer 40K units or Kill Team operatives side by side. Shows stats, weapons, abilities, and keywords for each.",
+    "Compare 2-4 Warhammer 40K units, Kill Team operatives, or Horus Heresy (3rd edition) units (game_mode 'heresy') side by side. Shows stats, weapons, abilities, and keywords for each.",
     {
       units: z
         .array(z.string())
@@ -191,14 +235,17 @@ export function registerCompareUnits(server: McpServer): void {
         .max(4)
         .describe("Unit/operative names to compare (2-4 names)"),
       game_mode: z
-        .enum(["40k", "40k_10e", "40k_11e", "combat_patrol", "kill_team"])
+        .enum(["40k", "40k_10e", "40k_11e", "combat_patrol", "kill_team", "heresy"])
         .optional()
         .describe(
           "Game mode/edition: defaults to '40k_11e'. Pass '40k_10e' for 10th Edition units, " +
-            "'40k'/'40k_11e' for 11th Edition (current default), or 'kill_team' for Kill Team operatives.",
+            "'40k'/'40k_11e' for 11th Edition (current default), 'kill_team' for Kill Team operatives, " +
+            "or 'heresy' for Horus Heresy 3rd edition units (a model name such as 'Legionaries' finds its unit).",
         ),
     },
     async ({ units, game_mode }) => {
+      if (game_mode === "heresy") return compareHeresy(units);
+
       if (game_mode === "kill_team") {
         const { found, notFound, duplicates } = resolveNames<KillTeamOperative>(KILL_TEAM_OPERATIVES, units);
 

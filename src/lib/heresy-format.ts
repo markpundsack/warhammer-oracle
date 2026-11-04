@@ -346,3 +346,57 @@ export function findHeresyWeapons(weapons: HeresyWeapon[], query: string): Heres
   const top = normalizeName(ranked[0].item.name);
   return ranked.filter((r) => normalizeName(r.item.name) === top).map((r) => r.item);
 }
+
+// === Unit comparison ===
+
+/**
+ * 2–4 Heresy datasheets side by side: one stat table with every model of
+ * every unit (so "T4 vs T5" reads off one table), points and size, then each
+ * unit's special rules and weapons as one-liners.
+ */
+export function formatHeresyComparison(units: HeresyUnit[], factions: HeresyFaction[], notes: string[] = []): string {
+  const sections: string[] = [heresyStamp(), `# Horus Heresy Unit Comparison (${units.length} unit${units.length === 1 ? "" : "s"})`];
+  if (notes.length) sections.push(notes.map((n) => `> ${n}`).join("\n"));
+
+  sections.push(
+    [
+      "| Unit | Faction | Points | Size |",
+      "|---|---|---|---|",
+      ...units.map((u) => `| ${u.name} | ${factionLabel(u, factions)} | ${formatPoints(u).replace(/^ — /, "") || "-"} | ${formatUnitSize(u.unitSize)} |`),
+    ].join("\n"),
+  );
+
+  const modelRows = units.flatMap((u) =>
+    u.models.map(
+      (m) =>
+        `| ${u.name} | ${m.name} | ${m.type} | ${m.movement} | ${m.weaponSkill} | ${m.ballisticSkill} | ${m.strength} | ${m.toughness} | ${m.wounds} | ${m.initiative} | ${m.attacks} | ${m.leadership} | ${m.cool} | ${m.willpower} | ${m.intelligence} | ${m.save} | ${m.invulnerableSave} |`,
+    ),
+  );
+  if (modelRows.length) {
+    sections.push(
+      [
+        "### Model Profiles",
+        "",
+        "| Unit | Model | Type | M | WS | BS | S | T | W | I | A | LD | CL | WP | IN | SAV | INV |",
+        "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|",
+        ...modelRows,
+      ].join("\n"),
+    );
+  }
+  for (const u of units.filter((x) => x.armoured.length)) {
+    sections.push(formatArmouredProfiles(u).replace("### Armoured Profiles", `### Armoured Profiles — ${u.name}`));
+  }
+
+  for (const u of units) {
+    const lines = [`### ${u.name}`, "", `**Special Rules:** ${u.specialRules.length ? u.specialRules.join(", ") : "None listed"}`];
+    if (u.conditionalRules.length) lines.push(`**Only with certain army options:** ${u.conditionalRules.join(", ")}`);
+    if (u.rangedWeapons.length) lines.push("", "**Ranged:**", ...u.rangedWeapons.map((w) => `- ${describeHeresyRanged(w)}`));
+    if (u.meleeWeapons.length) lines.push("", "**Melee:**", ...u.meleeWeapons.map((w) => `- ${describeHeresyMelee(w)}`));
+    sections.push(lines.join("\n"));
+  }
+  sections.push(
+    "_Weapons are every profile the unit can take (default loadout and options); use lookup_unit with game_mode \"heresy\" for which model carries what. " +
+      "Melee weapons modify the bearer's characteristics._",
+  );
+  return sections.join("\n\n");
+}

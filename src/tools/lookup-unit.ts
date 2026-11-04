@@ -5,7 +5,8 @@ import { UNITS_11E } from "../data/units-11e.js";
 import { KILL_TEAM_OPERATIVES } from "../data/kill-team-operatives.js";
 import { HERESY_UNITS, HERESY_FACTIONS } from "../data/heresy-units.js";
 import { fuzzySearch, normalizeName, rankByName } from "../lib/search.js";
-import { formatHeresyUnit, heresyContentKey, heresyStamp, HERESY_LABEL } from "../lib/heresy-format.js";
+import { formatHeresyUnit, heresyStamp, HERESY_LABEL } from "../lib/heresy-format.js";
+import { findHeresyUnit, modelMatchNote } from "../lib/heresy-unit-match.js";
 import {
   rankUnitMatches,
   matchUnitsWithFactionHint,
@@ -225,17 +226,8 @@ function reply(text: string) {
 }
 
 function lookupHeresyUnit(unitName: string, faction?: string, datasheetId?: string): LookupResult {
-  let candidates: HeresyUnit[] = [...HERESY_UNITS];
-  // A Legion name also finds the generic Legiones Astartes units it can field.
-  if (faction) candidates = fuzzySearch(candidates, faction, ["faction", "availableIn"]);
-  if (datasheetId) candidates = candidates.filter((u) => u.id === datasheetId);
-
-  // Among equal name scores, the shortest name is the closest match
-  // ("Contemptor" → "Contemptor Dreadnought", not "Contemptor-Incaendius Dreadnought").
-  const ranked = rankByName(candidates, unitName, (u) => u.name, 0.3).sort(
-    (a, b) => b.score - a.score || a.item.name.length - b.item.name.length,
-  );
-  if (ranked.length === 0) {
+  const match = findHeresyUnit(unitName, { faction, datasheetId });
+  if (!match) {
     return {
       score: 0,
       text:
@@ -244,28 +236,23 @@ function lookupHeresyUnit(unitName: string, faction?: string, datasheetId?: stri
         `Try a partial name or check the spelling. Note: Legion units are named without "Legion" (e.g. "Tactical Squad").`,
     };
   }
-  const score = ranked[0].score;
-  const closest = ranked[0].item.name;
-
-  // Same-name datasheets: identical copies (e.g. each Legion's own "Inductii
-  // Squad") collapse to one; genuinely different ones need a faction.
-  const top = ranked[0].item;
-  const sameName = ranked.map((r) => r.item).filter((u) => normalizeName(u.name) === normalizeName(top.name));
-  const contents = new Map<string, HeresyUnit[]>();
-  for (const u of sameName) contents.set(heresyContentKey(u), [...(contents.get(heresyContentKey(u)) ?? []), u]);
-  if (contents.size > 1 && score >= 0.9) {
-    const options = [...contents.values()].map((group) => group[0]);
-    const lines = options.map((o) => `- **${o.name}** (${o.faction}) — datasheet_id: \`${o.id}\``);
+  if (match.kind === "model") {
+    // Scored a little under a unit-name match, so a model name alone never pulls a no-game_mode question over from 40K.
+    const text = withCrossSystemNote(formatHeresyUnit(match.unit, HERESY_FACTIONS, []), heresyStamp(), modelMatchNote(match, unitName).replace(/^_|_$/g, ""));
+    return { score: match.score * 0.95, closest: match.unit.name, text };
+  }
+  const { unit: top, score, variants, alsoIn } = match;
+  if (variants.length > 1) {
+    const lines = variants.map((o) => `- **${o.name}** (${o.faction}) — datasheet_id: \`${o.id}\``);
     return {
       score,
-      closest,
+      closest: top.name,
       text:
         `${heresyStamp()}\n\n"${top.name}" is more than one ${HERESY_LABEL} datasheet with different stats, weapons, rules or points. ` +
         `Re-run \`lookup_unit\` with game_mode "heresy" and the \`faction\` (or \`datasheet_id\`) set to one of:\n\n${lines.join("\n")}`,
     };
   }
-  const alsoIn = (contents.get(heresyContentKey(top)) ?? []).filter((u) => u !== top).map((u) => u.faction);
-  return { score, closest, text: formatHeresyUnit(top, HERESY_FACTIONS, alsoIn) + fortyKHint(top.name) };
+  return { score, closest: top.name, text: formatHeresyUnit(top, HERESY_FACTIONS, alsoIn) + fortyKHint(top.name) };
 }
 
 function lookup40kUnit(

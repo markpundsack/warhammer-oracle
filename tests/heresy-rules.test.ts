@@ -204,3 +204,44 @@ describe("lookup_phase / game_flow with game_mode heresy", () => {
     expect(text).not.toContain("11th Edition");
   });
 });
+
+describe("Heresy units named by a model, and compare_units with game_mode heresy", () => {
+  it("lookup_unit finds the unit fielding a named model (Legionaries → Tactical Squad)", async () => {
+    const text = await call("lookup_unit", { unit_name: "Legionaries", game_mode: "heresy" });
+    expect(text.startsWith(HERESY_STAMP)).toBe(true);
+    expect(text).toContain('"Legionaries" is a model, not a unit: the Legionary in the Tactical Squad datasheet');
+    expect(text).toContain("# Tactical Squad");
+  });
+
+  it("a unit name still beats a model name", async () => {
+    const text = await call("lookup_unit", { unit_name: "Tactical Squad", game_mode: "heresy" });
+    expect(text).not.toContain("is a model, not a unit");
+  });
+
+  it("with no game_mode, a 40K unit of that name still wins", async () => {
+    const text = await call("lookup_unit", { unit_name: "Legionaries" });
+    expect(text.startsWith("[Mode: 40k 11e]")).toBe(true);
+  });
+
+  it("compares two Terminator squads in one stat table", async () => {
+    const text = await call("compare_units", { units: ["Cataphractii Terminator Squad", "Tartaros Terminator Squad"], game_mode: "heresy" });
+    expect(text.startsWith(HERESY_STAMP)).toBe(true);
+    expect(text).toContain("# Horus Heresy Unit Comparison (2 units)");
+    expect(text).toContain("| Unit | Model | Type | M | WS | BS | S | T | W | I | A | LD | CL | WP | IN | SAV | INV |");
+    expect(text).toMatch(/\| Cataphractii Terminator Squad \| Cataphractii Terminator \|.*\| 4\+ \|/);
+    expect(text).toMatch(/\| Tartaros Terminator Squad \| Tartaros Terminator \|.*\| 5\+ \|/);
+    expect(text).not.toContain("| OC |"); // never 40K headers
+  });
+
+  it("resolves a model name, notes a miss, and shows a duplicate once", async () => {
+    const text = await call("compare_units", { units: ["Legionaries", "Tactical Squad", "Qqq Fake Unit"], game_mode: "heresy" });
+    expect(text).toContain("**Units not found:**");
+    expect(text).toContain("matched Tactical Squad again");
+    expect(text).toMatch(/# Horus Heresy Unit Comparison \(1 unit\)$/m);
+  });
+
+  it("compares a vehicle with its armour profile", async () => {
+    const text = await call("compare_units", { units: ["Sicaran Battle Tank", "Predator"], game_mode: "heresy" });
+    expect(text).toContain("### Armoured Profiles — Sicaran");
+  });
+});
