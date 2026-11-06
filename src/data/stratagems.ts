@@ -11135,6 +11135,7 @@ const DARK_ANGELS_STRATAGEMS: Stratagem[] = [
 // Type-classification caveat: the 3 Faction Pack detachments with 3 stratagems
 // each have no type stated anywhere (same pattern as every other faction's
 // newest detachments) — types are a best-effort inference from WHEN wording.
+// Re-synced 2026-11-06: Imperial Knights Faction Pack v1.2, legal from 26 Aug 2026. Compared; Rules Updates errata were already present and pack text differs only in wording. No entries changed.
 const IMPERIAL_KNIGHTS_STRATAGEMS: Stratagem[] = [
   // --- Dominus Foebreakers (Faction Pack) ---
   {
