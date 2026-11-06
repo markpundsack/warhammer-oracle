@@ -201,4 +201,13 @@ describe("lookup_keyword existing behaviour", () => {
   it("an explicit Heresy lookup is never answered from the 40K core rules", async () => {
     expect(await lookup("emergency disembark", "heresy")).not.toContain("18.05");
   });
+
+  it("corrected keywords: Stealth is a BS penalty, Anti-Infantry finds Anti-X", async () => {
+    const stealth = await client.callTool({ name: "lookup_keyword", arguments: { keyword: "Stealth" } });
+    const st = (stealth.content as Array<{ type: string; text: string }>)[0].text;
+    expect(st).toContain("worsens the attacker's BS by 1");
+    expect(st).not.toContain("armour save");
+    const anti = await client.callTool({ name: "lookup_keyword", arguments: { keyword: "Anti-Infantry 4+" } });
+    expect((anti.content as Array<{ type: string; text: string }>)[0].text).toContain("critical wound");
+  });
 });

@@ -42,7 +42,7 @@ export const KEYWORDS: KeywordDefinition[] = [
     description:
       "Improves the critical wound threshold against targets with a specific keyword. Anti-Infantry 4+ means unmodified wound rolls of 4+ are critical wounds against Infantry.",
     plainEnglish:
-      "This weapon is specialised against a particular type of target. 'Anti-Infantry 4+' means when shooting at Infantry, your wound rolls of 4+ count as critical wounds (6s). Why does that matter? Because critical wounds trigger things like Devastating Wounds and Sustained Hits. On its own, Anti-X doesn't change your wound roll — but paired with Dev Wounds, it's devastating.",
+      "This weapon is specialised against a type of target. 'Anti-Infantry 4+' means that against Infantry, an unmodified wound roll of 4 or more is a critical wound, and so is a wound whatever the target's Toughness. It matters most on weapons with abilities that trigger on critical wounds, such as Devastating Wounds.",
     gameModes: ["40k", "combat_patrol"],
     examples: [
       "A weapon with Anti-Vehicle 4+ and Devastating Wounds against a tank: every wound roll of 4+ becomes mortal wounds.",
@@ -179,7 +179,7 @@ export const KEYWORDS: KeywordDefinition[] = [
     description:
       "If every model in a unit has this ability, each time a ranged attack targets that unit, it has the benefit of cover against that attack.",
     plainEnglish:
-      "This unit gets the benefit of cover against ranged attacks, on top of any cover it gets from terrain. It's no longer a flat -1 to the enemy's hit roll — it's the same 'Benefit of Cover' bonus terrain gives (typically +1 to the unit's armour save, capped so an unmodified 3+ is as good as it gets). It still stacks with actual terrain cover in the sense that being in cover doesn't grant it twice, but Stealth guarantees the bonus even in the open.",
+      "Ranged attacks at this unit count it as having the benefit of cover, even in the open, as long as every model has the ability. Cover worsens the attacker's BS by 1; it doesn't change the save.",
     gameModes: ["40k", "combat_patrol"],
   },
   {
@@ -214,7 +214,7 @@ export const KEYWORDS: KeywordDefinition[] = [
     description:
       "Units with this ability that are eligible to fight do so in the Fights First step, before other units.",
     plainEnglish:
-      "In the Fight phase, this unit swings before almost everyone else. Normally, the player whose turn it is picks first, but Fights First overrides that. If you charge a unit with Fights First, they hit you before you get to attack — which can be nasty. If both sides have Fights First, it goes back to normal alternating order.",
+      "In the Fight phase, Fights First units are picked to fight before all others, with players alternating from the active player. Units that charged this turn fight in that first step too. When those are done, players alternate through the rest.",
     gameModes: ["40k", "combat_patrol"],
   },
   {

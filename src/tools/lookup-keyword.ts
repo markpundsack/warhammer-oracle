@@ -270,6 +270,8 @@ function lookup40kKeyword(keyword: string, gameMode: GameMode | undefined, { cor
   // 1. Curated KEYWORDS first (substring match on name, best name match first).
   //    A value in the query ("Feel No Pain (5+)") is dropped if the full text finds nothing,
   //    and is tried against the keywords before the rules data ("Feel No Pain 5+" is in both).
+  // "Anti-Infantry 4+" is how weapons name it; the keyword is "Anti-X".
+  if (/^\s*anti[- ][a-z]/i.test(keyword)) keyword = "Anti-X";
   const bare = withoutValue(keyword);
   let query = keyword;
   let allCuratedMatches = byScore(fuzzySearch(KEYWORDS, query, ["name"]), query);

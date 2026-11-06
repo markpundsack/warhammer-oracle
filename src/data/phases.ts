@@ -8,8 +8,8 @@ const PHASES_40K: Phase[] = [
     gameMode: "40k",
     steps: [
       "Both players gain 1 Command Point (Core CP) — the same CP used to pay for Stratagems.",
-      "Resolve any 'start of Command phase' abilities (the Command Abilities step).",
       "Battle-shock rolls: the active player makes a battle-shock roll (2D6 vs. the unit's Leadership) for every unit that is currently Battle-shocked, or is at or below Half-strength. Failing leaves it (or makes it) Battle-shocked; passing clears an existing Battle-shocked status.",
+      "Resolve abilities that trigger in the Command phase (the Command Abilities step). Those that trigger at the start of the phase happen first, before Core CP.",
     ],
     tips: [
       "Don't forget your free CP — it's easy to miss on turn 1.",
