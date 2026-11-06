@@ -2332,6 +2332,7 @@ const CHAOS_SPACE_MARINES_STRATAGEMS: Stratagem[] = [
 // confirmation this is presently a genuine gap in the source material community-wide,
 // not just a limitation of this project's PDF extraction. Re-check once a Detachment
 // Focus-style deep-dive covers these three detachments.
+// Re-synced 2026-11-06: Chaos Daemons Faction Pack v1.2, legal from 30 Sep 2026. All nine detachments are printed in the pack. Changed: From Beyond the Veil (2CP), The Realm of Chaos. Thieves of Pain replaced by Rapturous Agony.
 const CHAOS_DAEMONS_STRATAGEMS: Stratagem[] = [
   {
     name: "Corrupt Realspace",
@@ -2391,8 +2392,8 @@ const CHAOS_DAEMONS_STRATAGEMS: Stratagem[] = [
     cpCost: 1,
     phase: "Opponent's turn",
     when: "End of your opponent's turn.",
-    target: "Up to two Legiones Daemonica units from your army within your army's Shadow of Chaos, or one other Legiones Daemonica unit.",
-    effect: "Remove the targeted units and place them into Strategic Reserves; they return using Deep Strike in your next Movement phase's Reinforcements step.",
+    target: "Up to two LEGIONES DAEMONICA units from your army within your Shadow of Chaos, or one other LEGIONES DAEMONICA unit from your army.",
+    effect: "Put them in strategic reserves. They must make an ingress move in your next Movement phase, even in your first turn.",
     restrictions: "Cannot target units within Engagement Range of one or more enemy units.",
     gameModes: ["40k"],
   },
@@ -2489,11 +2490,11 @@ const CHAOS_DAEMONS_STRATAGEMS: Stratagem[] = [
     faction: "Legiones Daemonica",
     detachment: "Cavalcade of Chaos",
     type: "strategic_ploy",
-    cpCost: 1,
+    cpCost: 2,
     phase: "Movement phase",
-    when: "End of the Movement phase, from the start of the battle.",
-    target: "One friendly Legiones Daemonica Mounted unit in Strategic Reserves.",
-    effect: "Your unit can make an ingress move.",
+    when: "End of a Movement phase, at any point from the start of the battle.",
+    target: "A LEGIONES DAEMONICA MOUNTED unit from your army in strategic reserves.",
+    effect: "It can make an ingress move.",
     gameModes: ["40k"],
   },
   {
@@ -2829,19 +2830,6 @@ const CHAOS_DAEMONS_STRATAGEMS: Stratagem[] = [
     gameModes: ["40k"],
   },
   {
-    name: "Thieves of Pain",
-    faction: "Legiones Daemonica",
-    detachment: "Legion of Excess",
-    type: "strategic_ploy",
-    cpCost: 1,
-    phase: "Any phase",
-    when: "Any phase, just after an attack or mortal wound is allocated to a model in a Legiones Daemonica Slaanesh unit from your army (excluding Monsters and Vehicles).",
-    target: "That unit.",
-    effect:
-      "Select another friendly Legiones Daemonica Slaanesh unit within 9\" and visible; until the end of the phase, while it remains on the battlefield, each time a model in your unit would lose a wound, inflict 1 mortal wound on the selected unit instead.",
-    gameModes: ["40k"],
-  },
-  {
     name: "Overwhelming Excess",
     faction: "Legiones Daemonica",
     detachment: "Legion of Excess",
@@ -2901,6 +2889,18 @@ const CHAOS_DAEMONS_STRATAGEMS: Stratagem[] = [
     target: "That unit.",
     effect:
       "Select an enemy unit within Engagement Range of your unit and roll one D6 for each of your models within Engagement Range of it (six D6 instead if your unit is a Monster unit): each 4+ inflicts 1 mortal wound on it.",
+    gameModes: ["40k"],
+  },
+  {
+    name: "Rapturous Agony",
+    faction: "Legiones Daemonica",
+    detachment: "Legion of Excess",
+    type: "strategic_ploy",
+    cpCost: 1,
+    phase: "Opponent's Shooting phase or the Fight phase",
+    when: "Your opponent's Shooting phase or the Fight phase, when an enemy unit targets a LEGIONES DAEMONICA SLAANESH unit from your army (not a MONSTER or VEHICLE).",
+    target: "That LEGIONES DAEMONICA SLAANESH unit.",
+    effect: "Attacks against it with a Strength above its Toughness have -1 to wound rolls.",
     gameModes: ["40k"],
   },
 ];
