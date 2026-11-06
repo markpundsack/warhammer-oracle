@@ -5469,6 +5469,7 @@ const THOUSAND_SONS_STRATAGEMS: Stratagem[] = [
 // — this also happens to match the `faction` field already used for these detachments in
 // detachments-11e.ts (unlike Chaos Space Marines, where the detachment-list `faction`
 // differs from the army keyword used in its own stratagems).
+// Re-synced 2026-11-06: World Eaters Faction Pack v1.3, legal from 30 Sep 2026. Changed from the pack: Apoplectic Clarity. From Rules Updates: Berzerker's Wrath, Fury Unleashed, Warp Stalkers.
 const WORLD_EATERS_STRATAGEMS: Stratagem[] = [
   // --- Berzerker Warband (10e Codex baseline) ---
   {
@@ -5539,9 +5540,9 @@ const WORLD_EATERS_STRATAGEMS: Stratagem[] = [
     type: "strategic_ploy",
     cpCost: 1,
     phase: "Opponent's Shooting phase",
-    when: "Your opponent's Shooting phase, when a friendly KHORNE BERZERKERS unit makes a Blood Surge move as a result of enemy attacks.",
-    target: "That unit.",
-    effect: "Instead of rolling a D6 for the distance, models in your unit move up to 8\" for that Blood Surge move.",
+    when: "Your opponent's Shooting phase, when enemy attacks let a KHORNE BERZERKERS unit from your army make a surge move.",
+    target: "That KHORNE BERZERKERS unit, if it can make a surge move because of those attacks.",
+    effect: "Don't roll for the distance: its models can move up to 8\" when they make that surge move.",
     gameModes: ["40k"],
   },
 
@@ -5755,9 +5756,9 @@ const WORLD_EATERS_STRATAGEMS: Stratagem[] = [
     type: "strategic_ploy",
     cpCost: 1,
     phase: "Movement phase or the Charge phase",
-    when: "Your Movement phase or Charge phase, before a WORLD EATERS POSSESSED unit moves or charges.",
+    when: "Your Movement phase or Charge phase, before a WORLD EATERS POSSESSED unit from your army moves or charges.",
     target: "That unit.",
-    effect: "Until the end of the phase, models in your unit can move through enemy models (excluding MONSTER/VEHICLE) and into Engagement Range of them; any Desperate Escape test taken as a result is automatically passed.",
+    effect: "Until the end of the phase, its Normal, Advance, Fall Back and Charge moves can pass through enemy models (not MONSTERS or VEHICLES) and within their Engagement Range, but only a Charge move can end there. Any Desperate Escape test is passed automatically.",
     gameModes: ["40k"],
   },
   {
@@ -5843,9 +5844,9 @@ const WORLD_EATERS_STRATAGEMS: Stratagem[] = [
     type: "strategic_ploy",
     cpCost: 1,
     phase: "Opponent's Shooting phase",
-    when: "Your opponent's Shooting phase, just after an enemy unit has shot a WORLD EATERS RHINO with wounds remaining.",
+    when: "Your opponent's Shooting phase, just after an enemy unit has shot a WORLD EATERS RHINO that still has wounds.",
     target: "That RHINO.",
-    effect: "One KHORNE BERZERKERS unit embarked within it can disembark and then make a surge move of up to D6+2\".",
+    effect: "One KHORNE BERZERKERS unit inside it can make a disembark move and then a surge move of up to D6+2\".",
     restrictions: "Cannot be used on the same unit in the same phase as Unrelenting Advance.",
     gameModes: ["40k"],
   },
@@ -5858,9 +5859,9 @@ const WORLD_EATERS_STRATAGEMS: Stratagem[] = [
     type: "battle_tactic",
     cpCost: 1,
     phase: "Shooting phase or the Fight phase",
-    when: "Your Shooting phase or the Fight phase, when a friendly DAEMON VEHICLE unit is selected to attack.",
-    target: "That unit.",
-    effect: "Until the end of the phase, your unit's attacks ignore negative modifiers to BS, WS, Hit rolls, and Wound rolls.",
+    when: "Your Shooting phase or the Fight phase, when a DAEMON VEHICLE unit from your army is selected to attack.",
+    target: "That DAEMON VEHICLE unit.",
+    effect: "Its attacks can ignore modifiers to BS, WS, hit rolls and wound rolls.",
     gameModes: ["40k"],
   },
   {
