@@ -13513,6 +13513,7 @@ const ADEPTUS_CUSTODES_STRATAGEMS: Stratagem[] = [
 // faction's newest detachments) — types are a best-effort inference from
 // WHEN wording (reactive-to-an-enemy-action triggers -> battle_tactic,
 // self-initiated triggers -> strategic_ploy).
+// Re-synced 2026-11-06: Grey Knights Faction Pack v1.2, legal from 30 Sep 2026. Changed from Rules Updates: Aggressive Anticipation, Shadow of Anarch, Precognitive Strategies.
 const GREY_KNIGHTS_STRATAGEMS: Stratagem[] = [
   // --- Argent Assault (Faction Pack) ---
   {
@@ -13707,8 +13708,8 @@ const GREY_KNIGHTS_STRATAGEMS: Stratagem[] = [
     cpCost: 1,
     phase: "Shooting phase or Fight phase",
     when: "Your Shooting phase or the Fight phase.",
-    target: "One GREY KNIGHTS PSYKER unit from your army that has not been selected to shoot or fight this phase.",
-    effect: "Until the end of the phase, each time a model in your unit makes an attack, you can ignore any or all modifiers to that attack's Weapon Skill or Ballistic Skill characteristics and/or any or all modifiers to the Hit roll.",
+    target: "A GREY KNIGHTS PSYKER unit from your army not yet selected to shoot or fight this phase.",
+    effect: "Its attacks can re-roll hit rolls.",
     gameModes: ["40k"],
   },
   {
@@ -13840,8 +13841,8 @@ const GREY_KNIGHTS_STRATAGEMS: Stratagem[] = [
     cpCost: 1,
     phase: "Opponent's Movement phase",
     when: "Your opponent's Movement phase, just after an enemy unit ends a Normal, Advance or Fall Back move.",
-    target: "One GREY KNIGHTS PSYKER unit from your army that is within 9\" of that enemy unit and is not within Engagement Range of one or more enemy units.",
-    effect: "Your unit can make a Normal move of up to 6\", or, if it has the Deep Strike ability, it can be placed into Strategic Reserves.",
+    target: "A GREY KNIGHTS PSYKER unit from your army within 8\" of that enemy unit and not within Engagement Range of any enemy unit.",
+    effect: "It can make a Normal move of up to 6\" or, if it has Deep Strike, go into Strategic Reserves.",
     gameModes: ["40k"],
   },
   // --- Brotherhood Strike (Codex baseline, via 40k.app) ---
@@ -13974,8 +13975,8 @@ const GREY_KNIGHTS_STRATAGEMS: Stratagem[] = [
     cpCost: 1,
     phase: "Opponent's Movement phase",
     when: "Your opponent's Movement phase, just after an enemy unit ends a Normal, Advance or Fall Back move.",
-    target: "One GREY KNIGHTS INFANTRY unit from your army that is within 9\" of that enemy unit and not within Engagement Range of one or more enemy units.",
-    effect: "Your unit can make a Normal move of up to D6\".",
+    target: "A GREY KNIGHTS INFANTRY unit from your army within 8\" of that enemy unit and not within Engagement Range of any enemy unit.",
+    effect: "It can make a Normal move of up to D6\".",
     gameModes: ["40k"],
   },
   {
