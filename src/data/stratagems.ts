@@ -15478,6 +15478,7 @@ const ORKS_STRATAGEMS: Stratagem[] = [
 // each. "Armour of Contempt" reuses the same name and effect as Dark
 // Angels', Deathwatch's and Blood Angels' shared stratagems of the same
 // name — no key collision since `(faction, detachment, name)` differs.
+// Re-synced 2026-11-06: Imperial Agents Faction Pack v1.3, legal from 14 Oct 2026. Changed: Ensnaring Trap (the pack has no charge-bonus clause).
 const AGENTS_OF_THE_IMPERIUM_STRATAGEMS: Stratagem[] = [
   // --- Veiled Blade Elimination Force (Faction Pack) ---
   {
@@ -15548,8 +15549,8 @@ const AGENTS_OF_THE_IMPERIUM_STRATAGEMS: Stratagem[] = [
     cpCost: 1,
     phase: "Opponent's Charge phase",
     when: "End of your opponent's Charge phase.",
-    target: "One Agents of the Imperium Infantry unit from your army that is within 6\" of one or more enemy units and would be eligible to declare a charge against one or more of those enemy units.",
-    effect: "Your unit can declare a charge. When doing so, you must select one or more of those enemy units as the targets of that charge, and your unit does not receive a Charge bonus this turn. In addition, if it is a Callidus Assassin unit and it makes a Charge move as a result of this Stratagem, until the end of the turn, each time a model in your unit makes a melee attack, add 1 to the Wound roll.",
+    target: "An AGENTS OF THE IMPERIUM INFANTRY unit from your army within 6\" of one or more enemy units, which would be eligible to declare a charge at them.",
+    effect: "It can declare a charge, targeting one or more of those enemy units. If it's a CALLIDUS ASSASSIN unit and it charges this way, its melee attacks have +1 to the Wound roll until the end of the turn.",
     gameModes: ["40k"],
   },
   // --- Alien Hunters (Ordo Xenos) (Codex baseline, via 40k.app) ---
