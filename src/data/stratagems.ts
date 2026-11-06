@@ -6782,6 +6782,7 @@ const BLACK_TEMPLARS_STRATAGEMS: Stratagem[] = [
 //
 // Faction field: rules text consistently refers to "ADEPTA SORORITAS unit", matching
 // BSData's own faction string exactly, so faction is set to "Adepta Sororitas".
+// Re-synced 2026-11-06: Adepta Sororitas Faction Pack v1.4, legal from 14 Oct 2026. Changed from the pack: Inspirational Battle Canticles, To the Heart of Heresy, Path of the Righteous. From Rules Updates: Light of the Emperor (2CP), Blinding Radiance, Suffering and Sacrifice, Divine Intervention.
 const ADEPTA_SORORITAS_STRATAGEMS: Stratagem[] = [
   // --- Chorus of Condemnation (Faction Pack) ---
   {
@@ -6791,9 +6792,9 @@ const ADEPTA_SORORITAS_STRATAGEMS: Stratagem[] = [
     type: "battle_tactic",
     cpCost: 1,
     phase: "Command phase",
-    when: "Start of your Command phase.",
-    target: "One friendly ADEPTA SORORITAS INFANTRY FLY unit, or one friendly EXORCIST unit.",
-    effect: "Select one friendly Battle-shocked ADEPTA SORORITAS unit within 6\" of your unit. That unit is no longer Battle-shocked.",
+    when: "Start of the Command phase.",
+    target: "An ADEPTA SORORITAS INFANTRY FLY unit or an EXORCIST unit from your army.",
+    effect: "Pick one battle-shocked ADEPTA SORORITAS unit from your army within 6\" of it. That unit stops being battle-shocked.",
     gameModes: ["40k"],
   },
   {
@@ -6879,9 +6880,9 @@ const ADEPTA_SORORITAS_STRATAGEMS: Stratagem[] = [
     type: "battle_tactic",
     cpCost: 1,
     phase: "Fight phase",
-    when: "Your Fight phase.",
-    target: "One ADEPTA SORORITAS unit from your army that has not been selected to fight this phase.",
-    effect: "Until the end of the turn, models in your unit can move up to 6\" (instead of 3\") when making Pile-in or Consolidation moves. If your unit is Righteous, it does not need to end a Consolidation move closer to the closest enemy model, provided it ends as close as possible to the closest enemy unit.",
+    when: "Fight phase.",
+    target: "An ADEPTA SORORITAS unit from your army not yet selected to fight this phase.",
+    effect: "Until the end of the turn, its Pile-in and Consolidation moves can be up to 6\" instead of 3\". If it's Righteous, those moves needn't end closer to the closest enemy model, as long as they end as close as possible to the closest enemy unit.",
     gameModes: ["40k"],
   },
   {
@@ -6903,9 +6904,9 @@ const ADEPTA_SORORITAS_STRATAGEMS: Stratagem[] = [
     type: "battle_tactic",
     cpCost: 1,
     phase: "Fight phase",
-    when: "Your Fight phase.",
-    target: "One ADEPTA SORORITAS unit from your army that has not been selected to fight this phase.",
-    effect: "Until the end of the turn, your unit's melee weapons have +1 Strength; if your unit is Righteous, until the end of the phase they also have +1 AP.",
+    when: "Fight phase.",
+    target: "An ADEPTA SORORITAS unit from your army not yet selected to fight this phase.",
+    effect: "Until the end of the turn its models' melee weapons have +1 Strength. If it's Righteous, those weapons also have +1 AP until the end of the phase.",
     gameModes: ["40k"],
   },
   {
@@ -6941,9 +6942,9 @@ const ADEPTA_SORORITAS_STRATAGEMS: Stratagem[] = [
     type: "epic_deed",
     cpCost: 1,
     phase: "Any phase",
-    when: "Any phase, just after a friendly ADEPTA SORORITAS CHARACTER unit is destroyed.",
-    target: "That unit.",
-    effect: "Discard 1-3 Miracle dice. At the end of the phase, set the last destroyed model in that unit back up on the battlefield, as close as possible to where it was destroyed and not within Engagement Range of any enemy models, with wounds equal to D3 plus the number of Miracle dice discarded (to a maximum of its starting wounds).",
+    when: "Any phase, just after an ADEPTA SORORITAS CHARACTER model from your army is destroyed.",
+    target: "That model, even though it was just destroyed.",
+    effect: "You can discard 1-3 Miracle dice. At the end of the phase, return it to the battlefield, unengaged and as close as possible to where it died. It isn't part of an attached unit and its unit's starting strength is 1. It has D3 wounds, plus 1 per Miracle dice discarded, up to its starting wounds.",
     restrictions: "Cannot target the same CHARACTER model twice per battle, nor Saint Celestine.",
     gameModes: ["40k"],
   },
@@ -6955,8 +6956,8 @@ const ADEPTA_SORORITAS_STRATAGEMS: Stratagem[] = [
     cpCost: 1,
     phase: "Fight phase",
     when: "Fight phase, just after an enemy model within Engagement Range of a friendly unit selects its targets.",
-    target: "One friendly ADEPTA SORORITAS INFANTRY or ADEPTA SORORITAS WALKER unit.",
-    effect: "Until the end of the phase, that enemy model must select your unit as the target of its attacks.",
+    target: "An ADEPTA SORORITAS INFANTRY or WALKER unit from your army.",
+    effect: "Until the end of the phase, every enemy model within Engagement Range of your unit must target your unit when it selects targets.",
     gameModes: ["40k"],
   },
   {
@@ -7174,11 +7175,11 @@ const ADEPTA_SORORITAS_STRATAGEMS: Stratagem[] = [
     faction: "Adepta Sororitas",
     detachment: "Army of Faith",
     type: "battle_tactic",
-    cpCost: 1,
+    cpCost: 2,
     phase: "Command phase",
     when: "Your Command phase.",
-    target: "One ADEPTA SORORITAS unit from your army.",
-    effect: "Until the end of the turn, your unit is Blessed: it ignores modifiers to its characteristics, and to Weapon Skill, Ballistic Skill, and other rolls or tests it makes (excluding saving throws). If your unit has the JUMP PACK keyword, friendly units within 3\" of it are also Blessed.",
+    target: "An ADEPTA SORORITAS unit from your army.",
+    effect: "Until the end of the turn it is Blessed: it ignores modifiers to its characteristics, to Weapon Skill and Ballistic Skill, and to its rolls and tests, except saving throws. If it has JUMP PACK, friendly units within 3\" are Blessed too.",
     gameModes: ["40k"],
   },
   {
@@ -7200,9 +7201,9 @@ const ADEPTA_SORORITAS_STRATAGEMS: Stratagem[] = [
     type: "strategic_ploy",
     cpCost: 1,
     phase: "Shooting phase or the Fight phase",
-    when: "Your opponent's Shooting phase or the Fight phase, just after a friendly ADEPTA SORORITAS unit is selected as a target.",
-    target: "That unit, or one friendly ADEPTA SORORITAS JUMP PACK unit within 3\" of it.",
-    effect: "Until the end of the phase, each time an attack targets your unit, subtract 1 from the Hit roll. If your unit has the JUMP PACK keyword, friendly units within 3\" of it gain this effect too.",
+    when: "Your opponent's Shooting phase or the Fight phase, just after an enemy unit selects its targets.",
+    target: "An ADEPTA SORORITAS INFANTRY unit from your army picked as a target of those attacks, or an ADEPTA SORORITAS JUMP PACK unit from your army within 3\" of such a unit.",
+    effect: "Until the end of the phase, attacks that target your unit have -1 to the Hit roll. If you targeted a JUMP PACK unit, attacks that target a friendly ADEPTA SORORITAS INFANTRY unit within 3\" of it have -1 to the Hit roll as well.",
     gameModes: ["40k"],
   },
   {
