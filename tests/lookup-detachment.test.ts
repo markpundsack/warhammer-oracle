@@ -63,7 +63,24 @@ describe("lookup_detachment", () => {
     });
     const text = (result.content as Array<{ type: string; text: string }>)[0].text;
     expect(text).toContain("[Mode: 40k 11e]");
-    expect(text).toContain("only a few 11th Edition factions/detachments are covered so far");
+    expect(text).toContain("No detachment-specific stratagems on file");
+  });
+
+  it.each([
+    ["Brood Brother Auxilia", "Regimental Reinforcements"],
+    ["Ordo Xenos Alien Hunters", "Armour of Contempt"],
+    ["Ordo Malleus Daemon Hunters", "Truesilver Armour"],
+  ])("finds stratagems for %s despite the different name in the data", async (name, stratagem) => {
+    const result = await client.callTool({ name: "lookup_detachment", arguments: { name } });
+    const text = (result.content as Array<{ type: string; text: string }>)[0].text;
+    expect(text).toContain(stratagem);
+    expect(text).toContain("Older text");
+  });
+
+  it("says which pack version a pack detachment is current to", async () => {
+    const result = await client.callTool({ name: "lookup_detachment", arguments: { name: "Ambush Predators" } });
+    const text = (result.content as Array<{ type: string; text: string }>)[0].text;
+    expect(text).toContain("Current to the Tyranids Faction Pack v1.3");
   });
 
   it("returns 10th Edition stratagems when game_mode is pinned to 40k_10e", async () => {

@@ -2,17 +2,19 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { STRATAGEMS } from "../data/stratagems.js";
 import { fuzzySearch } from "../lib/search.js";
+import { stratagemProvenance } from "../data/stratagem-sources.js";
 import type { Stratagem } from "../types.js";
 
 function formatCompact(strat: Stratagem): string {
   const detStr = strat.detachment ? ` [${strat.detachment}]` : "";
-  return `**${strat.name}** (${strat.faction}${detStr}) — ${strat.cpCost} CP | ${strat.phase} | ${strat.type.replace("_", " ")}`;
+  const source = strat.faction === "Core" ? "" : ` | ${stratagemProvenance(strat).short}`;
+  return `**${strat.name}** (${strat.faction}${detStr}) — ${strat.cpCost} CP | ${strat.phase} | ${strat.type.replace("_", " ")}${source}`;
 }
 
 export function registerSearchStratagems(server: McpServer): void {
   server.tool(
     "search_stratagems",
-    "Search Warhammer 40,000 stratagems by name, faction, phase, or detachment. Returns a compact list (max 10). For Kill Team ploys, use lookup_ploy instead.",
+    "Search Warhammer 40,000 stratagems by name, faction, phase, or detachment. Returns a compact list (max 10), each with how current its text is. For Kill Team ploys, use lookup_ploy instead.",
     {
       query: z
         .string()
@@ -83,7 +85,7 @@ export function registerSearchStratagems(server: McpServer): void {
       }
 
       const header =
-        "**Game:** Warhammer 40,000\n\n> Core stratagems reflect the 11th Edition Core Rules. Detachment-specific stratagems reflect 11th Edition faction packs where available (currently Space Marines, Chaos Space Marines) — other factions may still be on 10th Edition Codexes or missing entirely.\n\n";
+        "**Game:** Warhammer 40,000\n\n> Core stratagems reflect the 11th Edition Core Rules. Each detachment stratagem shows its source: the current faction pack version, or older text. Warn the player about anything marked older.\n\n";
       const lines = limited.map(formatCompact);
       const footer =
         matches.length > limited.length

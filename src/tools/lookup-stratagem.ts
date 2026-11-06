@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { STRATAGEMS } from "../data/stratagems.js";
 import { fuzzySearch } from "../lib/search.js";
+import { stratagemProvenance } from "../data/stratagem-sources.js";
 import type { Stratagem } from "../types.js";
 
 export function formatStratagem(strat: Stratagem): string {
@@ -24,11 +25,7 @@ export function formatStratagem(strat: Stratagem): string {
     sections.push(`**Restrictions:** ${strat.restrictions}`);
   }
 
-  sections.push(
-    strat.faction === "Core"
-      ? "> Reflects the Warhammer 40,000 11th Edition Core Rules."
-      : "> Reflects the Warhammer 40,000 11th Edition faction pack for this detachment. Only a few factions/detachments are covered so far — others may still reflect 10th Edition Codexes or be missing entirely.",
-  );
+  sections.push(`> ${stratagemProvenance(strat).note}`);
 
   return sections.join("\n\n");
 }
@@ -36,7 +33,7 @@ export function formatStratagem(strat: Stratagem): string {
 export function registerLookupStratagem(server: McpServer): void {
   server.tool(
     "lookup_stratagem",
-    "Look up a Warhammer 40,000 stratagem by name. Returns CP cost, phase, timing, target, and effect. For Kill Team ploys, use lookup_ploy instead.",
+    "Look up a Warhammer 40,000 stratagem by name. Returns CP cost, phase, timing, target, and effect, and how current the text is. If it says older text, warn the player. For Kill Team ploys, use lookup_ploy instead.",
     {
       name: z.string().describe("Name or partial name of the stratagem to look up"),
       faction: z

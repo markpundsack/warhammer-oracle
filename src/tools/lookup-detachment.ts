@@ -6,6 +6,7 @@ import { ENHANCEMENTS } from "../data/enhancements.js";
 import { ENHANCEMENTS_11E } from "../data/enhancements-11e.js";
 import { STRATAGEMS } from "../data/stratagems.js";
 import { fuzzySearch } from "../lib/search.js";
+import { stratagemDetachmentName, stratagemProvenance } from "../data/stratagem-sources.js";
 import { formatModeStamp } from "../lib/format.js";
 import type { Detachment, Enhancement, GameSystem, Stratagem } from "../types.js";
 
@@ -69,9 +70,13 @@ function formatDetachment(
       (s) => `- **${s.name}** (${s.cpCost} CP, ${s.phase}) — ${s.effect}`,
     );
     sections.push(`### Stratagems\n\n${stratLines.join("\n")}`);
+    if (gameSystem === "wh40k-11e") {
+      const notes = [...new Set(stratagems.map((s) => stratagemProvenance(s).note))];
+      sections.push(notes.map((n) => `> ${n}`).join("\n"));
+    }
   } else if (gameSystem === "wh40k-11e") {
     sections.push(
-      "> No detachment-specific stratagem data for this detachment yet — only a few 11th Edition factions/detachments are covered so far (use lookup_stratagem for Core Stratagems, which apply to every army).",
+      "> No detachment-specific stratagems on file for this detachment. It may be new in an 11th Edition Codex, have none, or be a Boarding Actions detachment, so say that it isn't covered rather than that it has none (use lookup_stratagem for Core Stratagems, which apply to every army).",
     );
   }
 
@@ -132,8 +137,9 @@ export function registerLookupDetachment(server: McpServer): void {
           e.detachment.toLowerCase() === det.name.toLowerCase(),
       );
 
+      const stratagemDetachment = stratagemDetachmentName(det.name).toLowerCase();
       const relatedStratagems = STRATAGEMS.filter(
-        (s) => s.detachment !== null && s.detachment.toLowerCase() === det.name.toLowerCase(),
+        (s) => s.detachment !== null && s.detachment.toLowerCase() === stratagemDetachment,
       );
 
       return {

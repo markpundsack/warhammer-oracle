@@ -1426,10 +1426,9 @@ const CHAOS_SPACE_MARINES_STRATAGEMS: Stratagem[] = [
     type: "strategic_ploy",
     cpCost: 1,
     phase: "Fight phase",
-    when: "Fight phase, just after an enemy unit has selected its targets.",
-    target: "One HERETIC ASTARTES Infantry unit from your army that was targeted.",
-    effect:
-      "Until the end of the phase, each time a model in your unit is destroyed, if it hasn't fought this phase, roll one D6: on a 4+, don't remove it from play — it fights after the attacking unit has finished, then is removed from play.",
+    when: "Fight phase, just after an enemy unit selects its targets.",
+    target: "A HERETIC ASTARTES INFANTRY unit from your army picked as a target of those attacks.",
+    effect: "Until the end of the phase, when a model in your unit is destroyed before it has fought this phase, roll a D6, subtracting 1 if it's a DAMNED unit. On a 4+ it stays in play, fights once the attacking unit has finished, and is then removed.",
     gameModes: ["40k"],
   },
   {

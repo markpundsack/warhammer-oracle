@@ -78,4 +78,41 @@ describe("lookup_stratagem", () => {
     expect(text).toContain("Chaos Knights");
     expect(text).not.toContain("Multiple stratagems named");
   });
+
+  async function lookup(args: Record<string, string>): Promise<string> {
+    const result = await client.callTool({ name: "lookup_stratagem", arguments: args });
+    return (result.content as Array<{ type: string; text: string }>)[0].text;
+  }
+
+  it("says a pack stratagem is current, naming pack version and date", async () => {
+    const text = await lookup({ name: "Scanner Gheist" });
+    expect(text).toContain("Current to the Tyranids Faction Pack v1.3 (legal from 14 Oct 2026)");
+  });
+
+  it("warns on 10e Codex text, naming the pack updates applied", async () => {
+    const text = await lookup({ name: "Reinforced Hive Node" });
+    expect(text).toContain("Older text: 10th Edition Codex wording");
+    expect(text).toContain("Tyranids Faction Pack v1.3");
+  });
+
+  it("warns on factions with no current pack", async () => {
+    const text = await lookup({ name: "Codex Discipline" });
+    expect(text).toContain("no longer lists a Space Marines pack");
+  });
+
+  it.each([
+    ["From Beyond the Veil", "**CP:** 2"],
+    ["Adamantine Behemoth", "**CP:** 2"],
+    ["Infernal Fusillade", "**CP:** 1"],
+    ["Rapturous Agony", "Strength above its Toughness"],
+    ["Crawling Horror", '-6" detection range'],
+    ["Tanglestrike Rounds", '-2" M'],
+    ["Insanity's Ire", 'surge move of up to D6"'],
+  ])("%s reflects the current pack", async (name, expected) => {
+    expect(await lookup({ name })).toContain(expected);
+  });
+
+  it("no longer has the replaced Thieves of Pain", async () => {
+    expect(await lookup({ name: "Thieves of Pain", faction: "Legiones Daemonica", detachment: "Legion of Excess" })).toContain("No Warhammer 40,000 stratagem found");
+  });
 });

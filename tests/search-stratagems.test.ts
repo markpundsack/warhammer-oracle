@@ -72,4 +72,23 @@ describe("search_stratagems", () => {
     const text = (result.content as Array<{ type: string; text: string }>)[0].text;
     expect(text).toContain("lookup_ploy");
   });
+
+  it("marks each detachment stratagem with its source and has no stale disclaimer", async () => {
+    const result = await client.callTool({
+      name: "search_stratagems",
+      arguments: { detachment: "Ambush Predators" },
+    });
+    const text = (result.content as Array<{ type: string; text: string }>)[0].text;
+    expect(text).toContain("pack v1.3, 14 Oct 2026");
+    expect(text).not.toContain("currently Space Marines, Chaos Space Marines");
+  });
+
+  it("marks 10e Codex text as older", async () => {
+    const result = await client.callTool({
+      name: "search_stratagems",
+      arguments: { detachment: "Invasion Fleet" },
+    });
+    const text = (result.content as Array<{ type: string; text: string }>)[0].text;
+    expect(text).toContain("older: 10e Codex text");
+  });
 });

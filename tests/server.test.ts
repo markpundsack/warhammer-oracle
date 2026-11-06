@@ -11,6 +11,7 @@ const EXPECTED_TOOLS = [
   "compare_units",
   "game_flow",
   "wound_calculator",
+  "lookup_faq",
   "lookup_stratagem",
   "search_stratagems",
   "lookup_detachment",
@@ -38,9 +39,9 @@ describe("server integration", () => {
     expect(server).toBeDefined();
   });
 
-  it("registers exactly 17 tools", async () => {
+  it("registers exactly 18 tools", async () => {
     const { tools } = await client.listTools();
-    expect(tools).toHaveLength(17);
+    expect(tools).toHaveLength(18);
   });
 
   it("registers all expected tool names", async () => {
