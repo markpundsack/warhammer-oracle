@@ -7267,6 +7267,7 @@ const ADEPTA_SORORITAS_STRATAGEMS: Stratagem[] = [
 //
 // Faction field: rules text consistently refers to "GENESTEALER CULTS unit", matching
 // BSData's own faction string exactly, so faction is set to "Genestealer Cults".
+// Re-synced 2026-11-06: Genestealer Cults Faction Pack v1.1, legal from 22 Jul 2026. Changed: Crawling Horror (restored the minus on -6"). From Rules Updates: Evasive Vanguard, Along Shadowed Trails, Rapid Feint (all 8"). From the Universal Rules Updates: Regimental Reinforcements (once per battle).
 const GENESTEALER_CULTS_STRATAGEMS: Stratagem[] = [
   // --- Heroes of the Uprising (Faction Pack) ---
   {
@@ -7327,8 +7328,8 @@ const GENESTEALER_CULTS_STRATAGEMS: Stratagem[] = [
     cpCost: 1,
     phase: "Opponent's Movement phase",
     when: "Start of your opponent's Movement phase.",
-    target: "One friendly PURESTRAIN GENESTEALERS unit.",
-    effect: "Your unit has 6\" detection range until the end of the turn.",
+    target: "A PURESTRAIN GENESTEALERS unit from your army.",
+    effect: "It has -6\" detection range until the end of the turn.",
     gameModes: ["40k"],
   },
   {
@@ -7541,9 +7542,9 @@ const GENESTEALER_CULTS_STRATAGEMS: Stratagem[] = [
     type: "strategic_ploy",
     cpCost: 1,
     phase: "Any phase",
-    when: "Any phase, when an enemy unit ends a move within 9\" of a friendly Cult Ambush marker.",
+    when: "Any phase, when an enemy unit ends a move within 8\" of one of your Cult Ambush markers.",
     target: "That Cult Ambush marker.",
-    effect: "You can set up that Cult Ambush marker anywhere on the battlefield that is more than 9\" horizontally away from all enemy units.",
+    effect: "Move it anywhere on the battlefield more than 8\" horizontally from all enemy units.",
     gameModes: ["40k"],
   },
   {
@@ -7627,9 +7628,10 @@ const GENESTEALER_CULTS_STRATAGEMS: Stratagem[] = [
     type: "strategic_ploy",
     cpCost: 1,
     phase: "Opponent's Shooting phase or the Fight phase",
-    when: "Your opponent's Shooting phase or the Fight phase, just after a friendly ASTRA MILITARUM INFANTRY REGIMENT unit is destroyed.",
-    target: "That destroyed unit.",
-    effect: "Roll one D6: on a 3+, place one Cult Ambush marker anywhere on the battlefield that is more than 8\" horizontally away from all enemy units (if not possible, no marker is placed), and add a new unit to your army identical to your destroyed unit, in Cult Ambush, at its Starting Strength, with all wounds remaining and any [ONE SHOT] weapons considered as not having been shot.",
+    when: "Your opponent's Shooting phase or the Fight phase, just after an ASTRA MILITARUM INFANTRY REGIMENT unit from your army is destroyed.",
+    target: "The destroyed unit.",
+    effect: "Roll a D6. On a 3+, place a Cult Ambush marker anywhere more than 8\" horizontally from all enemy units (none if that's impossible) and add an identical new unit to your army, in Cult Ambush, at Starting Strength with full wounds and unused [ONE SHOT] weapons.",
+    restrictions: "You can only use this Stratagem once per battle.",
     gameModes: ["40k"],
   },
   {
@@ -7763,9 +7765,9 @@ const GENESTEALER_CULTS_STRATAGEMS: Stratagem[] = [
     type: "strategic_ploy",
     cpCost: 1,
     phase: "Any phase",
-    when: "Any phase, when an enemy unit ends a move within 9\" of a friendly Cult Ambush marker.",
-    target: "That Cult Ambush marker.",
-    effect: "You can set up that Cult Ambush marker anywhere on the battlefield that is more than 8\" horizontally away from all enemy units.",
+    when: "Any phase, just after an enemy unit ends a move within 8\" of one or more of your Cult Ambush markers.",
+    target: "One of those Cult Ambush markers.",
+    effect: "Move it anywhere on the battlefield more than 8\" horizontally from all enemy units.",
     gameModes: ["40k"],
   },
   {
@@ -7799,9 +7801,9 @@ const GENESTEALER_CULTS_STRATAGEMS: Stratagem[] = [
     type: "strategic_ploy",
     cpCost: 1,
     phase: "Opponent's Movement phase",
-    when: "Your opponent's Movement phase, when an enemy unit ends a move within 9\" of a friendly ACHILLES RIDGERUNNERS or ATALAN JACKALS unit.",
+    when: "Your opponent's Movement phase, when an enemy unit ends a move within 8\" of an ACHILLES RIDGERUNNERS or ATALAN JACKALS unit from your army.",
     target: "That unit.",
-    effect: "Your unit can make a Normal move of up to 6\".",
+    effect: "It can make a Normal move of up to 6\".",
     gameModes: ["40k"],
   },
   {
