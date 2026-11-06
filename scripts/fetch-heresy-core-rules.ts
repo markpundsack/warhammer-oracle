@@ -286,6 +286,8 @@ function leadingBold(text: string): string {
   return m[1].replace(/\s+/g, " ").trim();
 }
 
+const CONTINUES_IN: Record<string, string> = { "Reaction Allotments": "Base Reaction Allotment" };
+
 /** How much child text a parent section may carry before it lists them instead. */
 const MAX_INLINE_CHARS = 4500;
 
@@ -354,6 +356,13 @@ export function sectionsToRules(
       else listed.push(`- ${k.name}`);
     }
     parent.description = listed.length ? [text, `**Covers:**\n${listed.join("\n")}`].filter(Boolean).join("\n\n") : text;
+  }
+  // A few sections stop mid-subject and carry on in the next heading: "Reaction Allotments" explains the idea and
+  // "Base Reaction Allotment" has the numbers, so a lookup of the first must answer with both.
+  for (const [name, next] of Object.entries(CONTINUES_IN)) {
+    const first = out.find((r) => r.name === name);
+    const second = out.find((r) => r.name === next);
+    if (first && second) first.description = `${first.description}\n\n### ${next}\n\n${own.get(second)}`;
   }
   // Drop empty shells (a heading with no text and nothing under it).
   return out.filter((r) => r.description.trim());

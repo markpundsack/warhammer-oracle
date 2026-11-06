@@ -171,6 +171,12 @@ describe("lookup_keyword with game_mode heresy (rules beyond special rules)", ()
     expect(text).toContain("1 High Command");
   });
 
+  it("\"Reaction Allotment\" answers with the numbers, not just the concept", async () => {
+    const text = await call("lookup_keyword", { keyword: "Reaction Allotment", game_mode: "heresy" });
+    expect(text).toContain("Base Reaction Allotment of 1");
+    expect(text).toContain("1,501 - 3,500 Points | +1 Reaction Point");
+  });
+
   it("\"Reactions\" carries the Reaction Allotment bonus table", async () => {
     const text = await call("lookup_keyword", { keyword: "Reactions", game_mode: "heresy" });
     expect(text).toContain("1,501 - 3,500 Points | +1 Reaction Point");
