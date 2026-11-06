@@ -11626,6 +11626,7 @@ const IMPERIAL_KNIGHTS_STRATAGEMS: Stratagem[] = [
 // Type-classification caveat: the 3 Faction Pack detachments with 3 stratagems
 // each have no type stated anywhere (same pattern as every other faction's
 // newest detachments) — types are a best-effort inference from WHEN wording.
+// Re-synced 2026-11-06: Adeptus Mechanicus Faction Pack v1.4, legal from 14 Oct 2026. Changed: Guided Retreat. Chant of Electrotraction keeps ELECTRO-PRIESTS BATTLECLADE: the pack's What's New says so, though its detachment page omits BATTLECLADE.
 const ADEPTUS_MECHANICUS_STRATAGEMS: Stratagem[] = [
   // --- Cohort Acquisitus (Faction Pack) ---
   {
@@ -11855,9 +11856,9 @@ const ADEPTUS_MECHANICUS_STRATAGEMS: Stratagem[] = [
     type: "strategic_ploy",
     cpCost: 1,
     phase: "Movement phase",
-    when: "Your Movement phase, just after an Adeptus Mechanicus unit from your army Falls back.",
-    target: "That Adeptus Mechanicus unit.",
-    effect: "Until the end of the turn, your unit is eligible to shoot and declare a charge in a turn in which it Fell Back, and, if it is a Halo Override unit, you can reroll Desperate Escape tests taken for it.",
+    when: "Your Movement phase, when an ADEPTUS MECHANICUS unit from your army is selected to make a fall-back move.",
+    target: "That ADEPTUS MECHANICUS unit.",
+    effect: "It can still shoot and declare a charge after that fall-back move. If it's a HALO OVERRIDE unit, it can also re-roll hazard rolls.",
     gameModes: ["40k"],
   },
   {
