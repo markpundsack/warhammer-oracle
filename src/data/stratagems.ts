@@ -1132,6 +1132,7 @@ const SPACE_MARINES_STRATAGEMS: Stratagem[] = [
 // "Slaves to Darkness" (the previous 10e-era detachment here) isn't a detachment name
 // in either layer — CSM's detachment list was completely replaced between editions, so
 // this was a swap, not a patch.
+// Re-synced 2026-11-06: Chaos Space Marines Faction Pack v1.3, legal from 30 Sep 2026. Changed: Screaming Descent (Rules Updates), Warp-Twisted Terrors (target and effect had been swapped), Masters are Watching (-1 for DAMNED units).
 const CHAOS_SPACE_MARINES_STRATAGEMS: Stratagem[] = [
   {
     name: "Infernal Vigour",
@@ -1202,9 +1203,9 @@ const CHAOS_SPACE_MARINES_STRATAGEMS: Stratagem[] = [
     type: "battle_tactic",
     cpCost: 1,
     phase: "Movement phase",
-    when: "Your Movement phase, when a friendly WARP TALONS unit ends a move.",
-    target: "One visible enemy unit (excluding MONSTER/VEHICLE) within 9\" of your unit.",
-    effect: "That enemy unit makes a battle-shock test with -1 to the result.",
+    when: "Your Movement phase, when a WARP TALONS unit from your army ends a move.",
+    target: "That WARP TALONS unit.",
+    effect: "Pick one visible enemy unit within 9\" of it (not a MONSTER or VEHICLE). That enemy unit makes a battle-shock roll at -1.",
     gameModes: ["40k"],
   },
   {
@@ -1960,9 +1961,9 @@ const CHAOS_SPACE_MARINES_STRATAGEMS: Stratagem[] = [
     type: "strategic_ploy",
     cpCost: 1,
     phase: "Opponent's Movement phase",
-    when: "The Reinforcements step of either player's Movement phase, from battle round 2 onwards.",
-    target: "One friendly HERETIC ASTARTES Jump Pack unit in Reserves.",
-    effect: "Set your unit up anywhere on the battlefield that is more than 6\" horizontally away from all enemy units, but until the end of the turn, it is not eligible to declare a charge. Select one enemy Infantry or Mounted unit within 9\" of and visible to your unit: that unit makes a battle-shock roll, with -1 to the result.",
+    when: "Reinforcements step of either player's Movement phase, from battle round 2 onwards.",
+    target: "A HERETIC ASTARTES JUMP PACK unit from your army in Reserves.",
+    effect: "Set it up anywhere more than 6\" horizontally from all enemy units; it can't declare a charge this turn. Then pick one enemy INFANTRY or MOUNTED unit within 9\" of and visible to it: that enemy unit makes a battle-shock roll.",
     gameModes: ["40k"],
   },
   {
