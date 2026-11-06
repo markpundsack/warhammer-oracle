@@ -108,6 +108,37 @@ export function bestSave(s: SaveInput, opts: { penetratingHit?: boolean } = {}):
   return options.sort((a, b) => a.target - b.target)[0];
 }
 
+// === Weapon special rules that change the maths ===
+
+/** The special rules the calculator models, read from a weapon's rule list ("Rending (6+)", "Breaching (5+)", "Armourbane"). */
+export type ModelledRules = {
+  rending?: number;
+  criticalHit?: number;
+  breaching?: number;
+  shred?: number;
+  armourbane?: boolean;
+  /** Rules given but not modelled (Template, Heavy, Pinning, …), for the "not modelled" note. */
+  ignored: string[];
+};
+
+export function parseWeaponRules(rules: string[] = []): ModelledRules {
+  const out: ModelledRules = { ignored: [] };
+  for (const raw of rules) {
+    const r = raw.trim();
+    const m = r.match(/^(rending|critical hit|breaching|shred)\s*\(\s*(\d)\s*\+?\s*\)$/i);
+    if (m) {
+      const key = m[1].toLowerCase();
+      const x = Number(m[2]);
+      if (key === "rending") out.rending = x;
+      else if (key === "critical hit") out.criticalHit = x;
+      else if (key === "breaching") out.breaching = x;
+      else out.shred = x;
+    } else if (/^armourbane$/i.test(r)) out.armourbane = true;
+    else if (r) out.ignored.push(r);
+  }
+  return out;
+}
+
 // === Whole attack ===
 
 export type HeresyAttackInput = {
@@ -127,6 +158,8 @@ export type HeresyAttackInput = {
   coverSave?: number;
   damageMitigation?: number;
   woundsPerModel?: number;
+  /** The weapon's special rules as listed on its profile, e.g. ["Breaching (6+)", "Heavy (FP)"]. */
+  specialRules?: string[];
 };
 
 export type HeresyAttackResult = {
@@ -134,6 +167,13 @@ export type HeresyAttackResult = {
   criticalOn: number | null;
   hits: number;
   criticalHits: number;
+  /** Rending Hits (auto-wound), non-vehicle targets only. */
+  rendingHits: number;
+  /** Wounds that became AP 2 through Breaching (X). */
+  breachingWounds: number;
+  /** Wounds with +1 Damage from Shred (X) or a Critical Hit. */
+  bonusDamageWounds: number;
+  rules: ModelledRules;
   /** Wound Test target (non-vehicle). */
   woundTarget?: Target;
   wounds?: number;
@@ -149,7 +189,14 @@ export type HeresyAttackResult = {
   modelsKilled?: number;
 };
 
+const D6 = [1, 2, 3, 4, 5, 6];
+
+function rolls(t: Target, d: number): boolean {
+  return t === "auto" || (t !== null && d >= Math.max(t, 2));
+}
+
 export function calculateHeresyAttack(i: HeresyAttackInput): HeresyAttackResult {
+  const rules = parseWeaponRules(i.specialRules);
   let hitTarget: Target;
   let criticalOn: number | null = null;
   if (i.attackType === "ranged") {
@@ -159,38 +206,82 @@ export function calculateHeresyAttack(i: HeresyAttackInput): HeresyAttackResult 
   } else {
     hitTarget = meleeHitTarget(i.weaponSkill ?? 4, i.targetWeaponSkill ?? 4);
   }
-  const hits = i.attacks * pSuccess(hitTarget);
-  const criticalHits = criticalOn === null ? 0 : i.attacks * (hitTarget === "auto" ? 1 : (7 - criticalOn) / 6);
+  const vehicle = i.targetArmour !== undefined;
+  // The weapon's own Critical Hit (X) and the table's CX+ both apply; the lower X wins.
+  const critX = [criticalOn, rules.criticalHit].filter((x): x is number => x != null).reduce<number | null>((a, b) => (a === null ? b : Math.min(a, b)), null);
   const averageDamage = parseDamage(i.damage);
-  const saveIn: SaveInput = {
-    armourSave: i.armourSave,
-    invulnerableSave: i.invulnerableSave,
-    coverSave: i.coverSave,
-    ap: i.ap,
-    ranged: i.attackType === "ranged",
-  };
-  const mitigate = (n: number) => (i.damageMitigation ? n * (1 - pSuccess(i.damageMitigation)) : n);
+  const saveFor = (ap: number | undefined, opts: { penetratingHit?: boolean } = {}) =>
+    bestSave({ armourSave: i.armourSave, invulnerableSave: i.invulnerableSave, coverSave: i.coverSave, ap, ranged: i.attackType === "ranged" }, opts);
+  const mitigateP = i.damageMitigation ? 1 - pSuccess(i.damageMitigation) : 1;
 
-  if (i.targetArmour !== undefined) {
-    const { glance, pen } = penetration(i.strength, i.targetArmour);
-    const glancing = hits * glance;
-    const penetrating = hits * pen;
-    const save = bestSave(saveIn); // against Glancing Hits
-    const penSave = bestSave(saveIn, { penetratingHit: true });
-    const unsaved = mitigate(penetrating * (1 - pSuccess(penSave.target)));
-    const unsavedGlancing = mitigate(glancing * (1 - pSuccess(save.target)));
+  // Per Hit Test die: the share that is a plain hit, a Critical Hit or a Rending Hit. "Automatic" counts as a natural 6.
+  let plain = 0, crit = 0, rend = 0;
+  for (const d of hitTarget === "auto" ? [6] : D6) {
+    const w = hitTarget === "auto" ? 1 : 1 / 6;
+    if (!rolls(hitTarget, d)) continue;
+    if (hitTarget === "auto" || (critX !== null && d >= critX)) crit += w;
+    else if (!vehicle && rules.rending !== undefined && d >= rules.rending) rend += w;
+    else plain += w;
+  }
+  const n = i.attacks;
+  const hits = n * (plain + crit + rend);
+
+  if (vehicle) {
+    // Rending and Shred do nothing against vehicles; a Critical Hit's auto-wound is a Wound Test rule, so its hits
+    // still make Armour Penetration Tests here (the +1 Damage is kept).
+    const { glance, pen } = penetration(i.strength, i.targetArmour!);
+    const glanceP = rules.armourbane ? 0 : glance;
+    const penP = rules.armourbane ? glance + pen : pen;
+    const glancing = hits * glanceP;
+    const penetrating = hits * penP;
+    const save = saveFor(i.ap);
+    const penSave = saveFor(i.ap, { penetratingHit: true });
+    const penKeep = (1 - pSuccess(penSave.target)) * mitigateP;
+    const unsaved = penetrating * penKeep;
+    const critPens = n * crit * penP * penKeep;
+    const unsavedGlancing = glancing * (1 - pSuccess(save.target)) * mitigateP;
     return {
-      hitTarget, criticalOn, hits, criticalHits, glancing, penetrating, save, penSave,
-      unsaved, unsavedGlancing, averageDamage, expectedDamage: unsaved * averageDamage,
+      hitTarget, criticalOn: critX, hits, criticalHits: n * crit, rendingHits: 0, breachingWounds: 0, bonusDamageWounds: critPens, rules,
+      glancing, penetrating, save, penSave, unsaved, unsavedGlancing, averageDamage,
+      expectedDamage: unsaved * averageDamage + critPens,
     };
   }
 
+  // Wounds by (AP used, +Damage): plain hits roll to wound; Critical and Rending Hits wound automatically, counting as a 6.
   const wTarget = woundTarget(i.strength, i.toughness ?? 4);
-  const wounds = hits * pSuccess(wTarget);
-  const save = bestSave(saveIn);
-  const unsaved = mitigate(wounds * (1 - pSuccess(save.target)));
-  const expectedDamage = unsaved * averageDamage;
-  // Damage never carries over to another model: a wound kills at most one model.
-  const modelsKilled = i.woundsPerModel ? unsaved * Math.min(averageDamage / i.woundsPerModel, 1) : undefined;
-  return { hitTarget, criticalOn, hits, criticalHits, woundTarget: wTarget, wounds, save, unsaved, averageDamage, expectedDamage, modelsKilled };
+  type Bucket = { ap: number | undefined; bonus: number; count: number };
+  const buckets: Bucket[] = [];
+  const add = (count: number, breach: boolean, bonus: number) => {
+    if (count <= 0) return;
+    const ap = breach ? Math.min(2, i.ap ?? 2) : i.ap;
+    const b = buckets.find((x) => x.ap === ap && x.bonus === bonus);
+    if (b) b.count += count;
+    else buckets.push({ ap, bonus, count });
+  };
+  for (const w of D6) {
+    if (!rolls(wTarget, w)) continue;
+    add((n * plain) / 6, rules.breaching !== undefined && w >= rules.breaching, rules.shred !== undefined && w >= rules.shred ? 1 : 0);
+  }
+  const autoBreach = rules.breaching !== undefined; // counts as a 6
+  const autoShred = rules.shred !== undefined ? 1 : 0;
+  add(n * crit, autoBreach, 1 + autoShred);
+  add(n * rend, autoBreach, autoShred);
+
+  const wounds = buckets.reduce((a, b) => a + b.count, 0);
+  let unsaved = 0, expectedDamage = 0, killed = 0, breachingWounds = 0, bonusDamageWounds = 0;
+  for (const b of buckets) {
+    if (b.ap !== i.ap) breachingWounds += b.count;
+    if (b.bonus) bonusDamageWounds += b.count;
+    const keep = b.count * (1 - pSuccess(saveFor(b.ap).target)) * mitigateP;
+    const dmg = averageDamage + b.bonus;
+    unsaved += keep;
+    expectedDamage += keep * dmg;
+    // Damage never carries over to another model: a wound kills at most one model.
+    if (i.woundsPerModel) killed += keep * Math.min(dmg / i.woundsPerModel, 1);
+  }
+  return {
+    hitTarget, criticalOn: critX, hits, criticalHits: n * crit, rendingHits: n * rend, breachingWounds, bonusDamageWounds, rules,
+    woundTarget: wTarget, wounds, save: saveFor(i.ap), unsaved, averageDamage, expectedDamage,
+    modelsKilled: i.woundsPerModel ? killed : undefined,
+  };
 }

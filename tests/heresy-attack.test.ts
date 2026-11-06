@@ -96,3 +96,48 @@ describe("calculateHeresyAttack", () => {
     expect(text).toContain("Not modelled");
   });
 });
+
+describe("calculateHeresyAttack: weapon special rules", () => {
+  it("Rending (6+): natural 6s to hit wound automatically", () => {
+    // WS4 vs WS4 hits on 4+: 4-5 plain (2/6), 6 Rending (1/6). Plain wounds 6·2/6·3/6 = 1; Rending 6·1/6 = 1. 3+ save (AP -).
+    const r = calculateHeresyAttack({ attackType: "melee", attacks: 6, strength: 4, toughness: 4, damage: "1", armourSave: 3, specialRules: ["Rending (6+)"] });
+    expect(r.rendingHits).toBeCloseTo(1);
+    expect(r.wounds).toBeCloseTo(2);
+    expect(r.unsaved).toBeCloseTo(2 * (2 / 6));
+  });
+
+  it("Breaching (5+): wound rolls of 5-6 are AP 2 and deny a 3+ save", () => {
+    // BS4: 4 hits. Wound 4+: a 4 is AP5 (saved on 3+), 5-6 are AP2 (no save).
+    const r = calculateHeresyAttack({ attackType: "ranged", attacks: 6, ballisticSkill: 4, strength: 4, toughness: 4, ap: 5, damage: "1", armourSave: 3, specialRules: ["Breaching (5+)"] });
+    expect(r.breachingWounds).toBeCloseTo(4 * (2 / 6));
+    expect(r.unsaved).toBeCloseTo(4 * (1 / 6) * (2 / 6) + 4 * (2 / 6));
+  });
+
+  it("Shred (6+): wound rolls of 6 do +1 Damage", () => {
+    // BS5 hits on 2+: 5 hits. S5 vs T4 wounds on 3+: 3-5 normal, 6 Shred. No save.
+    const r = calculateHeresyAttack({ attackType: "ranged", attacks: 6, ballisticSkill: 5, strength: 5, toughness: 4, damage: "1", specialRules: ["Shred (6+)"] });
+    expect(r.expectedDamage).toBeCloseTo(5 * (3 / 6) * 1 + 5 * (1 / 6) * 2);
+  });
+
+  it("the table's C6+ at BS6: natural 6s are Critical Hits (auto-wound, +1 Damage)", () => {
+    // 2-5 plain (4/6) wound T5 with S4 on 5+; the 6 (1/6) is a Critical Hit.
+    const r = calculateHeresyAttack({ attackType: "ranged", attacks: 6, ballisticSkill: 6, strength: 4, toughness: 5, damage: "1" });
+    expect(r.criticalHits).toBeCloseTo(1);
+    expect(r.expectedDamage).toBeCloseTo(6 * (4 / 6) * (2 / 6) * 1 + 1 * 2);
+  });
+
+  it("Armourbane: Glancing results become Penetrating", () => {
+    const plain = calculateHeresyAttack({ attackType: "ranged", attacks: 1, ballisticSkill: 4, strength: 9, targetArmour: 12, damage: "1" });
+    const bane = calculateHeresyAttack({ attackType: "ranged", attacks: 1, ballisticSkill: 4, strength: 9, targetArmour: 12, damage: "1", specialRules: ["Heavy (D)", "Armourbane"] });
+    expect(plain.penetrating).toBeCloseTo((4 / 6) * (3 / 6));
+    expect(bane.penetrating).toBeCloseTo((4 / 6) * (4 / 6));
+    expect(bane.glancing).toBe(0);
+    expect(bane.rules.ignored).toEqual(["Heavy (D)"]);
+  });
+
+  it("names unmodelled rules in the output", () => {
+    const text = formatHeresyAttack({ attackType: "ranged", attacks: 1, ballisticSkill: 4, strength: 9, targetArmour: 12, damage: "1", specialRules: ["Heavy (D)", "Armourbane"] });
+    expect(text).toContain("Armourbane: Glancing results count as Penetrating");
+    expect(text).toContain("Not modelled: the weapon's Heavy (D);");
+  });
+});

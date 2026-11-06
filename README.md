@@ -256,7 +256,7 @@ The Horus Heresy (3rd edition) counterpart: expected hits, wounds, saves and dam
 "Power fist against a Cataphractii Terminator?"
 ```
 
-**Parameters:** `attack_type` (`ranged`/`melee`), `attacks`, `strength`, `damage` (required); `ballistic_skill`, `snap_shots`, `weapon_skill`, `target_weapon_skill`, `toughness` or `target_armour`, `ap`, `armour_save`, `invulnerable_save`, `cover_save`, `damage_mitigation`, `wounds_per_model` (optional). Special rules (Rending, Breaching, Critical Hit effects), modifiers and re-rolls are not modelled.
+**Parameters:** `attack_type` (`ranged`/`melee`), `attacks`, `strength`, `damage` (required); `ballistic_skill`, `snap_shots`, `weapon_skill`, `target_weapon_skill`, `toughness` or `target_armour`, `ap`, `armour_save`, `invulnerable_save`, `cover_save`, `damage_mitigation`, `wounds_per_model`, `special_rules` (optional). `special_rules` takes the weapon's rules as its profile lists them. Rending (X), Critical Hit (X) (and the table's CX+ / Automatic results), Breaching (X), Shred (X) and Armourbane are modelled exactly, die by die; any other rule is named as not modelled. Characteristic modifiers and re-rolls are not modelled.
 
 ### `determine_primary_mission`
 

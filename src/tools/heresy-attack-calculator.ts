@@ -20,16 +20,18 @@ export function formatHeresyAttack(i: HeresyAttackInput): string {
     i.attackType === "ranged"
       ? `BS ${i.ballisticSkill ?? 4}${i.snapShots ? " (Snap Shots)" : ""}`
       : `WS ${i.weaponSkill ?? 4} vs WS ${i.targetWeaponSkill ?? 4}`;
-  const crit =
-    r.criticalOn !== null && r.criticalHits > 0
-      ? `, ${n(r.criticalHits)} of them Critical Hits (${r.hitTarget === "auto" ? "every hit" : `on ${r.criticalOn}+`})`
-      : "";
-  lines.push(`- **Hit Tests:** ${i.attacks} dice, ${hitHow} → ${targetText(r.hitTarget)} → **${n(r.hits)} hits**${crit}`);
+  const special: string[] = [];
+  if (r.criticalHits > 0) special.push(`${n(r.criticalHits)} Critical Hits (${r.hitTarget === "auto" ? "every hit" : `on ${r.criticalOn}+`}: wound automatically, +1 Damage)`);
+  if (r.rendingHits > 0) special.push(`${n(r.rendingHits)} Rending Hits (on ${r.rules.rending}+: wound automatically)`);
+  lines.push(
+    `- **Hit Tests:** ${i.attacks} dice, ${hitHow} → ${targetText(r.hitTarget)} → **${n(r.hits)} hits**${special.length ? `, including ${special.join(" and ")}` : ""}`,
+  );
 
   const saveText = (s: { target: number | null; kind: string }) => (s.target === null ? "no save" : `${s.kind} ${s.target}+`);
   if (i.targetArmour !== undefined) {
     lines.push(
-      `- **Armour Penetration:** D6 + S${i.strength} vs Armour ${i.targetArmour} → **${n(r.penetrating!)} Penetrating**, **${n(r.glancing!)} Glancing**`,
+      `- **Armour Penetration:** D6 + S${i.strength} vs Armour ${i.targetArmour} → **${n(r.penetrating!)} Penetrating**, **${n(r.glancing!)} Glancing**` +
+        (r.rules.armourbane ? " (Armourbane: Glancing results count as Penetrating)" : ""),
     );
     lines.push(`- **Saves:** vs Penetrating: ${saveText(r.penSave!)} (no Armour Tests against Penetrating Hits); vs Glancing: ${saveText(r.save)}`);
     lines.push(
@@ -37,19 +39,27 @@ export function formatHeresyAttack(i: HeresyAttackInput): string {
         `plus ${n(r.unsavedGlancing!)} Glancing Hits, each a roll on the Vehicle Damage Table.`,
     );
   } else {
-    lines.push(`- **Wound Tests:** S${i.strength} vs T${i.toughness ?? 4} → ${targetText(r.woundTarget!)} → **${n(r.wounds!)} wounds**`);
+    const woundExtras: string[] = [];
+    if (r.breachingWounds > 0) woundExtras.push(`${n(r.breachingWounds)} Breaching (AP 2, on ${r.rules.breaching}+)`);
+    if (r.rules.shred !== undefined) woundExtras.push(`Shred (+1 Damage on ${r.rules.shred}+)`);
+    lines.push(
+      `- **Wound Tests:** S${i.strength} vs T${i.toughness ?? 4} → ${targetText(r.woundTarget!)} → **${n(r.wounds!)} wounds**` +
+        (woundExtras.length ? `, ${woundExtras.join("; ")}` : ""),
+    );
     const apNote = i.ap === undefined ? "AP -" : `AP ${i.ap}`;
     lines.push(
       `- **Saves:** best available: ${saveText(r.save)} (${apNote}${i.armourSave !== undefined && i.ap !== undefined && i.ap <= i.armourSave ? `, which denies the ${i.armourSave}+ Armour Save` : ""})` +
         (i.damageMitigation ? `, then Damage Mitigation ${i.damageMitigation}+` : ""),
     );
     const killed = r.modelsKilled !== undefined ? `, about **${n(r.modelsKilled)} models** with ${i.woundsPerModel} Wound${i.woundsPerModel === 1 ? "" : "s"} each` : "";
-    lines.push(`- **Result:** **${n(r.unsaved)} unsaved wounds** × Damage ${i.damage} = about **${n(r.expectedDamage)} damage**${killed}.`);
+    const dmgText = r.bonusDamageWounds > 0 ? `Damage ${i.damage}, some +1` : `Damage ${i.damage}`;
+    lines.push(`- **Result:** **${n(r.unsaved)} unsaved wounds** (${dmgText}) = about **${n(r.expectedDamage)} damage**${killed}.`);
   }
+  const ignored = r.rules.ignored.length ? `the weapon's ${r.rules.ignored.join(", ")}; ` : "";
   lines.push(
     "",
-    "_Expected values. Not modelled: special rules (Rending, Breaching, Critical Hit effects, Shred, …), characteristic modifiers and re-rolls. " +
-      "Melee Strength is the bearer's Strength after the weapon's modifier._",
+    "_Expected values. Modelled: Rending, Critical Hit, Breaching, Shred, Armourbane (when listed in special_rules). " +
+      `Not modelled: ${ignored}other special rules, characteristic modifiers and re-rolls. Melee Strength is the bearer's Strength after the weapon's modifier._`,
   );
   return lines.join("\n");
 }
@@ -83,6 +93,13 @@ export function registerHeresyAttackCalculator(server: McpServer): void {
       cover_save: z.number().min(2).max(6).optional().describe("Cover Save from terrain or rules (ranged only)"),
       damage_mitigation: z.number().min(2).max(6).optional().describe("A Damage Mitigation Test (e.g. Feel No Pain (5+) → 5)"),
       wounds_per_model: z.number().min(1).optional().describe("Target's Wounds characteristic, for an estimate of models removed"),
+      special_rules: z
+        .array(z.string())
+        .optional()
+        .describe(
+          "The weapon's special rules exactly as its profile lists them, e.g. ['Breaching (6+)', 'Heavy (FP)']. " +
+            "Rending (X), Critical Hit (X), Breaching (X), Shred (X) and Armourbane are modelled; others are named as not modelled.",
+        ),
     },
     async (a) => {
       const text = formatHeresyAttack({
@@ -102,6 +119,7 @@ export function registerHeresyAttackCalculator(server: McpServer): void {
         coverSave: a.cover_save,
         damageMitigation: a.damage_mitigation,
         woundsPerModel: a.wounds_per_model,
+        specialRules: a.special_rules,
       });
       return { content: [{ type: "text" as const, text }] };
     },
