@@ -272,6 +272,15 @@ export type HeresySpecialRule = {
   url?: string;
 };
 
+/** An official Horus Heresy FAQ ruling (as published by Games Workshop, via Wahapedia). */
+export type HeresyFaqEntry = {
+  question: string;
+  answer: string;
+  /** "Horus Heresy FAQ", or an army list's FAQ, e.g. "Legiones Astartes FAQ". */
+  source: string;
+  url: string;
+};
+
 export type HeresyRuleKind =
   | "special rule"
   | "reaction"

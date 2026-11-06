@@ -4,6 +4,8 @@ import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { createServer } from "../src/server.js";
 import { HERESY_ARMY_RULES } from "../src/data/heresy-army-rules.js";
 import { HERESY_CORE_RULES } from "../src/data/heresy-core-rules.js";
+import { HERESY_FAQ } from "../src/data/heresy-faq.js";
+import { searchHeresyFaq } from "../src/lib/heresy-faq.js";
 import { HERESY_PROFILE_RULES } from "../src/data/heresy-profile-rules.js";
 import { PHASES_HERESY } from "../src/data/phases-heresy.js";
 import { splitSections, sectionsToRules } from "../scripts/fetch-heresy-core-rules.js";
@@ -249,5 +251,34 @@ describe("Heresy units named by a model, and compare_units with game_mode heresy
   it("compares a vehicle with its armour profile", async () => {
     const text = await call("compare_units", { units: ["Sicaran Battle Tank", "Predator"], game_mode: "heresy" });
     expect(text).toContain("### Armoured Profiles — Sicaran");
+  });
+});
+
+describe("Heresy FAQ", () => {
+  it("has the core FAQ and the army list FAQ rulings, cleanly split", () => {
+    expect(HERESY_FAQ.length).toBeGreaterThanOrEqual(45);
+    expect(HERESY_FAQ.some((e) => e.source === "Legiones Astartes FAQ")).toBe(true);
+    for (const e of HERESY_FAQ) {
+      expect(e.question).not.toMatch(/\bQ:|\bA:|\|/);
+      expect(e.answer).not.toMatch(/\bQ:|\|/);
+    }
+  });
+
+  it("finds a ruling from the player's own words, and nothing for an unrelated question", () => {
+    expect(searchHeresyFaq("can vehicles be locked in combat")[0].entry.question).toMatch(/^Vehicles ‘cannot be locked in combat’/);
+    expect(searchHeresyFaq("does orbital assault vehicle count towards the deep strike limit")[0].entry.answer).toBe("Yes.");
+    expect(searchHeresyFaq("how much does a lascannon cost")).toEqual([]);
+  });
+
+  it("heresy_faq answers with the ruling and its source", async () => {
+    const text = await call("heresy_faq", { question: "Do gambits work outside of challenges?" });
+    expect(text.startsWith(HERESY_STAMP)).toBe(true);
+    expect(text).toContain("**A:** No, the effects of a Gambit");
+    expect(text).toContain("Horus Heresy FAQ — https://wahapedia.ru/heresy3/the-rules/faq/");
+  });
+
+  it("lookup_keyword appends FAQ rulings that name the rule", async () => {
+    const text = await call("lookup_keyword", { keyword: "Vanguard", game_mode: "heresy" });
+    expect(text).toContain("### FAQ");
   });
 });

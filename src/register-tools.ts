@@ -15,6 +15,7 @@ import { registerDeterminePrimaryMission } from "./tools/determine-primary-missi
 import { registerLookupCrusade } from "./tools/lookup-crusade.js";
 import { registerLookupWeapon } from "./tools/lookup-weapon.js";
 import { registerHeresyAttackCalculator } from "./tools/heresy-attack-calculator.js";
+import { registerHeresyFaq } from "./tools/heresy-faq.js";
 
 export function registerTools(server: McpServer): void {
   registerLookupUnit(server);
@@ -25,6 +26,7 @@ export function registerTools(server: McpServer): void {
   registerGameFlow(server);
   registerWoundCalculator(server);
   registerHeresyAttackCalculator(server);
+  registerHeresyFaq(server);
   registerLookupStratagem(server);
   registerSearchStratagems(server);
   registerLookupDetachment(server);
