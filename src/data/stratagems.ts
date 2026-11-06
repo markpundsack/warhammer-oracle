@@ -6011,6 +6011,7 @@ const WORLD_EATERS_STRATAGEMS: Stratagem[] = [
 // Faction field: all source text (Faction Pack and Codex alike) refers to "T'AU
 // EMPIRE unit", so faction is set to "T'au Empire" to match BSData's capitalization
 // (there is no broader shared-keyword faction the way Chaos has "Heretic Astartes").
+// Re-synced 2026-11-06: T'au Empire Faction Pack v1.2, legal from 26 Aug 2026. Compared; the Rules Updates' Photon Grenades and The Shortened Blade errata were already present, and pack text differs only in wording. No entries changed.
 const TAU_EMPIRE_STRATAGEMS: Stratagem[] = [
   // --- Advanced Acquisition Cadre (Faction Pack) ---
   {
