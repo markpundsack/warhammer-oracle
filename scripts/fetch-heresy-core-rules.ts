@@ -56,7 +56,8 @@ export const ARMY_RULE_PAGES = [
 const VOID = new Set(["br", "img", "hr", "input", "meta", "link", "source", "wbr", "col", "area", "base"]);
 /** Elements dropped with everything inside them: scripts, ads, tooltip glossaries, flavour text, the contents box. */
 const SKIP_TAGS = new Set(["script", "style", "noscript", "svg", "iframe", "button", "select"]);
-const SKIP_CLASS = /\b(tooltip_templates|page_ads\w*|ShowFluff|legend2|noprint|contents_header|NavColumns\d|img-inv|BreakInsideAvoid_hide)\b/;
+// showShortN: the narrow-screen copy of a table (the full one is in hideShortN)
+const SKIP_CLASS = /\b(tooltip_templates|page_ads\w*|ShowFluff|legend2|noprint|contents_header|NavColumns\d|img-inv|BreakInsideAvoid_hide|showShort\d*)\b/;
 /** Headings that are site furniture, not rules. */
 const NOT_RULES = new Set(["books", "disable ads", "contents"]);
 
@@ -93,9 +94,17 @@ function tidy(raw: string): string {
     .replace(/\u0002(\s+)/g, "$1\u0002") // move edge whitespace outside the bold
     .replace(/(\s+)\u0003/g, "\u0003$1");
   // a bold label starts a new paragraph ("…Control.<b>Cost:</b>", "<b>Summary.</b> <b>Trigger:</b>")
-  t = t.replace(/([^\n])\s*\u0002([^\u0002\u0003]*)\u0003/g, (m, before: string, inner: string) =>
-    LABEL.test(inner) ? `${before}\n\n\u0002${inner}\u0003` : m,
-  );
+  // …but never inside a table row ("**BS** | **10+** | **9** |")
+  t = t
+    .split("\n")
+    .map((line) =>
+      line.includes(" | ")
+        ? line
+        : line.replace(/([^\n])[ \t]*\u0002([^\u0002\u0003]*)\u0003/g, (m, before: string, inner: string) =>
+            LABEL.test(inner) ? `${before}\n\n\u0002${inner}\u0003` : m,
+          ),
+    )
+    .join("\n");
   return t
     .replace(/\u0003[ \t]*\u0002/g, " ") // two plain bold runs side by side (same line) are one
     .replace(/[\u0002\u0003]/g, "**")
@@ -119,7 +128,9 @@ export function splitSections(html: string): RawSection[] {
   let headingText = "";
   let skip: { tag: string; depth: number } | null = null;
   let out = "";
+  let inCell = 0; // inside a <td>/<th>: block breaks become spaces so a table row stays on one line
   const emit = (s: string) => {
+    if (inCell && s.includes("\n") && s !== CELL) s = s.replace(/\n+/g, " ");
     if (inHeading) headingText += s;
     else if (current) out += s;
   };
@@ -190,11 +201,15 @@ export function splitSections(html: string): RawSection[] {
         if (!closing) emit("\n- ");
         break;
       case "tr":
+        inCell = 0;
         emit("\n");
         break;
       case "td":
       case "th":
-        if (!closing) emit(CELL);
+        if (!closing) {
+          emit(CELL);
+          inCell++;
+        } else inCell = Math.max(0, inCell - 1);
         break;
       case "b":
       case "strong":

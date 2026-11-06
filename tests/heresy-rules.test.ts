@@ -52,6 +52,12 @@ describe("Heresy rules data", () => {
     expect(reposition.description).toMatch(/\n\n\*\*Cost:\*\* /);
   });
 
+  it("prints a table once, one row per line (no narrow-screen duplicate)", () => {
+    const d = HERESY_CORE_RULES.find((r) => r.name === "Ranged Hit Tests")!.description;
+    expect(d).toContain("**BS** | **10+** | **9** | **8** | **7** | **6** | **5** | **4** | **3** | **2** | **1**");
+    expect(d.match(/\*\*Target Number\*\*/g)).toHaveLength(1);
+  });
+
   it("nests every sub-phase under its phase (incl. the Challenge Sub-Phase)", () => {
     const assault = PHASES_HERESY.find((p) => p.name === "Assault")!;
     expect(assault.steps.map((s) => s.split(":")[0])).toEqual([
