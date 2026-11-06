@@ -10056,6 +10056,7 @@ const SPACE_WOLVES_STRATAGEMS: Stratagem[] = [
 // Type-classification caveat: the three 3-stratagem Faction Pack detachments'
 // stratagems have no type stated anywhere (same pattern as every other faction's
 // newest detachments) — types are a best-effort inference from WHEN wording.
+// Re-synced 2026-11-06: Drukhari Faction Pack v1.2, legal from 26 Aug 2026. Changed: Postmortality (Rules Updates); Murderer's Circus is 1CP and Dance Macabre 2CP in the pack, the reverse of the older data.
 const DRUKHARI_STRATAGEMS: Stratagem[] = [
   // --- Exhibition of Slaughter (Faction Pack) ---
   {
@@ -10210,11 +10211,11 @@ const DRUKHARI_STRATAGEMS: Stratagem[] = [
     faction: "Drukhari",
     detachment: "Reaper's Wager",
     type: "battle_tactic",
-    cpCost: 2,
+    cpCost: 1,
     phase: "Fight phase",
-    when: "Fight phase, just after an enemy unit has selected its targets.",
-    target: "One Drukhari or Harlequins unit from your army that was selected as the target of one or more of the attacking unit's attacks.",
-    effect: "Until the end of the phase, each time an attack targets your unit, subtract 1 from the Hit roll.",
+    when: "Fight phase, just after an enemy unit selects its targets.",
+    target: "A DRUKHARI or HARLEQUINS unit from your army picked as a target of those attacks.",
+    effect: "Until the end of the phase, attacks that target it have -1 to the Hit roll.",
     gameModes: ["40k"],
   },
   {
@@ -10234,11 +10235,11 @@ const DRUKHARI_STRATAGEMS: Stratagem[] = [
     faction: "Drukhari",
     detachment: "Reaper's Wager",
     type: "strategic_ploy",
-    cpCost: 1,
+    cpCost: 2,
     phase: "Opponent's Movement phase",
     when: "Your opponent's Movement phase, just after an enemy unit ends a Normal, Advance or Fall Back move.",
-    target: "One Drukhari Infantry or Harlequins Infantry unit from your army that is within 8\" of that enemy unit.",
-    effect: "Your unit can make a Normal move of up to D6\". If your unit is currently losing the wager, it can make a Normal move of up to 6\" instead.",
+    target: "A DRUKHARI INFANTRY or HARLEQUINS INFANTRY unit from your army within 8\" of that enemy unit.",
+    effect: "It can make a Normal move of up to D6\", or up to 6\" if it's losing the wager.",
     gameModes: ["40k"],
   },
   // --- Covenite Coterie (Codex baseline, via 40k.app) ---
@@ -10249,9 +10250,9 @@ const DRUKHARI_STRATAGEMS: Stratagem[] = [
     type: "epic_deed",
     cpCost: 1,
     phase: "Any phase",
-    when: "Any phase, when a friendly HAEMONCULUS model is destroyed.",
-    target: "That HAEMONCULUS model.",
-    effect: "Spend 1-3 Pain tokens. At the end of the phase, set the destroyed model back up on the battlefield, as close as possible to where it was destroyed and not within Engagement Range of any enemy units, with a number of wounds remaining equal to the number of Pain tokens you just spent.",
+    when: "Any phase, when a HAEMONCULUS model from your army is destroyed.",
+    target: "That model.",
+    effect: "Spend 1-3 Pain tokens. At the end of the phase, return it to the battlefield, unengaged and as close as possible to where it died, with wounds equal to the tokens spent. It isn't part of an attached unit and its unit's starting strength is 1.",
     gameModes: ["40k"],
   },
   {
