@@ -53,16 +53,18 @@ describe("lookup_keyword tool", () => {
     expect(text).toContain("combat_patrol");
   });
 
-  it("falls back to SHARED_RULES for keywords not in curated list", async () => {
-    // "Lance" is in SHARED_RULES but not in curated KEYWORDS
+  it("falls back to the 11th Edition SHARED_RULES for keywords not in curated list or core rules", async () => {
+    // "Crucible" is in SHARED_RULES_11E but not in curated KEYWORDS or the core rules
     const result = await client.callTool({
       name: "lookup_keyword",
-      arguments: { keyword: "Lance" },
+      arguments: { keyword: "Crucible" },
     });
     const text = (result.content as Array<{ type: string; text: string }>)[0].text;
-    expect(text).toContain("Lance");
-    expect(text).toContain("Charge move");
+    expect(text).toContain("Crucible");
+    expect(text).toContain("Enhancements");
     expect(text).toContain("rules data");
+    expect(text).toContain("11th Edition");
+    expect(text).not.toContain("10th Edition");
   });
 
   it("returns friendly message for completely unknown keyword", async () => {
@@ -88,10 +90,10 @@ describe("lookup_keyword tool", () => {
   it("performs case insensitive search on SHARED_RULES fallback", async () => {
     const result = await client.callTool({
       name: "lookup_keyword",
-      arguments: { keyword: "lance" },
+      arguments: { keyword: "crucible" },
     });
     const text = (result.content as Array<{ type: string; text: string }>)[0].text;
-    expect(text).toContain("Lance");
+    expect(text).toContain("Crucible");
   });
 
   it("filters by game_mode when provided", async () => {

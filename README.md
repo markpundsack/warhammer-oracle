@@ -126,11 +126,13 @@ Matching is on the weapon's own name, so "plasma gun" doesn't pull in "Twin plas
 
 ### `lookup_keyword`
 
-Look up a keyword or rule. Returns the official definition, a plain English explanation, examples, and which game modes it applies to.
+Look up a keyword or rule. Keywords return the official definition, a plain English explanation, examples, and which game modes they apply to. It also covers the 11th Edition core rules with their rule numbers (written from GW's free Core Rules PDF) and army rules and other datasheet abilities with the factions that have them.
 
 ```
 "What does Devastating Wounds do?"
 "Explain the Feel No Pain keyword"
+"How does an emergency disembark work?"
+"What does Waaagh! do?"
 ```
 
 **Parameters:** `keyword` (required), `game_mode` (optional; `heresy` looks up Horus Heresy rules instead — special rules, Reactions, Gambits, Statuses, phases, detachments, missions; see [Horus Heresy](#horus-heresy-3rd-edition))

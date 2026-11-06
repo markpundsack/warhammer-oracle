@@ -620,3 +620,7 @@ Two reasons:
 2. **The disambiguation rules are easy to half-implement.** "Add a `mode` parameter and an enum" is the surface fix. "Mode-stamp every response, reject cross-mode mixing, flip defaults as documented events" is the actual product discipline. Without this doc, only the surface fix lands.
 
 When the future session reads this, it should feel slightly opinionated — that's the point. The opinions were paid for in this April 2026 conversation.
+
+## Follow-up (2026-11-06): core rules in `lookup_keyword`
+
+`src/data/core-rules-11e.ts` holds the core rules as short summaries with rule numbers, written from the app rulebook 2.7.1 (October 2026) and cross-checked against GW's free PDF, which is older on several rules (the file header lists them). `lookup_keyword` searches them after the curated keywords, then falls back to datasheet abilities across `UNITS_11E`. Its rules-data fallback also moved from `SHARED_RULES` (BSData 10e) to `SHARED_RULES_11E`: the "Reflects 10th Edition" note was accurate about that data, so the data was what needed changing.
