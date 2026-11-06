@@ -12930,6 +12930,7 @@ const LEAGUES_OF_VOTANN_STRATAGEMS: Stratagem[] = [
 // strategic_ploy for self-initiated ones, consistent with the confirmed
 // Solar Spearhead's identical-concept "Flawless Construction" being labelled
 // battle_tactic.
+// Re-synced 2026-11-06: Adeptus Custodes Faction Pack v1.2, legal from 30 Sep 2026. Compared; Rules Updates errata were already present and pack text differs only in wording. No entries changed. An 11e Codex (October 2026) postdates this pack and wasn't available to read.
 const ADEPTUS_CUSTODES_STRATAGEMS: Stratagem[] = [
   // --- Might of the Moritoi (Faction Pack) ---
   {
