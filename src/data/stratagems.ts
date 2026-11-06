@@ -12277,6 +12277,7 @@ const ADEPTUS_MECHANICUS_STRATAGEMS: Stratagem[] = [
 // Type-classification caveat: the 3 Faction Pack detachments with 3 stratagems
 // each have no type stated anywhere (same pattern as every other faction's
 // newest detachments) — types are a best-effort inference from WHEN wording.
+// Re-synced 2026-11-06: Leagues of Votann Faction Pack v1.2, legal from 14 Oct 2026. Changed: Secure Positions (Rules Updates: no longer conditional on Hostile Acquisition). Spelling fixed from the pack: Brekkeknots with an e-diaeresis, Kahl, Uthar the Destined.
 const LEAGUES_OF_VOTANN_STRATAGEMS: Stratagem[] = [
   // --- Armoured Trailblazers (Faction Pack) ---
   {
@@ -12354,15 +12355,15 @@ const LEAGUES_OF_VOTANN_STRATAGEMS: Stratagem[] = [
   },
   // --- Hearthguard Covenant (Faction Pack) ---
   {
-    name: "Brøkkeknots",
+    name: "Brëkkeknots",
     faction: "Leagues of Votann",
     detachment: "Hearthguard Covenant",
     type: "battle_tactic",
     cpCost: 1,
     phase: "Opponent's Shooting phase or the Fight phase",
-    when: "Your opponent's Shooting phase or the Fight phase, when an enemy unit targets a friendly EINHYR HEARTHGUARD unit.",
+    when: "Your opponent's Shooting phase or the Fight phase, when an enemy unit targets an EINHYR HEARTHGUARD unit from your army.",
     target: "That EINHYR HEARTHGUARD unit.",
-    effect: "Your unit has 4+ InSv.",
+    effect: "It has a 4+ invulnerable save.",
     gameModes: ["40k"],
   },
   {
@@ -12391,15 +12392,15 @@ const LEAGUES_OF_VOTANN_STRATAGEMS: Stratagem[] = [
   },
   // --- Hearthband (Faction Pack) ---
   {
-    name: "Brøkkeknots",
+    name: "Brëkkeknots",
     faction: "Leagues of Votann",
     detachment: "Hearthband",
     type: "battle_tactic",
     cpCost: 1,
     phase: "Opponent's Shooting phase or the Fight phase",
-    when: "Your opponent's Shooting phase or the Fight phase, just after an enemy unit has selected its targets.",
-    target: "One Kôhl, Æthar the Destined or Einhyr Hearthguard unit from your army that was selected as the target of one or more of the attacking unit's attacks.",
-    effect: "Until the end of the phase, models in your unit have a 4+ invulnerable save.",
+    when: "Your opponent's Shooting phase or the Fight phase, just after an enemy unit selects its targets.",
+    target: "A KÂHL, ÛTHAR THE DESTINED or EINHYR HEARTHGUARD unit from your army picked as a target of those attacks.",
+    effect: "Until the end of the phase, its models have a 4+ invulnerable save.",
     gameModes: ["40k"],
   },
   {
@@ -12544,9 +12545,9 @@ const LEAGUES_OF_VOTANN_STRATAGEMS: Stratagem[] = [
     type: "strategic_ploy",
     cpCost: 1,
     phase: "Any phase",
-    when: "End of any of your phases, if units from your army have Hostile Acquisition.",
-    target: "One LEAGUES OF VOTANN TRANSPORT unit from your army.",
-    effect: "One LEAGUES OF VOTANN unit embarked within your TRANSPORT can disembark. When doing so, models in that unit can be set up anywhere on the battlefield wholly within 6\" of your TRANSPORT. That unit cannot declare a charge in the same turn, but can otherwise act normally in the remainder of the turn.",
+    when: "End of any of your phases.",
+    target: "A LEAGUES OF VOTANN TRANSPORT unit from your army.",
+    effect: "One LEAGUES OF VOTANN unit inside it can disembark, setting up anywhere wholly within 6\" of the TRANSPORT. That unit can't declare a charge this turn but otherwise acts normally for the rest of it.",
     gameModes: ["40k"],
   },
   {
