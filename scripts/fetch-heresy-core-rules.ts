@@ -286,6 +286,9 @@ function leadingBold(text: string): string {
   return m[1].replace(/\s+/g, " ").trim();
 }
 
+/** How much child text a parent section may carry before it lists them instead. */
+const MAX_INLINE_CHARS = 4500;
+
 export function sectionsToRules(
   slug: string,
   pageTitle: string,
@@ -294,6 +297,7 @@ export function sectionsToRules(
 ): HeresySpecialRule[] {
   const out: HeresySpecialRule[] = [];
   const stack: { level: number; title: string; rule: HeresySpecialRule | null }[] = [];
+  const children = new Map<HeresySpecialRule, HeresySpecialRule[]>();
   for (const raw of sections) {
     // Wahapedia marks "Challenge Sub-Phase" up as a top-level heading, which would nest the Fight and
     // Resolution Sub-Phases under it: a sub-phase always sits one level under its phase.
@@ -315,9 +319,8 @@ export function sectionsToRules(
       context: [pageTitle, ...path].join(" > "),
       url: `${base}/${slug}/#${s.anchor}`,
     };
-    // a parent section lists what it covers, so "the Charge Sub-Phase" answers with its steps
     const parent = stack[stack.length - 1]?.rule;
-    if (parent) parent.description += `${parent.description.includes("\n\n**Covers:**") ? "" : "\n\n**Covers:**"}\n- ${title}`;
+    if (parent) children.set(parent, [...(children.get(parent) ?? []), rule]);
     out.push(rule);
     stack.push({ level: s.level, title, rule });
     // "Core Gambits" is one section listing every Gambit as "**Name –** text": give each its own entry
@@ -338,6 +341,19 @@ export function sectionsToRules(
         });
       }
     }
+  }
+  // A parent answers for its children ("Reactions" carries the Allotment bonus table): each child's own text, in
+  // order, while it fits; anything left over is listed by name.
+  const own = new Map(out.map((r) => [r, r.description]));
+  for (const [parent, kids] of children) {
+    let text = parent.description;
+    const listed: string[] = [];
+    for (const k of kids) {
+      const block = `### ${k.name}\n\n${own.get(k)}`;
+      if (!listed.length && text.length + block.length <= MAX_INLINE_CHARS) text = [text, block].filter(Boolean).join("\n\n");
+      else listed.push(`- ${k.name}`);
+    }
+    parent.description = listed.length ? [text, `**Covers:**\n${listed.join("\n")}`].filter(Boolean).join("\n\n") : text;
   }
   // Drop empty shells (a heading with no text and nothing under it).
   return out.filter((r) => r.description.trim());

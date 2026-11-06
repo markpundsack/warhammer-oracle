@@ -4,10 +4,11 @@ import { KEYWORDS } from "../data/keywords.js";
 import { SHARED_RULES } from "../data/rules.js";
 import { HERESY_SPECIAL_RULES } from "../data/heresy-rules.js";
 import { STRATAGEMS } from "../data/stratagems.js";
+import { formatStratagem } from "./lookup-stratagem.js";
 import { findHeresyRuleMentioning, HERESY_NAMED_RULES, HERESY_RULE_CORPUS } from "../lib/heresy-corpus.js";
 import { faqForRule, formatFaqEntry } from "../lib/heresy-faq.js";
 import { fuzzySearch, normalizeName, scoreName } from "../lib/search.js";
-import { otherGamePointer, shouldCrossOver, withCrossSystemNote } from "../lib/cross-system.js";
+import { shouldCrossOver, STRONG_MATCH, withCrossSystemNote } from "../lib/cross-system.js";
 import { findHeresyRules, formatHeresyRule, heresyStamp, scoreHeresyRule, splitRuleQuery, HERESY_LABEL } from "../lib/heresy-format.js";
 import type { KeywordDefinition, GameMode } from "../types.js";
 
@@ -155,11 +156,13 @@ function lookup40kKeyword(keyword: string, gameMode: GameMode | undefined): Look
  * though lookup_keyword has no 40K keyword for them, so a no-game_mode
  * question must not be answered from Heresy.
  */
-function fortyKStratagemNamed(keyword: string): string | undefined {
+function fortyKStratagemNamed(keyword: string) {
   const q = normalizeName(keyword);
   if (!q) return undefined;
   const re = new RegExp(`(^| )${q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}( |$)`);
-  return STRATAGEMS.find((s) => re.test(normalizeName(s.name)))?.name;
+  const named = STRATAGEMS.filter((s) => re.test(normalizeName(s.name)));
+  // The core stratagem, when there is one, over any faction's.
+  return named.find((s) => s.faction === "Core") ?? named[0];
 }
 
 export function registerLookupKeyword(server: McpServer): void {
@@ -195,31 +198,29 @@ export function registerLookupKeyword(server: McpServer): void {
         // Explicit game_mode: never substitute 40K, but point at a clear 40K match.
         const fortyK = lookup40kKeyword(keyword, undefined);
         if (shouldCrossOver(heresy.score, fortyK.score)) {
-          return reply(withCrossSystemNote(heresy.text, heresyStamp(), otherGamePointer("40k", fortyK.closest!)));
+          // Answer with the rule, labelled: a voice model reads a bare pointer aloud instead of following it.
+          return reply(withCrossSystemNote(fortyK.text, "", `Not in Horus Heresy. This is the Warhammer 40,000 rule.`));
         }
         return reply(heresy.text);
       }
 
       const fortyK = lookup40kKeyword(keyword, game_mode as GameMode | undefined);
       const heresy = lookupHeresyRule(keyword, HERESY_NAMED_RULES);
+      // A 40K stratagem term ("Overwatch" → Fire Overwatch) is a 40K question: answer with the stratagem itself.
+      if (fortyK.score < STRONG_MATCH && (game_mode === undefined || game_mode === "40k")) {
+        const stratagem = fortyKStratagemNamed(keyword);
+        if (stratagem) {
+          const also = heresy.score >= STRONG_MATCH ? ` Horus Heresy also has "${heresy.closest}" (game_mode "heresy").` : "";
+          return reply(withCrossSystemNote(formatStratagem(stratagem), "", `This is a Warhammer 40,000 stratagem.${also}`));
+        }
+      }
       if (shouldCrossOver(fortyK.score, heresy.score)) {
-        // No game_mode: no good 40K match but a clear Heresy rule answers from Heresy.
-        if (game_mode === undefined) {
-          const stratagem = fortyKStratagemNamed(keyword);
-          if (stratagem) {
-            return reply(
-              withCrossSystemNote(
-                fortyK.text,
-                "",
-                `In 40K this is the "${stratagem}" stratagem (lookup_stratagem). Horus Heresy has "${heresy.closest}" (game_mode "heresy").`,
-              ),
-            );
-          }
-          const closest = fortyK.score >= 0.55 ? ` Closest 40K keyword: ${fortyK.closest}.` : "";
+        // No clear 40K match but a clear Heresy rule: answer with the rule, labelled. Also under an explicit
+        // game_mode "40k", because a voice model reads a bare pointer aloud instead of following it.
+        if (game_mode === undefined || game_mode === "40k") {
+          const closest = game_mode === undefined && fortyK.score >= 0.55 ? ` Closest 40K keyword: ${fortyK.closest}.` : "";
           return reply(withCrossSystemNote(heresy.text, heresyStamp(), `Found in Horus Heresy, not 40K.${closest}`));
         }
-        // Explicit 40K mode: keep the 40K answer, add a pointer.
-        if (game_mode === "40k") return reply(withCrossSystemNote(fortyK.text, "", otherGamePointer("heresy", heresy.closest!)));
       }
       return reply(fortyK.text);
     },

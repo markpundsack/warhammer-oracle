@@ -152,18 +152,19 @@ describe("lookup_keyword cross-system fallback", () => {
     expect(text).not.toContain(HERESY_STAMP);
   });
 
-  it("explicit game_mode heresy for a 40K-only keyword: Heresy not-found plus a 40K pointer", async () => {
+  // Both answer with the rule, labelled: a voice model reads a bare pointer aloud instead of following it.
+  it("explicit game_mode heresy for a 40K-only keyword: the 40K rule, labelled", async () => {
     const text = await call("lookup_keyword", { keyword: "Devastating Wounds", game_mode: "heresy" });
-    expect(text.startsWith(HERESY_STAMP)).toBe(true);
-    expect(text).toContain('Not in Horus Heresy; Warhammer 40,000 has "Devastating Wounds" (game_mode "40k").');
-    expect(text).not.toContain("Official Definition");
+    expect(text).toContain("Not in Horus Heresy. This is the Warhammer 40,000 rule.");
+    expect(text).toContain("Official Definition");
+    expect(text).not.toContain(HERESY_STAMP);
   });
 
-  it("explicit game_mode 40k for a Heresy-only rule: 40K not-found plus a Heresy pointer", async () => {
+  it("explicit game_mode 40k for a Heresy-only rule: the Heresy rule, labelled", async () => {
     const text = await call("lookup_keyword", { keyword: "Bulky", game_mode: "40k" });
-    expect(text).toContain("not found");
-    expect(text).toContain('Not in Warhammer 40,000; Horus Heresy has "Bulky (X)" (game_mode "heresy").');
-    expect(text).not.toContain(HERESY_STAMP);
+    expect(text.startsWith(HERESY_STAMP)).toBe(true);
+    expect(text).toContain("_Found in Horus Heresy, not 40K.");
+    expect(text).toContain("# Bulky (X)");
   });
 });
 

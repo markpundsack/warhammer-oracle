@@ -94,8 +94,10 @@ describe("fetch-heresy-core-rules HTML parsing", () => {
     expect(pinned.context).toBe("Principles of Combat > Tactical Statuses");
   });
 
-  it("lists a parent section's children", () => {
-    expect(rules.find((r) => r.name === "Tactical Statuses")!.description).toContain("**Covers:**\n- Pinned");
+  it("a parent section carries a short child's text", () => {
+    const d = rules.find((r) => r.name === "Tactical Statuses")!.description;
+    expect(d).toContain("### Pinned");
+    expect(d).toContain("Summary line.");
   });
 });
 
@@ -155,11 +157,23 @@ describe("lookup_keyword with game_mode heresy (rules beyond special rules)", ()
     expect(text).toContain("# Shooting Phase: Return Fire");
   });
 
-  it("with no game_mode, keeps a 40K stratagem term (Overwatch) in 40K and points at both", async () => {
+  it("with no game_mode, a 40K stratagem term (Overwatch) answers with the stratagem itself, not a pointer", async () => {
     const text = await call("lookup_keyword", { keyword: "Overwatch" });
     expect(text).not.toContain("Found in Horus Heresy");
-    expect(text).toContain('"Fire Overwatch" stratagem');
-    expect(text).toContain('game_mode "heresy"');
+    expect(text).toContain("# Fire Overwatch");
+    expect(text).toContain("**When:**");
+    expect(text).toContain("Horus Heresy also has");
+  });
+
+  it("game_mode 40k for a Heresy-only rule answers with the rule, labelled (a pointer gets read aloud)", async () => {
+    const text = await call("lookup_keyword", { keyword: "Crusade Primary Detachment", game_mode: "40k" });
+    expect(text).toContain("_Found in Horus Heresy, not 40K.");
+    expect(text).toContain("1 High Command");
+  });
+
+  it("\"Reactions\" carries the Reaction Allotment bonus table", async () => {
+    const text = await call("lookup_keyword", { keyword: "Reactions", game_mode: "heresy" });
+    expect(text).toContain("1,501 - 3,500 Points | +1 Reaction Point");
   });
 
   it("does not pull a generic 40K question over to Heresy core rules when no game_mode is given", async () => {
@@ -280,5 +294,56 @@ describe("Heresy FAQ", () => {
   it("lookup_keyword appends FAQ rulings that name the rule", async () => {
     const text = await call("lookup_keyword", { keyword: "Vanguard", game_mode: "heresy" });
     expect(text).toContain("### FAQ");
+  });
+});
+
+describe("Heresy attack calculator from names", () => {
+  it("looks up weapon and target: ten bolter shots at Legionaries", async () => {
+    const text = await call("heresy_attack_calculator", { weapon: "bolter", target: "Legionaries", attacks: 10 });
+    expect(text).toContain("**Answer:** About 1 model killed.");
+    expect(text).toContain("assuming BS 4");
+    expect(text).toContain("T4, W1, SAV 3+");
+  });
+
+  it("a two-profile weapon answers per profile, matching the hand-worked 3.7 damage", async () => {
+    const text = await call("heresy_attack_calculator", { weapon: "Adrastus bolt caliver", target: "Legionaries", attacks: 10 });
+    expect(text).toContain("**Answer, by weapon profile:**");
+    expect(text).toMatch(/Bolt volley \(Primary\):\*\* .*about 3\.7 points of damage/);
+  });
+
+  it("speaks a single shot at a vehicle as a percentage, picking up Armourbane from the weapon", async () => {
+    const text = await call("heresy_attack_calculator", { weapon: "lascannon", target: "Rhino" });
+    expect(text).toContain("**Answer:** A 44% chance of a Penetrating Hit, and no Glancing Hits.");
+  });
+
+  it("uses a named attacker's characteristics and the melee Strength modifier", async () => {
+    const text = await call("heresy_attack_calculator", { weapon: "power fist", target: "Legionaries", attacker: "Centurion" });
+    expect(text).toContain("S8 vs T4");
+    expect(text).not.toContain("assuming");
+  });
+
+  it("says so when a name isn't found, and still takes plain numbers", async () => {
+    expect(await call("heresy_attack_calculator", { weapon: "Nonsense Gun", target: "Legionaries" })).toContain('No Horus Heresy weapon found matching "Nonsense Gun"');
+    const text = await call("heresy_attack_calculator", { attack_type: "ranged", attacks: 10, ballistic_skill: 4, strength: 4, toughness: 4, ap: 5, damage: "1", armour_save: 3 });
+    expect(text).toContain("3+ → **6.67 hits**");
+  });
+});
+
+describe("no-game_mode unit names across games", () => {
+  it("an exact Heresy name beats a prefix of Legends-only 40K datasheets", async () => {
+    const text = await call("lookup_unit", { unit_name: "Sicaran" });
+    expect(text.startsWith(HERESY_STAMP)).toBe(true);
+    expect(text).toContain("40K only has Legends datasheets");
+  });
+
+  it("a prefix of a current 40K unit stays 40K", async () => {
+    expect((await call("lookup_unit", { unit_name: "Leman Russ" })).startsWith("[Mode: 40k 11e]")).toBe(true);
+    expect((await call("lookup_unit", { unit_name: "Rogal Dorn" })).startsWith("[Mode: 40k 11e]")).toBe(true);
+  });
+
+  it("a Kill Team team name lists the team", async () => {
+    const text = await call("lookup_unit", { unit_name: "Gellerpox Infected", game_mode: "kill_team" });
+    expect(text).toContain("A Kill Team kill team");
+    expect(text).toContain("Vulgrar Thrice-cursed");
   });
 });

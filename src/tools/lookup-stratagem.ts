@@ -4,7 +4,7 @@ import { STRATAGEMS } from "../data/stratagems.js";
 import { fuzzySearch } from "../lib/search.js";
 import type { Stratagem } from "../types.js";
 
-function formatStratagem(strat: Stratagem): string {
+export function formatStratagem(strat: Stratagem): string {
   const sections: string[] = [];
 
   sections.push(

@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { calculateHeresyAttack, type HeresyAttackInput, type Target } from "../lib/heresy-attack.js";
+import { resolveHeresyAttack, type AttackRequest } from "../lib/heresy-attack-resolve.js";
 import { heresyStamp } from "../lib/heresy-format.js";
 
 function targetText(t: Target): string {
@@ -13,9 +14,43 @@ function n(x: number): string {
   return x >= 10 ? x.toFixed(1) : x.toFixed(2).replace(/0$/, "");
 }
 
+/** A count for reading aloud, with its noun: "about 1 model", "about 3.3 models", "almost no models"; never "0.44 models". */
+function spokenCount(x: number, singular: string, plural = `${singular}s`): string {
+  if (x < 0.05) return `almost no ${plural}`;
+  const whole = Math.round(x);
+  if (whole >= 1 && (Math.abs(x - whole) <= 0.15 || x >= 10)) return `about ${whole} ${whole === 1 ? singular : plural}`;
+  return `about ${x.toFixed(1)} ${plural}`;
+}
+
+function percent(p: number): string {
+  return `${Math.round(p * 100)}%`;
+}
+
+/** The result in one speakable sentence: odds as percentages for a single die, rounded counts otherwise. */
+export function spokenAnswer(i: HeresyAttackInput): string {
+  const r = calculateHeresyAttack(i);
+  if (i.targetArmour !== undefined) {
+    const pen = r.penetrating ?? 0;
+    const glance = r.glancing ?? 0;
+    if (i.attacks === 1) {
+      const g = glance > 0 ? `, and a ${percent(glance)} chance of a Glancing Hit` : ", and no Glancing Hits";
+      return pen > 0 ? `A ${percent(pen)} chance of a Penetrating Hit${g}.` : `No chance of a Penetrating Hit${g}.`;
+    }
+    return `${spokenCount(pen, "Penetrating Hit")} and ${spokenCount(glance, "Glancing Hit")}.`.replace(/^./, (c) => c.toUpperCase());
+  }
+  const damage = spokenCount(r.expectedDamage, "point of damage", "points of damage");
+  let text = damage;
+  if (r.modelsKilled !== undefined) {
+    const killed = `${spokenCount(r.modelsKilled, "model")} killed`;
+    // Multi-Wound targets lose Wounds without dying, and Damage over a model's Wounds is lost: give both when they differ.
+    text = Math.abs(r.expectedDamage - r.modelsKilled) < 0.15 ? killed : `${killed} (${damage} before overkill or spread across models)`;
+  }
+  return `${text}.`.replace(/^./, (c) => c.toUpperCase());
+}
+
 export function formatHeresyAttack(i: HeresyAttackInput): string {
   const r = calculateHeresyAttack(i);
-  const lines: string[] = [heresyStamp(), "# Horus Heresy attack"];
+  const lines: string[] = [heresyStamp(), "# Horus Heresy attack", `**Answer:** ${spokenAnswer(i)}`, ""];
   const hitHow =
     i.attackType === "ranged"
       ? `BS ${i.ballisticSkill ?? 4}${i.snapShots ? " (Snap Shots)" : ""}`
@@ -64,14 +99,33 @@ export function formatHeresyAttack(i: HeresyAttackInput): string {
   return lines.join("\n");
 }
 
+export function formatResolvedAttack(req: AttackRequest): string {
+  const { attacks, notes, error } = resolveHeresyAttack(req);
+  if (error) return `${heresyStamp()}\n\n${error}`;
+  const head = notes.length ? `\n\n_${notes.join(" ")}_` : "";
+  if (attacks.length === 1) {
+    return formatHeresyAttack(attacks[0].input).replace("# Horus Heresy attack\n", `# Horus Heresy attack${head}\n\n`);
+  }
+  // Several profiles: the answers up front, so a voice reply can name them or ask which.
+  const answers = attacks.map((a) => `- **${a.label}:** ${spokenAnswer(a.input)}`).join("\n");
+  const details = attacks.map((a) => `## ${a.label}\n\n${formatHeresyAttack(a.input).split("\n").slice(3).join("\n").trim()}`).join("\n\n");
+  return `${heresyStamp()}\n\n# Horus Heresy attack${head}\n\n**Answer, by weapon profile:**\n${answers}\n\n${details}`;
+}
+
 export function registerHeresyAttackCalculator(server: McpServer): void {
   server.tool(
     "heresy_attack_calculator",
-    "Horus Heresy (3rd edition) attack maths: expected hits, wounds (or Armour Penetration against a vehicle facing), saves and damage, " +
-      "using the Heresy Ranged Hit Table (BS), Melee Hit Table (WS vs WS) and Wound Table (S vs T). Use this, not wound_calculator, for Heresy.",
+    "Horus Heresy (3rd edition) attack maths: expected hits, wounds (or Armour Penetration against a vehicle facing), saves and damage. " +
+      "Call it directly with the weapon and target NAMES: it looks up their stats, so no lookup_unit or lookup_weapon first. " +
+      "Speak the Answer line. Use this, not wound_calculator, for Heresy.",
     {
-      attack_type: z.enum(["ranged", "melee"]).describe("Shooting Attack ('ranged') or melee ('melee')"),
-      attacks: z.number().min(1).describe("Number of Hit Test dice: Firepower × firing models (ranged), or Attacks × models (melee)"),
+      weapon: z.string().optional().describe("Weapon name, e.g. 'bolter', 'power fist'. Its stats and special rules are looked up for you; a weapon with several profiles gets a result for each"),
+      target: z.string().optional().describe("Target unit or model name, e.g. 'Legionaries', 'Rhino'. Its Toughness or Armour, saves and Wounds are looked up for you"),
+      attacker: z.string().optional().describe("Firing or attacking unit or model, if the querent named one. Omitted: BS/WS 4, Strength 4, and the answer says so"),
+      facing: z.enum(["front", "side", "rear"]).optional().describe("Vehicle target's facing (default front)"),
+      firing_models: z.number().min(1).optional().describe("How many models attack, when the querent gives models, not shots ('five bolters')"),
+      attack_type: z.enum(["ranged", "melee"]).optional().describe("Shooting Attack ('ranged') or melee ('melee'); only needed for a weapon with both"),
+      attacks: z.number().min(1).optional().describe("Number of Hit Test dice, when the querent gives shots ('ten shots')"),
       ballistic_skill: z.number().min(1).max(12).optional().describe("Ranged: the firer's BS (default 4)"),
       snap_shots: z.boolean().optional().describe("Ranged: the attack is made as Snap Shots"),
       weapon_skill: z.number().min(1).max(12).optional().describe("Melee: the attacker's WS (default 4)"),
@@ -79,6 +133,7 @@ export function registerHeresyAttackCalculator(server: McpServer): void {
       strength: z
         .number()
         .min(1)
+        .optional()
         .describe("Strength of the hits: ranged = the weapon's RS; melee = the bearer's S after the weapon's modifier (S4 with 'user +4' = 8)"),
       toughness: z.number().min(1).optional().describe("Target's Toughness (non-vehicle targets; default 4)"),
       target_armour: z
@@ -87,7 +142,7 @@ export function registerHeresyAttackCalculator(server: McpServer): void {
         .optional()
         .describe("Vehicle target: the Armour Value of the facing hit (uses Armour Penetration Tests instead of Wound Tests)"),
       ap: z.number().min(1).max(6).optional().describe("The weapon's AP value (omit for AP '-'). An AP equal to or lower than the target's SAV number denies the Armour Save (AP 3 denies 3+ and 4+, not 2+)"),
-      damage: z.string().describe("Damage value (e.g. '1', '2', 'D3')"),
+      damage: z.string().optional().describe("Damage value (e.g. '1', '2', 'D3'); looked up when a weapon is named"),
       armour_save: z.number().min(2).max(6).optional().describe("Target's SAV as a number (3 for 3+); omit for '-'"),
       invulnerable_save: z.number().min(2).max(6).optional().describe("Target's INV as a number; omit for '-'"),
       cover_save: z.number().min(2).max(6).optional().describe("Cover Save from terrain or rules (ranged only)"),
@@ -102,7 +157,12 @@ export function registerHeresyAttackCalculator(server: McpServer): void {
         ),
     },
     async (a) => {
-      const text = formatHeresyAttack({
+      const req: AttackRequest = {
+        weapon: a.weapon,
+        target: a.target,
+        attacker: a.attacker,
+        facing: a.facing,
+        firingModels: a.firing_models,
         attackType: a.attack_type,
         attacks: a.attacks,
         ballisticSkill: a.ballistic_skill,
@@ -120,7 +180,8 @@ export function registerHeresyAttackCalculator(server: McpServer): void {
         damageMitigation: a.damage_mitigation,
         woundsPerModel: a.wounds_per_model,
         specialRules: a.special_rules,
-      });
+      };
+      const text = formatResolvedAttack(req);
       return { content: [{ type: "text" as const, text }] };
     },
   );

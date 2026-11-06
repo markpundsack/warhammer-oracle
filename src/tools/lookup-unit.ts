@@ -16,7 +16,7 @@ import {
   resolveHomeDatasheet,
 } from "../lib/unit-match.js";
 import type { AbilityVariantException, HomeDatasheetResolution } from "../lib/unit-match.js";
-import { otherGamePointer, shouldCrossOver, stripCatalogueTag, scoreTaggedName, withCrossSystemNote } from "../lib/cross-system.js";
+import { otherGamePointer, shouldCrossOver, stripCatalogueTag, scoreTaggedName, withCrossSystemNote, STRONG_MATCH } from "../lib/cross-system.js";
 import { formatCompositionSection, formatModeStamp, formatUnitSize, formatWargearSection } from "../lib/format.js";
 import type {
   HeresyUnit,
@@ -223,6 +223,14 @@ type LookupResult = { text: string; score: number; closest?: string };
 
 function reply(text: string) {
   return { content: [{ type: "text" as const, text }] };
+}
+
+/** Every best-scoring 11th-edition match for this name is a [Legends] datasheet. */
+function onlyLegendsMatches(unitName: string): boolean {
+  const ranked = rankByName(UNITS_11E, unitName, (u) => stripCatalogueTag(u.name), 0.3);
+  if (!ranked.length) return false;
+  const best = ranked[0].score;
+  return ranked.filter((r) => r.score === best).every((r) => /\[legends\]/i.test(r.item.name));
 }
 
 function lookupHeresyUnit(unitName: string, faction?: string, datasheetId?: string): LookupResult {
@@ -451,6 +459,17 @@ export function registerLookupUnit(server: McpServer): void {
         }
         if (datasheet_id) candidates = candidates.filter((op) => op.id === datasheet_id);
 
+        // A kill team's own name ("Gellerpox Infected") is a faction here, not an operative: list the team.
+        if (!faction && !datasheet_id) {
+          const teams = rankByName([...new Set(KILL_TEAM_OPERATIVES.map((op) => op.faction))], unit_name, (t) => t, STRONG_MATCH);
+          if (teams.length) {
+            const team = teams[0].item;
+            const ops = KILL_TEAM_OPERATIVES.filter((op) => op.faction === team);
+            const lines = ops.map((op) => `- **${op.name}**: APL ${op.profile.apl}, Move ${op.profile.movement}, Save ${op.profile.save}, Wounds ${op.profile.wounds}`);
+            return reply(`${formatModeStamp("wh40k-killteam")}\n\n# ${team}\n\nA Kill Team kill team with ${ops.length} operative types:\n\n${lines.join("\n")}`);
+          }
+        }
+
         const matches = rankUnitMatches(candidates, unit_name, datasheetContentKey);
 
         if (matches.length === 0) {
@@ -491,6 +510,11 @@ export function registerLookupUnit(server: McpServer): void {
       const fortyK = lookup40kUnit(unit_name, faction, datasheet_id, gameSystem);
       if (!datasheet_id) {
         const heresy = lookupHeresyUnit(unit_name, faction);
+        // "Sicaran": Heresy's exact name beats a prefix of 40K datasheets that are all Legends (not 11th-edition
+        // legal). A prefix of a current 40K unit ("Predator", "Leman Russ") stays 40K.
+        if (game_mode === undefined && !faction && heresy.score === 1 && fortyK.score >= STRONG_MATCH && fortyK.score < 1 && onlyLegendsMatches(unit_name)) {
+          return reply(withCrossSystemNote(heresy.text, heresyStamp(), `Found in Horus Heresy. 40K only has Legends datasheets of this name, such as ${fortyK.closest}.`));
+        }
         if (shouldCrossOver(fortyK.score, heresy.score)) {
           // No game_mode: a name with no good 40K match but a clear Heresy one answers from Heresy.
           if (game_mode === undefined) {
