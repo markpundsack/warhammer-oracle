@@ -2984,6 +2984,7 @@ const CHAOS_DAEMONS_STRATAGEMS: Stratagem[] = [
 // (every stratagem here says "CHAOS KNIGHTS unit/model"), so there is no divergence to
 // flag here (unlike Chaos Space Marines, where the in-text keyword is "HERETIC
 // ASTARTES").
+// Re-synced 2026-11-06: Chaos Knights Faction Pack v1.2, legal from 26 Aug 2026. Changed from Rules Updates: Storm of Darkness. This pack lists no FAQs.
 const CHAOS_KNIGHTS_STRATAGEMS: Stratagem[] = [
   // --- Bastions of Tyranny (Faction Pack; Knight Tyrant focus) ---
   {
@@ -3250,10 +3251,10 @@ const CHAOS_KNIGHTS_STRATAGEMS: Stratagem[] = [
     detachment: "Traitoris Lance",
     type: "strategic_ploy",
     cpCost: 1,
-    phase: "Opponent's Shooting phase",
-    when: "Your opponent's Shooting phase, just after an enemy unit has selected its targets.",
-    target: "One CHAOS KNIGHTS unit that was targeted.",
-    effect: "Until the end of the phase, your unit has the Stealth ability and benefits from Cover against those attacks.",
+    phase: "Opponent's Shooting phase or the Fight phase",
+    when: "Your opponent's Shooting phase or the Fight phase, just after an enemy unit selects its targets.",
+    target: "A CHAOS KNIGHTS unit from your army picked as a target.",
+    effect: "It has Stealth, and melee attacks that target it have -1 to hit rolls.",
     gameModes: ["40k"],
   },
 
