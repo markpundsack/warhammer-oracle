@@ -16512,6 +16512,7 @@ const TYRANIDS_STRATAGEMS: Stratagem[] = [
 // Force) print no type anywhere, including 40k.app — types are a
 // best-effort inference from WHEN wording (reactive-to-an-enemy-action
 // triggers -> battle_tactic, self-initiated triggers -> strategic_ploy).
+// Re-synced 2026-11-06: Astra Militarum Faction Pack v1.3, legal from 30 Sep 2026. Changed: Adamantine Behemoth now costs 2CP.
 const ASTRA_MILITARUM_STRATAGEMS: Stratagem[] = [
   // --- Abhuman Auxiliaries (Faction Pack) ---
   {
@@ -16690,11 +16691,11 @@ const ASTRA_MILITARUM_STRATAGEMS: Stratagem[] = [
     faction: "Astra Militarum",
     detachment: "Steel Hammer",
     type: "strategic_ploy",
-    cpCost: 1,
+    cpCost: 2,
     phase: "Movement phase or Charge phase",
     when: "Your Movement phase or your Charge phase.",
-    target: "One Astra Militarum Vehicle unit from your army that has not been selected to move or charge this phase.",
-    effect: "Until the end of the phase, each time your unit makes a Normal, Advance or Charge move, it can move horizontally through terrain features.",
+    target: "An ASTRA MILITARUM VEHICLE unit from your army not yet selected to move or charge this phase.",
+    effect: "Until the end of the phase, its Normal, Advance and Charge moves can pass horizontally through terrain features.",
     gameModes: ["40k"],
   },
   // --- Armoured Infantry (Faction Pack) ---
