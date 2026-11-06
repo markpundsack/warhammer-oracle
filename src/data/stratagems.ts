@@ -3539,6 +3539,7 @@ const CHAOS_KNIGHTS_STRATAGEMS: Stratagem[] = [
 // and the Codex material consistently key their rules off "DEATH GUARD unit", matching
 // Death Guard's own faction keyword since the 10e codex split, and matching the BSData
 // faction string used in detachments-11e.ts.
+// Re-synced 2026-11-06: Death Guard Faction Pack v1.3, legal from 30 Sep 2026. Changed from Rules Updates: Stinking Mire.
 const DEATH_GUARD_STRATAGEMS: Stratagem[] = [
   // --- Faction Pack layer ---
   {
@@ -3791,8 +3792,8 @@ const DEATH_GUARD_STRATAGEMS: Stratagem[] = [
     cpCost: 1,
     phase: "Opponent's Charge phase",
     when: "Start of your opponent's Charge phase.",
-    target: "One friendly DEATH GUARD VEHICLE unit.",
-    effect: "Until the end of the phase, subtract 2 from Charge rolls for enemy units that declare a charge that targets your unit.",
+    target: "An unengaged DEATH GUARD VEHICLE unit from your army.",
+    effect: "Pick one visible enemy unit within 12\" of your unit. That enemy unit has -1 to charge rolls when it declares a charge.",
     gameModes: ["40k"],
   },
   {
