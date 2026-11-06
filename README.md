@@ -183,6 +183,17 @@ Show the full turn sequence for a game mode, or highlight where you are in the t
 
 **Parameters:** `current_phase` (optional), `game_mode` (optional, default: `40k`)
 
+### `lookup_faq`
+
+Search Games Workshop's official 11th Edition rulings by question: the Universal Rules Updates, the Chapter Approved mission deck FAQ and event rules from the Event Companion, every faction pack's FAQ, and the Space Marines and Custodes printed updates. Summaries are in our own words and name their source.
+
+```
+"Does the 15VP limit apply to VP scored at the end of the battle?"
+"Can Tyranids use Insane Bravery against Shadow in the Warp?"
+```
+
+**Parameters:** `question` (required), `faction` (optional, limits results to that army's rulings plus the universal ones)
+
 ### `lookup_stratagem`
 
 Look up a Warhammer 40,000 stratagem by name. Returns CP cost, phase timing, target, and effect.
