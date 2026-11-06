@@ -15854,6 +15854,7 @@ const AGENTS_OF_THE_IMPERIUM_STRATAGEMS: Stratagem[] = [
 // Bioform Onslaught) print no type anywhere, including 40k.app — types are
 // a best-effort inference from WHEN wording (reactive-to-an-enemy-action
 // triggers -> battle_tactic, self-initiated triggers -> strategic_ploy).
+// Re-synced 2026-11-06: Tyranids Faction Pack v1.3, legal from 14 Oct 2026. Pack detachments compared by name; Rules Updates stratagem errata were already present. Changed: Tanglestrike Rounds (restored the minus on -2" M).
 const TYRANIDS_STRATAGEMS: Stratagem[] = [
   // --- Ambush Predators (Faction Pack) ---
   {
@@ -15924,9 +15925,9 @@ const TYRANIDS_STRATAGEMS: Stratagem[] = [
     type: "strategic_ploy",
     cpCost: 1,
     phase: "Shooting phase",
-    when: "Your Shooting phase, when a friendly NORN ASSIMILATOR unit has shot.",
+    when: "Your Shooting phase, when a NORN ASSIMILATOR unit from your army has shot.",
     target: "That NORN ASSIMILATOR unit.",
-    effect: "Select one enemy unit hit by those attacks. That enemy unit is tethered until the start of your next Command phase: while a unit is tethered, that unit has 2\" Move.",
+    effect: "Pick one enemy unit those attacks hit. It is tethered until the start of your next Command phase, and a tethered unit has -2\" M.",
     gameModes: ["40k"],
   },
   // --- Warrior Bioform Onslaught (Faction Pack) ---
