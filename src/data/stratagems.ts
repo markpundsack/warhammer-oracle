@@ -4828,6 +4828,7 @@ const EMPERORS_CHILDREN_STRATAGEMS: Stratagem[] = [
 // Faction string: stratagem text consistently refers to "THOUSAND SONS unit" /
 // "Thousand Sons model" as the army-wide keyword, so `faction: "Thousand Sons"` is used
 // throughout (matching the BSData faction string), rather than a broader umbrella term.
+// Re-synced 2026-11-06: Thousand Sons Faction Pack v1.3, legal from 30 Sep 2026. Changed from the pack: Kaleidoscopic Tempest, Warding Hex. From Rules Updates: Ethereal Phantasm, Chronosorcerous Bleed, Infernal Fusillade (1CP), Unwavering Phalanx, Hex-marked Armour, Ensorcelled Infusion (2CP), Twisted Mirage. Kaleidoscopic Tempest: the PDF extraction reads '-3 detection range' with no inch mark; other detection rules are in inches.
 const THOUSAND_SONS_STRATAGEMS: Stratagem[] = [
   // --- Ritual of Regeneration (Faction Pack) ---
   {
@@ -4955,11 +4956,9 @@ const THOUSAND_SONS_STRATAGEMS: Stratagem[] = [
     type: "epic_deed",
     cpCost: 1,
     phase: "Command phase",
-    when: "Your Command phase.",
-    target:
-      "One friendly Thousand Sons Psyker unit within range of an objective marker you control, provided that marker is wholly within your army's Flow of Magic.",
-    effect:
-      "That objective marker remains under your control until your opponent's level of control over it exceeds yours at the end of a phase.",
+    when: "Command phase.",
+    target: "A THOUSAND SONS PSYKER unit from your army within range of an objective marker you control that's wholly within your army's Flow of Magic.",
+    effect: "You keep control of that marker until your opponent's Level of Control over it beats yours at the end of a phase.",
     gameModes: ["40k"],
   },
   {
@@ -5023,10 +5022,9 @@ const THOUSAND_SONS_STRATAGEMS: Stratagem[] = [
     type: "battle_tactic",
     cpCost: 1,
     phase: "Opponent's Shooting phase",
-    when: "Your opponent's Shooting phase, just after an enemy unit has selected its targets.",
-    target: "One friendly Thousand Sons Psyker unit targeted by one or more of those attacks.",
-    effect:
-      "Until the end of the phase, your unit gains the Stealth ability, and if it is wholly within your army's Flow of Magic, it also has the Benefit of Cover against those attacks.",
+    when: "Your opponent's Shooting phase, just after an enemy unit selects its targets.",
+    target: "A THOUSAND SONS PSYKER unit from your army picked as a target of those attacks.",
+    effect: "It has Stealth, and -3\" detection range if it's wholly within your army's Flow of Magic.",
     gameModes: ["40k"],
   },
 
@@ -5142,9 +5140,8 @@ const THOUSAND_SONS_STRATAGEMS: Stratagem[] = [
     cpCost: 1,
     phase: "Opponent's Movement phase",
     when: "Your opponent's Movement phase, just after an enemy unit ends a move.",
-    target: "One friendly Scintillating Legion unit within 9\" of that enemy unit and not within Engagement Range of any enemy units.",
-    effect:
-      "Your unit can make a Normal move of up to D6\", or up to 6\" instead if it is within 6\" of a friendly Thousand Sons unit.",
+    target: "A SCINTILLATING LEGION unit from your army within 8\" of that enemy unit and not within Engagement Range of any enemy unit.",
+    effect: "It can make a Normal move of up to D6\", or up to 6\" if within 6\" of a friendly THOUSAND SONS unit.",
     gameModes: ["40k"],
   },
   {
@@ -5167,9 +5164,9 @@ const THOUSAND_SONS_STRATAGEMS: Stratagem[] = [
     type: "strategic_ploy",
     cpCost: 1,
     phase: "Opponent's Charge phase",
-    when: "Your opponent's Charge phase, just after an enemy unit declares a charge.",
-    target: "One friendly Thousand Sons Psyker or Scintillating Legion unit targeted by that charge.",
-    effect: "Subtract 2 from Charge rolls made for that enemy unit for that charge.",
+    when: "Start of your opponent's Charge phase.",
+    target: "An unengaged THOUSAND SONS PSYKER or SCINTILLATING LEGION unit from your army.",
+    effect: "Pick one visible enemy unit within 12\" of it. That enemy unit has -1 to charge rolls when it declares a charge.",
     gameModes: ["40k"],
   },
   {
@@ -5257,9 +5254,9 @@ const THOUSAND_SONS_STRATAGEMS: Stratagem[] = [
     type: "strategic_ploy",
     cpCost: 1,
     phase: "Movement phase",
-    when: "Reinforcements step of your Movement phase, for a friendly Tzeentch Mutant unit arriving from Strategic Reserves.",
+    when: "Reinforcements step of your Movement phase, when a TZEENTCH MUTANT unit from your army arrives from Strategic Reserves.",
     target: "That unit.",
-    effect: "Set it up more than 6\" from all enemy models, or more than 9\" if it is a Monster.",
+    effect: "Set it up more than 6\" from all enemy models, or more than 8\" if it's a MONSTER.",
     restrictions: "That unit cannot declare a charge this turn.",
     gameModes: ["40k"],
   },
@@ -5295,11 +5292,11 @@ const THOUSAND_SONS_STRATAGEMS: Stratagem[] = [
     faction: "Thousand Sons",
     detachment: "Rubricae Phalanx",
     type: "wargear",
-    cpCost: 2,
+    cpCost: 1,
     phase: "Shooting phase",
-    when: "Your Shooting phase, before a friendly Thousand Sons Psyker unit equipped with inferno weapons that hasn't shot yet is selected to shoot.",
+    when: "Your Shooting phase, before a THOUSAND SONS PSYKER unit from your army with inferno weapons that hasn't shot is selected to shoot.",
     target: "That unit.",
-    effect: "Until the end of the phase, its inferno weapons gain [PSYCHIC] and their Strength becomes 5.",
+    effect: "Until the end of the phase, its inferno bolt pistols, inferno boltguns, inferno combi-bolters and inferno combi-weapons have [PSYCHIC] and Strength 5.",
     gameModes: ["40k"],
   },
   {
@@ -5333,9 +5330,9 @@ const THOUSAND_SONS_STRATAGEMS: Stratagem[] = [
     type: "battle_tactic",
     cpCost: 1,
     phase: "Opponent's Charge phase",
-    when: "Your opponent's Charge phase, just after an enemy unit ends a charge move within Engagement Range of a friendly Rubric Marines unit.",
-    target: "That unit.",
-    effect: "Subtract 1 from Wound rolls for attacks made against your unit until the end of the phase.",
+    when: "Your opponent's Charge phase, just after an enemy unit ends a charge move within Engagement Range of a RUBRIC MARINES unit from your army.",
+    target: "That RUBRIC MARINES unit.",
+    effect: "Until the end of the turn, attacks against it with a Strength above its Toughness have -1 to wound rolls.",
     gameModes: ["40k"],
   },
 
@@ -5347,9 +5344,9 @@ const THOUSAND_SONS_STRATAGEMS: Stratagem[] = [
     type: "battle_tactic",
     cpCost: 1,
     phase: "Shooting phase or the Fight phase",
-    when: "Your opponent's Shooting phase or the Fight phase, just after an enemy unit has selected its targets.",
-    target: "One friendly Thousand Sons Vehicle unit that was targeted.",
-    effect: "Worsen the Armour Penetration of attacks that target your unit by 1 for the rest of the phase.",
+    when: "Your opponent's Shooting phase or the Fight phase, just after an enemy unit selects its targets.",
+    target: "A THOUSAND SONS VEHICLE unit from your army picked as a target.",
+    effect: "Until that enemy unit has finished its attacks, attacks against your unit have their AP worsened by 1.",
     gameModes: ["40k"],
   },
   {
@@ -5394,11 +5391,11 @@ const THOUSAND_SONS_STRATAGEMS: Stratagem[] = [
     faction: "Thousand Sons",
     detachment: "Warpforged Cabal",
     type: "battle_tactic",
-    cpCost: 1,
+    cpCost: 2,
     phase: "Shooting phase",
-    when: "Your Shooting phase, before a friendly Thousand Sons Vehicle unit within 6\" of a friendly Thousand Sons Psyker unit that hasn't shot yet is selected to shoot.",
-    target: "That unit.",
-    effect: "Until the end of the phase, its ranged weapons gain [PSYCHIC] and add 1 to Wound rolls made for them.",
+    when: "Your Shooting phase.",
+    target: "A THOUSAND SONS VEHICLE unit from your army not yet selected to shoot this phase, within 6\" of a friendly THOUSAND SONS PSYKER unit.",
+    effect: "Until the end of the phase, its ranged weapons have [PSYCHIC] and +1 to Wound rolls.",
     gameModes: ["40k"],
   },
   {
