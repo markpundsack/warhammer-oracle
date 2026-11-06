@@ -32,8 +32,12 @@ export function registerSearchStratagems(server: McpServer): void {
         .string()
         .optional()
         .describe("Optional detachment filter (e.g. 'Gladius Task Force')"),
+      include_core: z
+        .boolean()
+        .optional()
+        .describe("With detachment: also return the Core stratagems every army can use."),
     },
-    async ({ query, faction, phase, detachment }) => {
+    async ({ query, faction, phase, detachment, include_core }) => {
       let candidates: Stratagem[] = [...STRATAGEMS];
 
       if (faction) {
@@ -47,7 +51,9 @@ export function registerSearchStratagems(server: McpServer): void {
       }
       if (detachment) {
         candidates = candidates.filter(
-          (s) => s.detachment && s.detachment.toLowerCase().includes(detachment.toLowerCase()),
+          (s) =>
+            (s.detachment && s.detachment.toLowerCase().includes(detachment.toLowerCase())) ||
+            (include_core && s.faction === "Core"),
         );
       }
 
