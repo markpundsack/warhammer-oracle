@@ -4149,6 +4149,7 @@ const DEATH_GUARD_STRATAGEMS: Stratagem[] = [
 // Faction string: every stratagem below uses "Emperor's Children", matching the
 // "EMPEROR'S CHILDREN unit" keyword referenced throughout both source layers and the
 // faction string BSData uses in detachments-11e.ts.
+// Re-synced 2026-11-06: Emperor's Children Faction Pack v1.3, legal from 30 Sep 2026. Changed: Catalytic Stimulus (surge move, from the pack). From Rules Updates: Dark Apparitions, On to the Next, Vengeful Surge. Dark Apparitions' 8" comes from the erratum 'change 9" to 8"'; the earlier summary had dropped that distance, so its placement in the sentence is inferred.
 const EMPERORS_CHILDREN_STRATAGEMS: Stratagem[] = [
   // === Faction Pack layer ===
   // Elegant Brutes (Emperor's Children Terminators)
@@ -4331,8 +4332,8 @@ const EMPERORS_CHILDREN_STRATAGEMS: Stratagem[] = [
     cpCost: 1,
     phase: "Opponent's Shooting phase",
     when: "Your opponent's Shooting phase, just after an enemy unit has shot.",
-    target: "One EMPEROR'S CHILDREN unit from your army that lost one or more wounds as a result of those attacks.",
-    effect: "Your unit can make a Normal move of up to D6\".",
+    target: "An EMPEROR'S CHILDREN unit from your army that lost one or more wounds to those attacks.",
+    effect: "It can make a surge move of up to D6\".",
     gameModes: ["40k"],
   },
 
@@ -4492,9 +4493,9 @@ const EMPERORS_CHILDREN_STRATAGEMS: Stratagem[] = [
     type: "strategic_ploy",
     cpCost: 1,
     phase: "End of the Fight phase",
-    when: "End of the Fight phase, for a friendly EMPEROR'S CHILDREN unit that destroyed an enemy unit this phase.",
-    target: "That unit and one friendly TRANSPORT it is able to embark within.",
-    effect: "Your unit can embark within that TRANSPORT.",
+    when: "End of the Fight phase.",
+    target: "An EMPEROR'S CHILDREN unit from your army that destroyed an enemy unit this phase, and a friendly TRANSPORT it can embark in.",
+    effect: "If it's wholly within 6\" of that TRANSPORT it can embark, even if it disembarked from a TRANSPORT this turn.",
     gameModes: ["40k"],
   },
   {
@@ -4626,8 +4627,8 @@ const EMPERORS_CHILDREN_STRATAGEMS: Stratagem[] = [
     cpCost: 2,
     phase: "End of the Fight phase",
     when: "End of your opponent's Fight phase.",
-    target: "One friendly DAEMONETTES unit not within Engagement Range of an enemy unit.",
-    effect: "Remove your unit from the battlefield and place it into Strategic Reserves; it can later be set up using the Deep Strike ability within 6\" of a friendly EMPEROR'S CHILDREN unit.",
+    target: "A DAEMONETTES unit from your army not within Engagement Range of an enemy unit.",
+    effect: "Put it in Strategic Reserves. It can later set up using Deep Strike within 6\" of a friendly EMPEROR'S CHILDREN unit and more than 8\" from all enemy models.",
     gameModes: ["40k"],
   },
   // Coterie of the Conceited
@@ -4772,9 +4773,9 @@ const EMPERORS_CHILDREN_STRATAGEMS: Stratagem[] = [
     type: "strategic_ploy",
     cpCost: 1,
     phase: "Opponent's Shooting phase",
-    when: "Your opponent's Shooting phase, just after an enemy unit has selected a friendly EMPEROR'S CHILDREN CHARACTER unit as a target and finished shooting.",
-    target: "That unit.",
-    effect: "Your unit can make a surge move of up to D6\"; if it is not your army's Favoured Champions, you can re-roll the distance.",
+    when: "Your opponent's Shooting phase, when an enemy unit that targeted an unengaged EMPEROR'S CHILDREN CHARACTER unit from your army this phase has shot.",
+    target: "That EMPEROR'S CHILDREN CHARACTER unit.",
+    effect: "It can make a surge move of up to D6\". If it isn't your army's Favoured Champions, you can re-roll that distance.",
     gameModes: ["40k"],
   },
 ];
