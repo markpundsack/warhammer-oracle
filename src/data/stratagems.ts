@@ -8823,6 +8823,7 @@ const AELDARI_STRATAGEMS: Stratagem[] = [
 //
 // Codex-baseline detachments (5, via 40k.app): Awakened Dynasty, Annihilation
 // Legion, Canoptek Court, Obeisance Phalanx, Hypercrypt Legion.
+// Re-synced 2026-11-06: Necrons Faction Pack v1.3, legal from 30 Sep 2026. Changed from Rules Updates: Insanity's Ire, Protocol of the Eternal Revenant, Cosmic Precision. From the pack: Unnatural Aggression.
 const NECRONS_STRATAGEMS: Stratagem[] = [
   // --- Hand of the Dynasty (Faction Pack) ---
   {
@@ -9151,8 +9152,8 @@ const NECRONS_STRATAGEMS: Stratagem[] = [
     cpCost: 2,
     phase: "Charge phase",
     when: "End of your opponent's Charge phase.",
-    target: "One Necrons unit (excluding Monsters and Vehicles) from your army that is within 6\" of one or more enemy units and would be eligible to declare a charge against one or more of those enemy units if it were your Charge phase.",
-    effect: "Your unit now declares a charge that only targets one or more of those enemy units, and you resolve that charge. Note that even if this charge is successful, your unit does not receive any Charge bonus this turn.",
+    target: "A NECRONS unit from your army (not a MONSTER or VEHICLE) within 6\" of one or more enemy units, which could declare a charge at them if it were your Charge phase.",
+    effect: "It declares a charge at one or more of those enemy units only, and you resolve that charge.",
     gameModes: ["40k"],
   },
   // --- Pantheon of Woe (Faction Pack) ---
@@ -9238,9 +9239,9 @@ const NECRONS_STRATAGEMS: Stratagem[] = [
     type: "epic_deed",
     cpCost: 1,
     phase: "Any phase",
-    when: "Any phase, when a friendly NECRONS INFANTRY CHARACTER model is destroyed.",
-    target: "That NECRONS INFANTRY CHARACTER model.",
-    effect: "At the end of the phase, set your model back up on the battlefield as close as possible to where it was destroyed and not within Engagement Range of any enemy units, with half of its starting number of wounds remaining.",
+    when: "Any phase, when a NECRONS INFANTRY CHARACTER model from your army is destroyed.",
+    target: "That model.",
+    effect: "At the end of the phase, return it to the battlefield, unengaged and as close as possible to where it died, with half its starting wounds. It isn't part of an attached unit, and its unit's starting strength is 1.",
     gameModes: ["40k"],
   },
   {
@@ -9371,9 +9372,9 @@ const NECRONS_STRATAGEMS: Stratagem[] = [
     type: "strategic_ploy",
     cpCost: 1,
     phase: "Opponent's Shooting phase",
-    when: "Your opponent's Shooting phase, just after an enemy unit has shot.",
-    target: "One DESTROYER CULT or FLAYED ONES unit from your army that had one or more of its models destroyed by the attacking unit's attacks.",
-    effect: "Your unit can make a Normal move, but must end that move as close as possible to that enemy unit.",
+    when: "Your opponent's Shooting phase, when an enemy unit that targeted an unengaged DESTROYER CULT or FLAYED ONES unit from your army this phase has shot.",
+    target: "That DESTROYER CULT or FLAYED ONES unit.",
+    effect: "It can make a surge move of up to D6\".",
     gameModes: ["40k"],
   },
   // --- Canoptek Court (Codex baseline, via 40k.app) ---
@@ -9567,8 +9568,8 @@ const NECRONS_STRATAGEMS: Stratagem[] = [
     cpCost: 1,
     phase: "Movement phase",
     when: "Your Movement phase.",
-    target: "One NECRONS unit from your army (excluding MONSTER units) that is arriving using Deep Strike or Hyperphasing abilities this phase.",
-    effect: "Your unit can be set up anywhere on the battlefield that is more than 6\" horizontally away from all enemy models.",
+    target: "A NECRONS unit from your army (not a MONSTER unit) arriving by an ingress move this phase.",
+    effect: "It can set up anywhere on the battlefield more than 6\" horizontally from all enemy models.",
     gameModes: ["40k"],
   },
   {
