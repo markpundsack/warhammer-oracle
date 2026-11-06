@@ -16,6 +16,7 @@ import { registerLookupCrusade } from "./tools/lookup-crusade.js";
 import { registerLookupWeapon } from "./tools/lookup-weapon.js";
 import { registerHeresyAttackCalculator } from "./tools/heresy-attack-calculator.js";
 import { registerHeresyFaq } from "./tools/heresy-faq.js";
+import { registerLookupFaq } from "./tools/lookup-faq.js";
 
 export function registerTools(server: McpServer): void {
   registerLookupUnit(server);
@@ -27,6 +28,7 @@ export function registerTools(server: McpServer): void {
   registerWoundCalculator(server);
   registerHeresyAttackCalculator(server);
   registerHeresyFaq(server);
+  registerLookupFaq(server);
   registerLookupStratagem(server);
   registerSearchStratagems(server);
   registerLookupDetachment(server);

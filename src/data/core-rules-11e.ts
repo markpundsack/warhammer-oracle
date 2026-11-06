@@ -574,7 +574,7 @@ export const CORE_RULES_11E: CoreRule[] = [
     ruleRef: "15.01",
     aliases: ["stratagem", "stratagems", "stratagem rules", "stratagem limits", "how do stratagems work", "same stratagem twice", "two stratagems on one unit", "stratagem restrictions"],
     summary:
-      "Pick targets, pay the CP, then apply the effect; if you can't afford it you can't use it, and extra-cost sections (like +1CP) need the extra paid. You can't use the same stratagem twice in one phase, and you normally can't target one unit with two stratagems in one phase. Battle-shocked units can't be targeted by their own controller's stratagems.",
+      "Pick targets, pay the CP, then apply the effect; if you can't afford it you can't use it, and extra-cost sections (like +1CP) need the extra paid. You can't use the same stratagem twice in one phase, and you normally can't target one unit with two stratagems in one phase. Battle-shocked units can't be targeted by their own controller's stratagems. A rule that lifts one of these limits only works if it names the stratagem (Universal Rules Updates).",
   },
   {
     name: "Core Stratagems",
@@ -958,7 +958,7 @@ export const CORE_RULES_11E: CoreRule[] = [
     ruleRef: "01.02.10",
     aliases: ["new unit", "new units", "add a unit to your army", "adding units during battle", "new unit starting strength"],
     summary:
-      "A unit added during a battle has its starting strength set when it's added, and counted the usual way.",
+      "A unit added during a battle has its starting strength set when it's added, and counted the usual way. A stratagem that adds a new unit identical to a destroyed one can only be used once per battle (Universal Rules Updates).",
   },
   {
     name: "Destroyed",
