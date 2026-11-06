@@ -7858,6 +7858,7 @@ const GENESTEALER_CULTS_STRATAGEMS: Stratagem[] = [
 // (all Asuryani), Devoted of Ynnead (Ynnari). "Skyborne Sanctuary" is a genuine
 // shared-name stratagem appearing in both Warhost's and Aspect Host's lists on
 // 40k.app (confirmed, not a scrape artifact) — included under both.
+// Re-synced 2026-11-06: Aeldari Faction Pack v1.4, legal from 14 Oct 2026. Changed from Rules Updates: Unshrouded Truth.
 const AELDARI_STRATAGEMS: Stratagem[] = [
   // --- Armoured Warhost (Faction Pack) ---
   {
@@ -8624,8 +8625,8 @@ const AELDARI_STRATAGEMS: Stratagem[] = [
     cpCost: 1,
     phase: "Movement phase",
     when: "Your Movement phase.",
-    target: "One ASURYANI INFANTRY unit from your army (excluding WRAITH CONSTRUCT units) that has not been selected to move this phase, was not set up on the battlefield this phase, and is within 8\" of one or more friendly ASURYANI PSYKER models.",
-    effect: "Remove your unit from the battlefield and set it up again anywhere on the battlefield that is more than 9\" horizontally away from all enemy models.",
+    target: "An ASURYANI INFANTRY unit from your army (not WRAITH CONSTRUCT) that hasn't been selected to move this phase, wasn't set up this phase, and is within 9\" of a friendly ASURYANI PSYKER model.",
+    effect: "Put it in strategic reserves. It has Deep Strike and must make an ingress move this phase, even in your first turn.",
     gameModes: ["40k"],
   },
   {
