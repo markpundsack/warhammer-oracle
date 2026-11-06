@@ -37,6 +37,33 @@ describe("search_stratagems", () => {
     expect(text).toContain("Fight phase");
   });
 
+  it("lists by filters alone, with any-phase stratagems included", async () => {
+    const result = await client.callTool({
+      name: "search_stratagems",
+      arguments: { faction: "Core", phase: "Shooting phase" },
+    });
+    expect(result.isError).toBeFalsy();
+    const text = (result.content as Array<{ type: string; text: string }>)[0].text;
+    expect(text).toContain("Command Re-Roll");
+    expect(text).toContain("Shooting phase");
+  });
+
+  it("one call returns a detachment's stratagems plus Core for a phase", async () => {
+    const result = await client.callTool({
+      name: "search_stratagems",
+      arguments: { detachment: "Kult of Speed", phase: "Shooting phase", include_core: true },
+    });
+    const text = (result.content as Array<{ type: string; text: string }>)[0].text;
+    expect(text).toContain("Dakkastorm");
+    expect(text).toContain("Command Re-Roll");
+  });
+
+  it("asks for something when given nothing at all", async () => {
+    const result = await client.callTool({ name: "search_stratagems", arguments: {} });
+    const text = (result.content as Array<{ type: string; text: string }>)[0].text;
+    expect(text).toContain("at least one of");
+  });
+
   it("suggests lookup_ploy when no results", async () => {
     const result = await client.callTool({
       name: "search_stratagems",

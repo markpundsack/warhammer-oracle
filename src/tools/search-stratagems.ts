@@ -14,7 +14,12 @@ export function registerSearchStratagems(server: McpServer): void {
     "search_stratagems",
     "Search Warhammer 40,000 stratagems by name, faction, phase, or detachment. Returns a compact list (max 10). For Kill Team ploys, use lookup_ploy instead.",
     {
-      query: z.string().describe("Search query — matches against name, faction, phase, and effect"),
+      query: z
+        .string()
+        .optional()
+        .describe(
+          "Search query — matches against name, faction, phase, and effect. Omit to list everything matching the filters.",
+        ),
       faction: z
         .string()
         .optional()
@@ -27,31 +32,51 @@ export function registerSearchStratagems(server: McpServer): void {
         .string()
         .optional()
         .describe("Optional detachment filter (e.g. 'Gladius Task Force')"),
+      include_core: z
+        .boolean()
+        .optional()
+        .describe("With detachment: also return the Core stratagems every army can use."),
     },
-    async ({ query, faction, phase, detachment }) => {
+    async ({ query, faction, phase, detachment, include_core }) => {
       let candidates: Stratagem[] = [...STRATAGEMS];
 
       if (faction) {
         candidates = fuzzySearch(candidates, faction, ["faction"]);
       }
       if (phase) {
-        candidates = fuzzySearch(candidates, phase, ["phase"]);
+        // "Any phase" stratagems (e.g. Command Re-Roll) are usable in every phase.
+        const inPhase = fuzzySearch(candidates, phase, ["phase"]);
+        const anyPhase = fuzzySearch(candidates, "any phase", ["phase"]);
+        candidates = [...new Set([...inPhase, ...anyPhase])];
       }
       if (detachment) {
         candidates = candidates.filter(
-          (s) => s.detachment && s.detachment.toLowerCase().includes(detachment.toLowerCase()),
+          (s) =>
+            (s.detachment && s.detachment.toLowerCase().includes(detachment.toLowerCase())) ||
+            (include_core && s.faction === "Core"),
         );
       }
 
-      const matches = fuzzySearch(candidates, query, ["name", "effect", "phase"]);
-      const limited = matches.slice(0, 10);
+      if (!query && !faction && !phase && !detachment) {
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: "Give a query, or at least one of faction, phase or detachment.",
+            },
+          ],
+        };
+      }
+
+      const matches = query ? fuzzySearch(candidates, query, ["name", "effect", "phase"]) : candidates;
+      const limited = matches.slice(0, query ? 10 : 25);
 
       if (limited.length === 0) {
         return {
           content: [
             {
               type: "text" as const,
-              text: `No Warhammer 40,000 stratagems found matching "${query}".${faction ? ` (faction: "${faction}")` : ""}\n\nNote: For Kill Team ploys, use the lookup_ploy tool instead.`,
+              text: `No Warhammer 40,000 stratagems found${query ? ` matching "${query}"` : ""}.${faction ? ` (faction: "${faction}")` : ""}\n\nNote: For Kill Team ploys, use the lookup_ploy tool instead.`,
             },
           ],
         };
@@ -61,8 +86,8 @@ export function registerSearchStratagems(server: McpServer): void {
         "**Game:** Warhammer 40,000\n\n> Core stratagems reflect the 11th Edition Core Rules. Detachment-specific stratagems reflect 11th Edition faction packs where available (currently Space Marines, Chaos Space Marines) — other factions may still be on 10th Edition Codexes or missing entirely.\n\n";
       const lines = limited.map(formatCompact);
       const footer =
-        matches.length > 10
-          ? `\n\n_Showing 10 of ${matches.length} results. Narrow your search for more specific results._`
+        matches.length > limited.length
+          ? `\n\n_Showing ${limited.length} of ${matches.length} results. Narrow your search for more specific results._`
           : "";
 
       return {
