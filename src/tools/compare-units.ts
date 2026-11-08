@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { UNITS } from "../data/units.js";
-import { UNITS_11E } from "../data/units-11e.js";
+import { UNITS_11E } from "../data/current-11e.js";
 import { KILL_TEAM_OPERATIVES } from "../data/kill-team-operatives.js";
 import { datasheetContentKey, pickUnitMatch, rankUnitMatchesWithFactionHint } from "../lib/unit-match.js";
 import { formatCompositionInline, formatModeStamp, formatUnitSize } from "../lib/format.js";

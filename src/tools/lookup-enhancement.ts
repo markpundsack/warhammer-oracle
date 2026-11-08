@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { ENHANCEMENTS } from "../data/enhancements.js";
-import { ENHANCEMENTS_11E } from "../data/enhancements-11e.js";
+import { ENHANCEMENTS_11E } from "../data/current-11e.js";
 import { fuzzySearch } from "../lib/search.js";
 import { formatModeStamp } from "../lib/format.js";
 import type { Enhancement, GameSystem } from "../types.js";

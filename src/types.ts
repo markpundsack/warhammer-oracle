@@ -401,7 +401,8 @@ export type Stratagem = {
   name: string;
   faction: string;
   detachment: string | null;
-  type: "battle_tactic" | "epic_deed" | "strategic_ploy" | "wargear" | "core";
+  /** "detachment": an 11e codex stratagem, which prints no Battle Tactic/Strategic Ploy subtype. */
+  type: "battle_tactic" | "epic_deed" | "strategic_ploy" | "wargear" | "core" | "detachment";
   cpCost: number;
   phase: string;
   when: string;

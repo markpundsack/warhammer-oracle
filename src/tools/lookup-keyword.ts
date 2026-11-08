@@ -3,7 +3,7 @@ import { z } from "zod";
 import { KEYWORDS } from "../data/keywords.js";
 import { SHARED_RULES_11E } from "../data/rules-11e.js";
 import { CORE_RULES_11E, CORE_STRATAGEM_REFS, type CoreRule } from "../data/core-rules-11e.js";
-import { UNITS_11E } from "../data/units-11e.js";
+import { UNITS_11E } from "../data/current-11e.js";
 import { HERESY_SPECIAL_RULES } from "../data/heresy-rules.js";
 import { STRATAGEMS } from "../data/stratagems.js";
 import { formatStratagem } from "./lookup-stratagem.js";

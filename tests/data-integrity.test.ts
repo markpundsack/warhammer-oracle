@@ -546,7 +546,7 @@ describe("SHARED_RULES data integrity", () => {
 });
 
 describe("STRATAGEMS data integrity", () => {
-  const VALID_TYPES = new Set(["battle_tactic", "epic_deed", "strategic_ploy", "wargear", "core"]);
+  const VALID_TYPES = new Set(["battle_tactic", "epic_deed", "strategic_ploy", "wargear", "core", "detachment"]);
 
   it("has a substantial number of stratagems", () => {
     expect(STRATAGEMS.length).toBeGreaterThan(400);

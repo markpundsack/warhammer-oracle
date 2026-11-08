@@ -1,12 +1,16 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { DETACHMENTS } from "../data/detachments.js";
-import { DETACHMENTS_11E } from "../data/detachments-11e.js";
+import { DETACHMENTS_11E, ENHANCEMENTS_11E } from "../data/current-11e.js";
 import { ENHANCEMENTS } from "../data/enhancements.js";
-import { ENHANCEMENTS_11E } from "../data/enhancements-11e.js";
 import { STRATAGEMS } from "../data/stratagems.js";
 import { fuzzySearch } from "../lib/search.js";
-import { stratagemDetachmentName, stratagemProvenance } from "../data/stratagem-sources.js";
+import {
+  codexDetachmentWithoutStratagems,
+  detachmentKey,
+  stratagemDetachmentName,
+  stratagemProvenance,
+} from "../data/stratagem-sources.js";
 import { formatModeStamp } from "../lib/format.js";
 import type { Detachment, Enhancement, GameSystem, Stratagem } from "../types.js";
 
@@ -74,6 +78,11 @@ function formatDetachment(
       const notes = [...new Set(stratagems.map((s) => stratagemProvenance(s).note))];
       sections.push(notes.map((n) => `> ${n}`).join("\n"));
     }
+  } else if (gameSystem === "wh40k-11e" && codexDetachmentWithoutStratagems(det.name)) {
+    const codex = codexDetachmentWithoutStratagems(det.name)!;
+    sections.push(
+      `> The 11th edition ${codex.codexName} codex gives this detachment no stratagems (Mark's saved pages, ${codex.savedOn}). Core Stratagems still apply (use lookup_stratagem).`,
+    );
   } else if (gameSystem === "wh40k-11e") {
     sections.push(
       "> No detachment-specific stratagems on file for this detachment. It may be new in an 11th Edition Codex, have none, or be a Boarding Actions detachment, so say that it isn't covered rather than that it has none (use lookup_stratagem for Core Stratagems, which apply to every army).",
@@ -132,14 +141,12 @@ export function registerLookupDetachment(server: McpServer): void {
       const det = matches[0];
 
       const relatedEnhancements = enhancementsPool.filter(
-        (e) =>
-          e.faction === det.faction &&
-          e.detachment.toLowerCase() === det.name.toLowerCase(),
+        (e) => e.faction === det.faction && detachmentKey(e.detachment) === detachmentKey(det.name),
       );
 
-      const stratagemDetachment = stratagemDetachmentName(det.name).toLowerCase();
+      const stratagemDetachment = detachmentKey(stratagemDetachmentName(det.name));
       const relatedStratagems = STRATAGEMS.filter(
-        (s) => s.detachment !== null && s.detachment.toLowerCase() === stratagemDetachment,
+        (s) => s.detachment !== null && detachmentKey(s.detachment) === stratagemDetachment,
       );
 
       return {

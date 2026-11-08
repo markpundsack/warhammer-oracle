@@ -10,6 +10,10 @@
  *   40k.app or Wahapedia in earlier passes) with the stratagem changes from the
  *   pack's Rules Updates section applied. Wording can still be older.
  *
+ * - A faction with an 11e Codex ("CODEX_SOURCES") is current to that codex for
+ *   the detachments it prints. Its other detachments are older pack or 10e
+ *   text and may no longer be legal.
+ *
  * Pack dates per faction are the "legal for matched play" date printed in each
  * PDF. Codex release claims come from Wargamer's release list (see
  * docs/research/11e-stratagem-sources.md in the game-mode worktree): Orks 5 Sep,
@@ -54,6 +58,24 @@ export const FACTION_PACKS: FactionPack[] = [
   { faction: "World Eaters", packName: "World Eaters", version: "1.3", legalFrom: "30 Sep 2026", packDetachments: ["Brazen Engines", "Butchers of Khorne", "Vessels of Wrath"] },
 ];
 
+/** A faction whose 11e Codex replaced its pack, read from the pages Mark saved. */
+export interface CodexSource {
+  /** Faction string used in STRATAGEMS. */
+  faction: string;
+  /** Name as the codex is titled, for answers. */
+  codexName: string;
+  /** When Mark saved the codex pages (Wahapedia, codex app data October 2026). */
+  savedOn: string;
+  /** What the saved pages leave out, if anything, for the "not in the codex" note. */
+  scope?: string;
+  /** Matched-play detachments printed in the codex (Boarding Actions ones excluded). */
+  detachments: string[];
+  /** Codex detachments that print no stratagems at all. */
+  noStratagems?: string[];
+}
+
+export const CODEX_SOURCES: CodexSource[] = [];
+
 /** Factions with no current non-Legends pack: their text was not re-synced. */
 export const FACTIONS_WITHOUT_CURRENT_PACK: Record<string, string> = {
   Orks: "GW no longer lists an Orks pack and an 11e Codex came out in September 2026, so this is June 2026 pack or 10th Edition Codex text",
@@ -75,6 +97,17 @@ const DETACHMENT_ALIASES: Record<string, string> = {
   "ordo hereticus purgation force": "Purgation Force (Ordo Hereticus)",
   "ordo malleus daemon hunters": "Daemon Hunters (Ordo Malleus)",
 };
+
+/** Compare detachment names ignoring case, spacing and apostrophe style. */
+export function detachmentKey(name: string): string {
+  return name.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+/** The codex that prints this detachment without any stratagems, if one does. */
+export function codexDetachmentWithoutStratagems(detachment: string): CodexSource | undefined {
+  const k = detachmentKey(detachment);
+  return CODEX_SOURCES.find((c) => c.noStratagems?.some((d) => detachmentKey(d) === k));
+}
 
 /** The detachment name stratagems.ts uses for a detachment name from anywhere else. */
 export function stratagemDetachmentName(name: string): string {
@@ -117,6 +150,23 @@ export interface StratagemProvenance {
 export function stratagemProvenance(s: Pick<Stratagem, "faction" | "detachment">): StratagemProvenance {
   if (s.faction === "Core" || !s.detachment) {
     return { older: false, note: "Reflects the Warhammer 40,000 11th Edition Core Rules.", short: "core rules" };
+  }
+  const codex = CODEX_SOURCES.find((c) => c.faction === s.faction);
+  if (codex) {
+    const ref = `the 11th edition ${codex.codexName} codex`;
+    if (codex.detachments.some((d) => detachmentKey(d) === detachmentKey(s.detachment!))) {
+      return {
+        older: false,
+        note: `Current to ${ref}, via Mark's saved pages (${codex.savedOn}).`,
+        short: `11e codex, ${codex.savedOn}`,
+      };
+    }
+    const pages = codex.scope ? `Mark's saved pages, ${codex.savedOn}, ${codex.scope}` : `Mark's saved pages, ${codex.savedOn}`;
+    return {
+      older: true,
+      note: `Older text: ${s.detachment} isn't in ${ref} (${pages}), so this is earlier pack or 10th Edition text and the detachment may no longer be legal. Warn the player and suggest checking the app.`,
+      short: "older: not in the 11e codex",
+    };
   }
   const missing = FACTIONS_WITHOUT_CURRENT_PACK[s.faction];
   if (missing) {

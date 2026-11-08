@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { UNITS } from "../data/units.js";
-import { UNITS_11E } from "../data/units-11e.js";
+import { UNITS_11E } from "../data/current-11e.js";
 import { KILL_TEAM_OPERATIVES } from "../data/kill-team-operatives.js";
 import { HERESY_UNITS, HERESY_FACTIONS } from "../data/heresy-units.js";
 import { fuzzySearch, normalizeName, rankByName } from "../lib/search.js";
