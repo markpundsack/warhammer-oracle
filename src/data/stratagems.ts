@@ -5583,7 +5583,7 @@ const WORLD_EATERS_STRATAGEMS: Stratagem[] = [
     phase: "Opponent's Shooting phase or the Fight phase",
     when: "Your opponent's Shooting phase or the Fight phase, just after a friendly JAKHALS or GOREMONGERS unit is selected as the target of an attack.",
     target: "That unit.",
-    effect: "Your unit has Feel No Pain 6+ until the end of the phase (5+ instead if it is within range of a friendly WORLD EATERS MONSTER or TITANIC unit).",
+    effect: "Your unit has Feel No Pain 6+ until the end of the phase, or 5+ instead if it is within 6\" of a friendly WORLD EATERS MONSTER unit or within 9\" of a friendly WORLD EATERS TITANIC unit.",
     gameModes: ["40k"],
   },
   {
@@ -5684,7 +5684,7 @@ const WORLD_EATERS_STRATAGEMS: Stratagem[] = [
     phase: "Command phase",
     when: "Your Command phase.",
     target: "One WORLD EATERS unit.",
-    effect: "Return destroyed models to a nearby friendly BLOOD LEGIONS unit: 1 model if MOUNTED, D3 models if BEAST, or D6 models if INFANTRY.",
+    effect: "Pick one friendly BLOOD LEGIONS unit within 6\" of your unit and return destroyed models to it with full wounds: 1 MOUNTED model, up to D3 BEAST models, or up to D6 INFANTRY models.",
     restrictions: "Cannot return destroyed CHARACTER models to an Attached unit.",
     gameModes: ["40k"],
   },
