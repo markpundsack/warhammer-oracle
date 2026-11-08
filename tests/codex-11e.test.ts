@@ -164,3 +164,15 @@ describe("Adeptus Custodes 11e codex", () => {
     expect(text).toContain("Rendax");
   });
 });
+
+describe("spot-check fixes from the other factions' saved pages", () => {
+  it.each([
+    ["Sustained by Agony", "D3+3"],
+    ["Beautiful Death", "4+"],
+    ["Glut of Souls", "5+"],
+    ["A Dark Network", "within 12\""],
+    ["Blitzing Firepower", "within 12\""],
+  ])("%s has the number from the saved pages", async (name, expected) => {
+    expect(await call("lookup_stratagem", { name })).toContain(expected);
+  });
+});
