@@ -2219,7 +2219,7 @@ const CHAOS_SPACE_MARINES_STRATAGEMS: Stratagem[] = [
     phase: "Fight phase",
     when: "Fight phase.",
     target: "One DAEMON VEHICLE unit (excluding TITANIC) from your army that has not acted this phase.",
-    effect: "If your unit invokes its contract and destroys one or more models this phase, it regains up to 6 lost wounds.",
+    effect: "Until the end of the phase, if your unit invokes its contract, each time one of its attacks destroys an enemy model, roll a D6: on a 5+ your unit regains 1 lost wound once all its attacks are resolved (up to 6 wounds in total).",
     gameModes: ["40k"],
   },
   {
