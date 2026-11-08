@@ -137,3 +137,30 @@ describe("Space Marines 11e codex", () => {
     expect(text).toContain("1-2");
   });
 });
+
+describe("Adeptus Custodes 11e codex", () => {
+  it("adds the Shield Host detachments BSData lacks, with their stratagems and enhancements", async () => {
+    const text = await call("lookup_detachment", { name: "Shadowkeepers", faction: "Adeptus Custodes" });
+    expect(text).toContain("Wardens of the Dark Cells");
+    expect(text).toContain("**No Escape** (2 CP");
+    expect(text).toContain("Genalchemic Warding");
+    expect(text).toContain("Mutually exclusive");
+    expect(text).toContain("Current to the 11th edition Adeptus Custodes codex");
+  });
+
+  it("uses the codex's per-army limit for Leonine Ferocity", async () => {
+    const text = await call("lookup_enhancement", { name: "Leonine Ferocity" });
+    expect(text).toContain("Once per phase, per army");
+    expect(text).toContain("SHIELD-CAPTAIN IN ALLARUS TERMINATOR ARMOUR model only");
+  });
+
+  it("no longer calls Custodes pack text possibly stale; flags detachments the codex dropped", async () => {
+    expect(await call("lookup_stratagem", { name: "Vigil Unending" })).toContain("Current to the 11th edition Adeptus Custodes codex");
+    expect(await call("search_stratagems", { detachment: "Talons of the Emperor" })).toContain("older: not in the 11e codex");
+  });
+
+  it("lists the ka'tah abilities in the Martial Ka'tah army rule", async () => {
+    const text = await call("lookup_unit", { unit_name: "Custodian Guard", faction: "Adeptus Custodes" });
+    expect(text).toContain("Rendax");
+  });
+});

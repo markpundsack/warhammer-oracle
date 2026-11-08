@@ -43,7 +43,6 @@ export const FACTION_PACKS: FactionPack[] = [
   { faction: "Astra Militarum", packName: "Astra Militarum", version: "1.3", legalFrom: "30 Sep 2026", packDetachments: ["Abhuman Auxiliaries", "Bridgehead Strike", "Designation Force", "Steel Hammer", "Armoured Infantry", "Grizzled Company"] },
   { faction: "Aeldari", packName: "Aeldari", version: "1.4", legalFrom: "14 Oct 2026", packDetachments: ["Armoured Warhost", "Fateful Performance", "Path of the Outcast", "Twilight Flickers", "Serpent's Brood", "Eldritch Raiders", "Corsair Coterie"] },
   { faction: "Adepta Sororitas", packName: "Adepta Sororitas", version: "1.4", legalFrom: "14 Oct 2026", packDetachments: ["Chorus of Condemnation", "Sacred Champions", "Champions of Faith"] },
-  { faction: "Adeptus Custodes", packName: "Adeptus Custodes", version: "1.2", legalFrom: "30 Sep 2026", packDetachments: ["Might of the Moritoi", "Silent Hunters", "Tharanatoi Hammerblow", "Lions of the Emperor", "Solar Spearhead"], codexSince: "October 2026" },
   { faction: "Adeptus Mechanicus", packName: "Adeptus Mechanicus", version: "1.4", legalFrom: "14 Oct 2026", packDetachments: ["Cohort Acquisitus", "Lords of the Forge", "Luminen Auto-choir", "Eradication Cohort", "Haloscreed Battle Clade"] },
   { faction: "Legiones Daemonica", packName: "Chaos Daemons", version: "1.2", legalFrom: "30 Sep 2026", packDetachments: ["Daemonic Incursion", "Shadow Legion", "Cavalcade of Chaos", "Lords of the Warp", "Warptide", "Blood Legion", "Scintillating Legion", "Plague Legion", "Legion of Excess"] },
   { faction: "Chaos Knights", packName: "Chaos Knights", version: "1.2", legalFrom: "26 Aug 2026", packDetachments: ["Bastions of Tyranny", "Hunting Warpack", "Iconoclast Fiefdom", "Helhunt Lance"] },
@@ -95,6 +94,16 @@ export const CODEX_SOURCES: CodexSource[] = [
       "Tacticus Attack Force", "Tacticus Firestorm Force", "Phobos Shadow Force", "Phobos Shock Force",
       "Gravis Linebreaker Force", "Gravis Siege Force", "Stormlance Task Force", "Ironclad Champions",
       "Gauntlet Task Force", "Ironstorm Spearhead", "Deathwatch Support",
+    ],
+  },
+  {
+    faction: "Adeptus Custodes",
+    codexName: "Adeptus Custodes",
+    savedOn: "8 Nov 2026",
+    detachments: [
+      "Guardians of the Throne", "Aquilan Shield", "Dread Host", "Emperor's Chosen", "Emissaries Imperatus",
+      "Shadowkeepers", "Solar Watch", "Honoured Companions", "Auric Champions", "Lions of the Emperor",
+      "Might of the Moritoi", "Grav-Assault Force", "Null Maiden Vigil",
     ],
   },
 ];

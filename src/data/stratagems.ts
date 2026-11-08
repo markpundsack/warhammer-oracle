@@ -1,5 +1,9 @@
 import type { Stratagem } from "../types.js";
-import { ORKS_CODEX_STRATAGEMS, SPACE_MARINES_CODEX_STRATAGEMS } from "./stratagems-codex-11e.js";
+import {
+  ADEPTUS_CUSTODES_CODEX_STRATAGEMS,
+  ORKS_CODEX_STRATAGEMS,
+  SPACE_MARINES_CODEX_STRATAGEMS,
+} from "./stratagems-codex-11e.js";
 
 // === Core Stratagems (11th Edition) ===
 // These are the universal stratagems available to every army in Warhammer 40,000 11th edition.
@@ -12900,79 +12904,18 @@ const LEAGUES_OF_VOTANN_STRATAGEMS: Stratagem[] = [
   },
 ];
 
-// ADEPTUS CUSTODES (11e Faction Pack, version 1.0, legal from 20th June 2026)
-// layered over the 10e Codex baseline (via 40k.app; Talons of the Emperor's
-// Taloned Pincer errata, 9"->8", is already reflected there). Its own BSData
-// faction — note BSData ships no "Adeptus Custodes" entries at all in
-// detachments.ts/detachments-11e.ts (units-only catalogue), so every
-// detachment here (both FP and baseline) is hand-sourced from the Faction
-// Pack PDF and 40k.app rather than cross-checked against a BSData detachment
-// list.
+// ADEPTUS CUSTODES: superseded detachments only. The 11e Codex (October 2026)
+// replaced the faction pack; its 13 detachments live in
+// ADEPTUS_CUSTODES_CODEX_STRATAGEMS (stratagems-codex-11e.ts). The five below
+// (Silent Hunters, Tharanatoi Hammerblow and Solar Spearhead from the pack;
+// Shield Host and Talons of the Emperor from the 10e Codex via 40k.app) are
+// not in the codex pages Mark saved on 8 Nov 2026, so answers flag them as
+// older text that may no longer be legal (see CODEX_SOURCES).
 //
-// Faction Pack detachments (5): Might of the Moritoi (3 stratagems),
-// Silent Hunters (3 — an ANATHEMA PSYKANA/Sisters of Silence-flavoured
-// detachment folded into the Custodes faction), Tharanatoi Hammerblow (3),
-// Lions of the Emperor (6), Solar Spearhead (6). Codex-baseline detachments
-// (4, via 40k.app): Auric Champions (6, all Epic Deed — confirmed via literal
-// per-stratagem query, a character-only detachment so the pattern checks
-// out), Null Maiden Vigil (6), Shield Host (6), Talons of the Emperor (6).
-//
-// "Unleash the Lions" is a genuine shared-name stratagem with identical text
-// appearing in both Tharanatoi Hammerblow and Lions of the Emperor (confirmed
-// via the source PDF directly, not a scrape artifact — same pattern as
-// Aeldari's Skyborne Sanctuary, Dark Angels' Armour of Contempt, Leagues of
-// Votann's Brøkkeknots). "Flawless Construction" appears in both Might of the
-// Moritoi and Solar Spearhead with the same mechanical concept (S>T attacks
-// suffer -1 to wound) reworded for WALKER vs Vehicle scope — also confirmed
-// directly from the source PDF.
-//
-// Type-classification caveat: Lions of the Emperor and Solar Spearhead print
-// explicit type labels for all 12 of their stratagems (source-confirmed).
-// Might of the Moritoi, Silent Hunters, and Tharanatoi Hammerblow (8
-// stratagems net of the shared "Unleash the Lions") print no type anywhere —
-// inferred battle_tactic for reactive-to-an-enemy-action triggers,
-// strategic_ploy for self-initiated ones, consistent with the confirmed
-// Solar Spearhead's identical-concept "Flawless Construction" being labelled
-// battle_tactic.
-// Re-synced 2026-11-06: Adeptus Custodes Faction Pack v1.2, legal from 30 Sep 2026. Compared; Rules Updates errata were already present and pack text differs only in wording. No entries changed. An 11e Codex (October 2026) postdates this pack and wasn't available to read.
+// Type-classification caveat: Silent Hunters and Tharanatoi Hammerblow print
+// no type anywhere — inferred battle_tactic for reactive-to-an-enemy-action
+// triggers, strategic_ploy for self-initiated ones.
 const ADEPTUS_CUSTODES_STRATAGEMS: Stratagem[] = [
-  // --- Might of the Moritoi (Faction Pack) ---
-  {
-    name: "Flawless Construction",
-    faction: "Adeptus Custodes",
-    detachment: "Might of the Moritoi",
-    type: "battle_tactic",
-    cpCost: 1,
-    phase: "Opponent's Shooting phase or the Fight phase",
-    when: "Your opponent's Shooting phase or the Fight phase, when an enemy unit targets a friendly ADEPTUS CUSTODES WALKER unit.",
-    target: "That ADEPTUS CUSTODES WALKER unit.",
-    effect: "Attacks that target your unit with a Strength greater than your unit's Toughness have -1 to wound rolls.",
-    gameModes: ["40k"],
-  },
-  {
-    name: "Unstoppable Advance",
-    faction: "Adeptus Custodes",
-    detachment: "Might of the Moritoi",
-    type: "strategic_ploy",
-    cpCost: 1,
-    phase: "Movement phase",
-    when: "Your Movement phase, when a friendly ADEPTUS CUSTODES WALKER unit is selected to move.",
-    target: "That ADEPTUS CUSTODES WALKER unit.",
-    effect: "Your unit has the MOBILE ability.",
-    gameModes: ["40k"],
-  },
-  {
-    name: "Prioritised Eradication",
-    faction: "Adeptus Custodes",
-    detachment: "Might of the Moritoi",
-    type: "strategic_ploy",
-    cpCost: 1,
-    phase: "Shooting phase",
-    when: "Your Shooting phase, when a friendly TELEMON HEAVY DREADNOUGHT unit is selected to shoot.",
-    target: "That TELEMON HEAVY DREADNOUGHT unit.",
-    effect: "Your unit's Arachnus Storm Cannon weapons have [RAPID FIRE 6] and its Iliastus Accelerator Culverin weapons have [RAPID FIRE 2].",
-    gameModes: ["40k"],
-  },
   // --- Silent Hunters (Faction Pack) ---
   {
     name: "Deathsong Scythes",
@@ -13047,80 +12990,6 @@ const ADEPTUS_CUSTODES_STRATAGEMS: Stratagem[] = [
     effect: "Your unit's Ballistus Grenade Launcher weapons have D3+3 Attacks.",
     gameModes: ["40k"],
   },
-  // --- Lions of the Emperor (Faction Pack) ---
-  {
-    name: "Gilded Champion",
-    faction: "Adeptus Custodes",
-    detachment: "Lions of the Emperor",
-    type: "strategic_ploy",
-    cpCost: 1,
-    phase: "Any phase",
-    when: "Any phase, just after an Adeptus Custodes Character model from your army has used an ability on its datasheet that states it can only be used 'once per battle'.",
-    target: "That Adeptus Custodes Character model.",
-    effect: "Your model can use that 'once per battle' ability one additional time during the battle (but not in the same phase).",
-    restrictions: "You cannot use this Stratagem on the same Adeptus Custodes Character model more than once per battle.",
-    gameModes: ["40k"],
-  },
-  {
-    name: "Defiant to the Last",
-    faction: "Adeptus Custodes",
-    detachment: "Lions of the Emperor",
-    type: "strategic_ploy",
-    cpCost: 1,
-    phase: "Fight phase",
-    when: "Fight phase, just after an enemy unit has selected its targets.",
-    target: "One Adeptus Custodes unit from your army that was selected as the target of one or more of the attacking unit's attacks.",
-    effect: "Until the end of the phase, each time a model in your unit is destroyed, if that model has not fought this phase, roll one D6, adding 2 to the result if that model has the Character keyword. On a 4+, do not remove it from play; the destroyed model can fight after the attacking unit has finished making its attacks (when doing so, it is treated as having 1 wound remaining), and is then removed from play.",
-    gameModes: ["40k"],
-  },
-  {
-    name: "Unleash the Lions",
-    faction: "Adeptus Custodes",
-    detachment: "Lions of the Emperor",
-    type: "strategic_ploy",
-    cpCost: 1,
-    phase: "Command phase",
-    when: "Your Command phase.",
-    target: "One Allarus Custodians or Aquilon Custodians unit from your army that is on the battlefield.",
-    effect: "That unit is split into separate units, each containing one model. These new units each have a Starting Strength of 1.",
-    gameModes: ["40k"],
-  },
-  {
-    name: "Manoeuvre and Fire",
-    faction: "Adeptus Custodes",
-    detachment: "Lions of the Emperor",
-    type: "strategic_ploy",
-    cpCost: 1,
-    phase: "Movement phase",
-    when: "Your Movement phase, just after an Adeptus Custodes unit from your army Falls Back.",
-    target: "That Adeptus Custodes unit.",
-    effect: "Until the end of the turn, your unit is eligible to shoot and declare a charge in a turn in which it Fell Back.",
-    gameModes: ["40k"],
-  },
-  {
-    name: "Swift as the Eagle",
-    faction: "Adeptus Custodes",
-    detachment: "Lions of the Emperor",
-    type: "strategic_ploy",
-    cpCost: 1,
-    phase: "Opponent's Shooting phase",
-    when: "Your opponent's Shooting phase, just after an enemy unit has shot.",
-    target: "One Adeptus Custodes unit from your army (excluding VEHICLE units) that was selected as the target of one or more of the attacking unit's attacks.",
-    effect: "Your unit can make a Normal move of up to D6\".",
-    gameModes: ["40k"],
-  },
-  {
-    name: "Peerless Warrior",
-    faction: "Adeptus Custodes",
-    detachment: "Lions of the Emperor",
-    type: "battle_tactic",
-    cpCost: 1,
-    phase: "Fight phase",
-    when: "Fight phase.",
-    target: "One Adeptus Custodes unit from your army that has not been selected to fight this phase.",
-    effect: "Until the end of the phase, melee weapons equipped by models in your unit have the [PRECISION] ability.",
-    gameModes: ["40k"],
-  },
   // --- Solar Spearhead (Faction Pack) ---
   {
     name: "Flawless Construction",
@@ -13192,153 +13061,6 @@ const ADEPTUS_CUSTODES_STRATAGEMS: Stratagem[] = [
     when: "Your Shooting phase.",
     target: "One Adeptus Custodes unit from your army that has not been selected to shoot this phase.",
     effect: "Until the end of the phase, ranged weapons equipped by models in your unit have the [IGNORES COVER] ability, and until the end of the phase, each time a model in your unit makes an attack, you can ignore any or all modifiers to that attack's Ballistic Skill characteristic and/or any or all modifiers to the Hit roll.",
-    gameModes: ["40k"],
-  },
-  // --- Auric Champions (Codex baseline, via 40k.app) ---
-  {
-    name: "Slayer of Champions",
-    faction: "Adeptus Custodes",
-    detachment: "Auric Champions",
-    type: "epic_deed",
-    cpCost: 1,
-    phase: "Any phase",
-    when: "Any phase, just after an ADEPTUS CUSTODES CHARACTER unit from your army has destroyed the unit you selected at the start of your Command phase.",
-    target: "That ADEPTUS CUSTODES CHARACTER unit.",
-    effect: "Select one enemy unit on the battlefield. Until the start of your next Command phase, each time an ADEPTUS CUSTODES CHARACTER model from your army makes an attack that targets that enemy unit, add 1 to the Wound roll. In addition, if the destroyed unit was a CHARACTER unit, gain 1CP.",
-    gameModes: ["40k"],
-  },
-  {
-    name: "Superhuman Reserves",
-    faction: "Adeptus Custodes",
-    detachment: "Auric Champions",
-    type: "epic_deed",
-    cpCost: 2,
-    phase: "Any phase",
-    when: "Any phase, just after an ADEPTUS CUSTODES WARLORD model from your army has used an ability on its datasheet or from an Enhancement.",
-    target: "That ADEPTUS CUSTODES WARLORD model.",
-    effect: "Your model can use its 'Once per battle' ability one additional time during this battle (but not in the same phase).",
-    restrictions: "You cannot use this Stratagem more than once per battle.",
-    gameModes: ["40k"],
-  },
-  {
-    name: "The Emperor's Auspice",
-    faction: "Adeptus Custodes",
-    detachment: "Auric Champions",
-    type: "epic_deed",
-    cpCost: 1,
-    phase: "Opponent's Shooting phase or the Fight phase",
-    when: "Your opponent's Shooting phase or the Fight phase, just after an enemy unit has selected its targets.",
-    target: "One ADEPTUS CUSTODES CHARACTER unit from your army that was selected as the target of one or more of the attacking unit's attacks.",
-    effect: "Until the end of the phase, CHARACTER models in your unit have the Feel No Pain 4+ ability.",
-    gameModes: ["40k"],
-  },
-  {
-    name: "Earning of a Name",
-    faction: "Adeptus Custodes",
-    detachment: "Auric Champions",
-    type: "epic_deed",
-    cpCost: 1,
-    phase: "Fight phase",
-    when: "Fight phase.",
-    target: "Up to two ADEPTUS CUSTODES CHARACTER units from your army that have not been selected to fight this phase.",
-    effect: "Until the end of the phase, each time a CHARACTER model in either of your units makes an attack that targets a MONSTER or VEHICLE unit, you can re-roll the Hit roll and you can re-roll the Wound roll.",
-    gameModes: ["40k"],
-  },
-  {
-    name: "Vigil Unending",
-    faction: "Adeptus Custodes",
-    detachment: "Auric Champions",
-    type: "epic_deed",
-    cpCost: 2,
-    phase: "Fight phase",
-    when: "Fight phase.",
-    target: "One ADEPTUS CUSTODES CHARACTER model from your army that was just destroyed and has not fought this phase.",
-    effect: "Do not remove your destroyed model from play. The destroyed model can fight after the attacking unit has finished making attacks, and is then removed from play.",
-    gameModes: ["40k"],
-  },
-  {
-    name: "Shoulder the Mantle",
-    faction: "Adeptus Custodes",
-    detachment: "Auric Champions",
-    type: "epic_deed",
-    cpCost: 1,
-    phase: "Movement phase",
-    when: "Your Movement phase, before the Reinforcements step.",
-    target: "One ADEPTUS CUSTODES CHARACTER model from your army that is not leading a unit.",
-    effect: "Select one friendly unit (excluding Battle-shocked and Attached units) within 2\" horizontally and 5\" vertically of your model that it could lead (as described in the Leader section of its datasheet). Your model attaches to that unit as a Leader. Change that unit's Starting Strength accordingly.",
-    gameModes: ["40k"],
-  },
-  // --- Null Maiden Vigil (Codex baseline, via 40k.app) ---
-  {
-    name: "Desperation's Price",
-    faction: "Adeptus Custodes",
-    detachment: "Null Maiden Vigil",
-    type: "strategic_ploy",
-    cpCost: 1,
-    phase: "Any phase",
-    when: "Any phase, just after an enemy PSYKER unit has either finished using a Psychic ability that targets a unit, or finished making Psychic Attacks.",
-    target: "One ANATHEMA PSYKANA unit from your army within 18\" of that enemy PSYKER unit.",
-    effect: "That enemy PSYKER unit must take a Leadership test. If the test is passed, that PSYKER unit is Battle-shocked; if the test is failed, that PSYKER unit suffers 3 mortal wounds and is Battle-shocked.",
-    gameModes: ["40k"],
-  },
-  {
-    name: "Witch Hunters",
-    faction: "Adeptus Custodes",
-    detachment: "Null Maiden Vigil",
-    type: "battle_tactic",
-    cpCost: 1,
-    phase: "Shooting phase or Fight phase",
-    when: "Your Shooting phase or the Fight phase.",
-    target: "One ANATHEMA PSYKANA unit from your army that has not been selected to shoot or fight this phase.",
-    effect: "Select either the [LETHAL HITS] or [SUSTAINED HITS 1] ability. Until the end of the phase, weapons equipped by models in your unit have the selected ability, but models in your unit can only target PSYKER units.",
-    gameModes: ["40k"],
-  },
-  {
-    name: "Anathema Blademastery",
-    faction: "Adeptus Custodes",
-    detachment: "Null Maiden Vigil",
-    type: "battle_tactic",
-    cpCost: 1,
-    phase: "Fight phase",
-    when: "Fight phase.",
-    target: "One VIGILATORS unit from your army that has not been selected to fight this phase.",
-    effect: "Until the end of the phase, each time a model in your unit makes a melee attack, you can re-roll the Hit roll. If the target of that attack is Battle-shocked or a PSYKER, you can re-roll the Wound roll as well.",
-    gameModes: ["40k"],
-  },
-  {
-    name: "Psy-chaff Volley",
-    faction: "Adeptus Custodes",
-    detachment: "Null Maiden Vigil",
-    type: "strategic_ploy",
-    cpCost: 1,
-    phase: "Shooting phase",
-    when: "Your Shooting phase.",
-    target: "One PROSECUTORS unit from your army that has just shot.",
-    effect: "Select one enemy unit hit by one or more of those attacks. Until the start of your next turn, while your unit is on the battlefield, that enemy unit is prosecuted. While a unit is prosecuted, each time an ANATHEMA PSYKANA model makes an attack against that unit, improve the Armour Penetration characteristic of that attack by 1. While a PSYKER or Battle-shocked unit is prosecuted, each time a model in that unit makes an attack, subtract 1 from the Hit roll.",
-    gameModes: ["40k"],
-  },
-  {
-    name: "Purgation Sweep",
-    faction: "Adeptus Custodes",
-    detachment: "Null Maiden Vigil",
-    type: "battle_tactic",
-    cpCost: 1,
-    phase: "Shooting phase",
-    when: "Your Shooting phase.",
-    target: "One WITCHSEEKERS unit from your army that has not been selected to shoot this phase.",
-    effect: "Until the end of the phase, add 1 to the Attacks characteristic of Torrent weapons equipped by models in your unit. If such a weapon targets a PSYKER or Battle-shocked unit this phase, add 2 to its Attacks characteristic instead.",
-    gameModes: ["40k"],
-  },
-  {
-    name: "Psychic Abominations",
-    faction: "Adeptus Custodes",
-    detachment: "Null Maiden Vigil",
-    type: "strategic_ploy",
-    cpCost: 1,
-    phase: "Opponent's Shooting phase",
-    when: "Your opponent's Shooting phase, just after an enemy unit has selected its targets.",
-    target: "One ANATHEMA PSYKANA INFANTRY unit from your army that was selected as the target of one or more of the attacking unit's attacks.",
-    effect: "Until the end of the phase, your unit has the Stealth ability, and Battle-shocked and PSYKER models can only select your unit as a target of a ranged attack if they are within 12\".",
     gameModes: ["40k"],
   },
   // --- Shield Host (Codex baseline, via 40k.app) ---
@@ -16683,6 +16405,7 @@ export const STRATAGEMS: Stratagem[] = [
   ...ADEPTUS_MECHANICUS_STRATAGEMS,
   ...LEAGUES_OF_VOTANN_STRATAGEMS,
   ...ADEPTUS_CUSTODES_STRATAGEMS,
+  ...ADEPTUS_CUSTODES_CODEX_STRATAGEMS,
   ...GREY_KNIGHTS_STRATAGEMS,
   ...DEATHWATCH_STRATAGEMS,
   ...BLOOD_ANGELS_STRATAGEMS,
