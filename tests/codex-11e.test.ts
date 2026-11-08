@@ -1,4 +1,7 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeAll } from "vitest";
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
+import { createServer } from "../src/server.js";
 import {
   applyDetachmentOverrides,
   applyEnhancementOverrides,
@@ -50,5 +53,61 @@ describe("codex overrides layered over generated BSData", () => {
     const [mine, theirs] = applyUnitAbilityOverrides([unit("F"), unit("G")], [{ faction: "F", name: "Rule", description: "new" }]);
     expect(mine.abilities[0].description).toBe("new");
     expect(theirs.abilities[0].description).toBe("old");
+  });
+});
+
+let client: Client;
+
+beforeAll(async () => {
+  const server = createServer();
+  client = new Client({ name: "test-client", version: "1.0.0" });
+  const [ct, st] = InMemoryTransport.createLinkedPair();
+  await Promise.all([client.connect(ct), server.connect(st)]);
+});
+
+async function call(name: string, args: Record<string, string>): Promise<string> {
+  const result = await client.callTool({ name, arguments: args });
+  return (result.content as Array<{ type: string; text: string }>)[0].text;
+}
+
+describe("Orks 11e codex", () => {
+  it("labels a codex stratagem as current to the codex", async () => {
+    const text = await call("lookup_stratagem", { name: "Hit 'Em Harder", faction: "Orks" });
+    expect(text).toContain("Current to the 11th edition Orks codex, via Mark's saved pages (8 Nov 2026)");
+    expect(text).toContain("[LETHAL HITS]");
+  });
+
+  it("shows stratagems for a detachment that had none before, with its 2CP stratagem", async () => {
+    const text = await call("lookup_detachment", { name: "Runt Swarm", faction: "Orks" });
+    expect(text).toContain("**Infested War Zone** (2 CP");
+    expect(text).toContain("Grot Shields");
+  });
+
+  it("says a codex detachment without stratagems has none, rather than 'not covered'", async () => {
+    const text = await call("lookup_detachment", { name: "Brute Bosses", faction: "Orks" });
+    expect(text).toContain("gives this detachment no stratagems");
+    expect(text).toContain("Da Gobshot Thunderbuss");
+  });
+
+  it("replaces the older War Horde text with the codex's", async () => {
+    const text = await call("search_stratagems", { detachment: "War Horde" });
+    expect(text).toContain("Breakin' Heads");
+    expect(text).toContain("11e codex, 8 Nov 2026");
+    expect(text).not.toContain("older:");
+  });
+
+  it("warns that a pack detachment missing from the codex may no longer be legal", async () => {
+    const text = await call("lookup_stratagem", { name: "Brutal Broadside" });
+    expect(text).toContain("Rollin' Deff isn't in the 11th edition Orks codex");
+  });
+
+  it("fills in the Dread Mob roll table", async () => {
+    const text = await call("lookup_detachment", { name: "Dread Mob", faction: "Orks" });
+    expect(text).toContain("3-4, +2 S");
+  });
+
+  it("gives Ork units the full Waaagh! army rule, including War Cry", async () => {
+    const text = await call("lookup_unit", { unit_name: "Boyz", faction: "Orks" });
+    expect(text).toContain("War Cry (once per battle, per army)");
   });
 });

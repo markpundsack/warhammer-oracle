@@ -74,11 +74,21 @@ export interface CodexSource {
   noStratagems?: string[];
 }
 
-export const CODEX_SOURCES: CodexSource[] = [];
+export const CODEX_SOURCES: CodexSource[] = [
+  {
+    faction: "Orks",
+    codexName: "Orks",
+    savedOn: "8 Nov 2026",
+    detachments: [
+      "War Horde", "Green Tide", "Bully Boyz", "Runt Swarm", "Shoota Boyz", "Taktikal Brigade", "Wreckas",
+      "Da Big Hunt", "Madcap Meks", "Dread Mob", "Blitz Brigade", "Kult of Speed", "Flyboyz", "Brute Bosses", "Wurrband",
+    ],
+    noStratagems: ["Brute Bosses", "Wurrband"],
+  },
+];
 
 /** Factions with no current non-Legends pack: their text was not re-synced. */
 export const FACTIONS_WITHOUT_CURRENT_PACK: Record<string, string> = {
-  Orks: "GW no longer lists an Orks pack and an 11e Codex came out in September 2026, so this is June 2026 pack or 10th Edition Codex text",
   "Adeptus Astartes": "GW no longer lists a Space Marines pack and an 11e Codex came out in October 2026, so this is June 2026 pack or 10th Edition Codex text",
   "Black Templars": "GW no longer lists a Black Templars pack, so this is June 2026 pack or 10th Edition Codex text",
   Deathwatch: "GW no longer lists a Deathwatch pack, so this is June 2026 pack text",

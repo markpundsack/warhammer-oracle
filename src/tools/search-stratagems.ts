@@ -85,7 +85,7 @@ export function registerSearchStratagems(server: McpServer): void {
       }
 
       const header =
-        "**Game:** Warhammer 40,000\n\n> Core stratagems reflect the 11th Edition Core Rules. Each detachment stratagem shows its source: the current faction pack version, or older text. Warn the player about anything marked older.\n\n";
+        "**Game:** Warhammer 40,000\n\n> Core stratagems reflect the 11th Edition Core Rules. Each detachment stratagem shows its source: the 11e codex, the current faction pack version, or older text. Warn the player about anything marked older.\n\n";
       const lines = limited.map(formatCompact);
       const footer =
         matches.length > limited.length
