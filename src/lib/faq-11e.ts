@@ -39,7 +39,9 @@ export function faqFor(ruleName: string, faction?: string, limit = 2): string {
   if (words.length < 4) return "";
   const stem = words.replace(/(ing|s)$/, "");
   const hits = searchFaq11e(ruleName, faction, 6)
-    .filter((h) => h.score >= 0.35 && `${h.entry.question} ${h.entry.answer}`.toLowerCase().includes(stem))
+    // Faction rulings ("Hive Tyrant with Tyrant Guard") only belong on that faction's answers.
+    .filter((h) => (faction || !h.entry.faction) && h.score >= 0.35 &&
+      `${h.entry.question} ${h.entry.answer}`.toLowerCase().includes(stem))
     .slice(0, limit);
   if (!hits.length) return "";
   return "\n\n## Official clarifications\n\n" + hits.map((h) => formatEntry(h.entry)).join("\n\n");
