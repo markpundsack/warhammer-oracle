@@ -8278,7 +8278,7 @@ const AELDARI_STRATAGEMS: Stratagem[] = [
     phase: "Shooting phase",
     when: "Your Shooting phase.",
     target: "One ASURYANI unit from your army that has not been selected to shoot this phase.",
-    effect: "Until the end of the phase, ranged weapons equipped by models in your unit have the [SUSTAINED HITS 1] ability, or, if they already have that ability, each time a model in your unit makes a ranged attack, a Critical Hit is scored on a 5+ instead of a 6, for attacks made within half range.",
+    effect: "Until the end of the phase, your unit's ranged weapons gain [SUSTAINED HITS 1] against enemy units within 12\". Weapons that already have it instead score a Critical Hit on an unmodified hit roll of 5+.",
     gameModes: ["40k"],
   },
   {
