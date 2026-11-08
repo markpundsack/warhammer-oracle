@@ -1,5 +1,5 @@
 import type { Stratagem } from "../types.js";
-import { ORKS_CODEX_STRATAGEMS } from "./stratagems-codex-11e.js";
+import { ORKS_CODEX_STRATAGEMS, SPACE_MARINES_CODEX_STRATAGEMS } from "./stratagems-codex-11e.js";
 
 // === Core Stratagems (11th Edition) ===
 // These are the universal stratagems available to every army in Warhammer 40,000 11th edition.
@@ -144,21 +144,19 @@ const CORE_STRATAGEMS: Stratagem[] = [
   },
 ];
 
-// === Detachment-Specific Stratagems (examples) ===
-// These demonstrate the pattern for faction/detachment-specific stratagems.
-// Unlike CORE_STRATAGEMS above, these come from Codexes/detachment packs, not the Core
-// Rules PDF, so they're updated per-faction as source material becomes available.
-//
-// Source: Space Marines Faction Pack (11th Edition, legal for matched play from 20th June
-// 2026) — all 15 detachments' stratagem sections. "Gladius Task Force" (the previous
-// detachment here) isn't one of the fully detailed detachments in the 11e Space Marines
-// faction pack — it only turns up in the pack's FAQ as a legacy reference — so this is a
-// swap, not a patch, same as the Chaos Space Marines section below. Librarius Conclave is
-// the one SM detachment with no stratagems section in the pack (psychic disciplines
-// instead) — it's omitted here rather than invented. "Armour of Contempt" recurs
-// verbatim across most detachments (a common defensive stratagem baked into each
-// detachment's own list) — it's listed once per detachment it actually belongs to,
-// matching how a player would see it on that detachment's card.
+// === Detachment-Specific Stratagems ===
+// These come from Codexes and faction packs, not the Core Rules PDF, so
+// they're updated per faction as source material becomes available.
+
+// SPACE MARINES: June 2026 Faction Pack detachments only. The 11e Codex
+// (October 2026) replaced that pack; its detachments live in
+// SPACE_MARINES_CODEX_STRATAGEMS (stratagems-codex-11e.ts). None of the
+// detachments below are in the base codex pages Mark saved on 8 Nov 2026.
+// Some (Blade of Ultramar, Ceramite Sentinels, Forgefather's Seekers,
+// Shadowmark Talon, Spearpoint Task Force) still appear in BSData, which
+// suggests they live on in Chapter supplements the saved pages leave out.
+// Answers flag all of them as older text (see CODEX_SOURCES). Librarius
+// Conclave had no stratagems section in the pack, so it was omitted.
 const SPACE_MARINES_STRATAGEMS: Stratagem[] = [
   {
     name: "Codex Discipline",
@@ -16664,6 +16662,7 @@ const ASTRA_MILITARUM_STRATAGEMS: Stratagem[] = [
 export const STRATAGEMS: Stratagem[] = [
   ...CORE_STRATAGEMS,
   ...SPACE_MARINES_STRATAGEMS,
+  ...SPACE_MARINES_CODEX_STRATAGEMS,
   ...CHAOS_SPACE_MARINES_STRATAGEMS,
   ...CHAOS_DAEMONS_STRATAGEMS,
   ...CHAOS_KNIGHTS_STRATAGEMS,

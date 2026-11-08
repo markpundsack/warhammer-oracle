@@ -111,3 +111,29 @@ describe("Orks 11e codex", () => {
     expect(text).toContain("War Cry (once per battle, per army)");
   });
 });
+
+describe("Space Marines 11e codex", () => {
+  it("shows Gladius Task Force's codex stratagems, labelled current", async () => {
+    const text = await call("lookup_detachment", { name: "Gladius Task Force", faction: "Space Marines" });
+    expect(text).toContain("**Adaptive Strategy** (1 CP");
+    expect(text).toContain("Current to the 11th edition Space Marines codex");
+  });
+
+  it("records a 2CP codex stratagem", async () => {
+    const text = await call("lookup_stratagem", { name: "Hail of Vengeance" });
+    expect(text).toContain("**CP:** 2");
+    expect(text).toContain("Devastator Brethren");
+  });
+
+  it("warns that a June pack detachment isn't in the codex pages", async () => {
+    const text = await call("lookup_stratagem", { name: "Codex Discipline" });
+    expect(text).toContain("Bastion Task Force isn't in the 11th edition Space Marines codex");
+    expect(text).toContain("leave out the Chapter supplements");
+  });
+
+  it("adds the Venator Omni-Auspex BSData lacks", async () => {
+    const text = await call("lookup_enhancement", { name: "Venator Omni-Auspex", detachment: "Phobos Shock Force" });
+    expect(text).toContain("15 pts");
+    expect(text).toContain("1-2");
+  });
+});

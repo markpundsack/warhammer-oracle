@@ -59,7 +59,7 @@ describe("lookup_detachment", () => {
   it("defaults to 11th Edition and notes detachment stratagems aren't checked yet", async () => {
     const result = await client.callTool({
       name: "lookup_detachment",
-      arguments: { name: "Gladius Task Force" },
+      arguments: { name: "Biotide" },
     });
     const text = (result.content as Array<{ type: string; text: string }>)[0].text;
     expect(text).toContain("[Mode: 40k 11e]");

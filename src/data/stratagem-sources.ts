@@ -85,11 +85,22 @@ export const CODEX_SOURCES: CodexSource[] = [
     ],
     noStratagems: ["Brute Bosses", "Wurrband"],
   },
+  {
+    faction: "Adeptus Astartes",
+    codexName: "Space Marines",
+    savedOn: "8 Nov 2026",
+    scope: "which leave out the Chapter supplements",
+    detachments: [
+      "Gladius Task Force", "Assault Brethren", "Tactical Brethren", "Devastator Brethren", "Terminator Storm Force",
+      "Tacticus Attack Force", "Tacticus Firestorm Force", "Phobos Shadow Force", "Phobos Shock Force",
+      "Gravis Linebreaker Force", "Gravis Siege Force", "Stormlance Task Force", "Ironclad Champions",
+      "Gauntlet Task Force", "Ironstorm Spearhead", "Deathwatch Support",
+    ],
+  },
 ];
 
 /** Factions with no current non-Legends pack: their text was not re-synced. */
 export const FACTIONS_WITHOUT_CURRENT_PACK: Record<string, string> = {
-  "Adeptus Astartes": "GW no longer lists a Space Marines pack and an 11e Codex came out in October 2026, so this is June 2026 pack or 10th Edition Codex text",
   "Black Templars": "GW no longer lists a Black Templars pack, so this is June 2026 pack or 10th Edition Codex text",
   Deathwatch: "GW no longer lists a Deathwatch pack, so this is June 2026 pack text",
   "Blood Angels": "GW's current Blood Angels pack holds only Legends datasheets, so this is June 2026 pack or 10th Edition Codex text",

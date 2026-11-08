@@ -111,6 +111,30 @@ export const ENHANCEMENT_OVERRIDES_11E: EnhancementOverride[] = [
     points: 20,
     description: "BIG MEK/WARBOSS INFANTRY model only. While the model is part of an attached unit, it has Infiltrators and Stealth.",
   },
+  // --- Space Marines: missing from BSData ---
+  {
+    faction: "Adeptus Astartes - Space Marines",
+    detachment: "Assault Brethren",
+    name: "Imperium's Sword",
+    points: 20,
+    description: "ADEPTUS ASTARTES model only. The model gains a melee weapon, Imperium's Sword: Melee, A 6, WS 2+, S 7, AP -3, D 3.",
+  },
+  ...["Phobos Shadow Force", "Phobos Shock Force"].map((detachment) => ({
+    faction: "Adeptus Astartes - Space Marines",
+    detachment,
+    name: "Venator Omni-Auspex",
+    points: 15,
+    description:
+      "PHOBOS model only. The unit's attacks against a hidden unit can re-roll wound rolls of 1, or wound rolls of 1-2 if the assault doctrine is active for the unit.",
+  })),
+  {
+    faction: "Adeptus Astartes - Space Marines",
+    detachment: "Deathwatch Support",
+    name: "Beacon Angelis",
+    points: 25,
+    description:
+      "ADEPTUS ASTARTES model only. If the unit is a KILL TEAM unit, it has Deep Strike, and the Rapid Ingress stratagem costs 1CP less when it targets this unit.",
+  },
 ];
 
 export const UNIT_ABILITY_OVERRIDES_11E: UnitAbilityOverride[] = [

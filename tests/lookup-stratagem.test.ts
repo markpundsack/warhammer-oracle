@@ -96,8 +96,8 @@ describe("lookup_stratagem", () => {
   });
 
   it("warns on factions with no current pack", async () => {
-    const text = await lookup({ name: "Codex Discipline" });
-    expect(text).toContain("no longer lists a Space Marines pack");
+    const text = await lookup({ name: "Blade of Detestation" });
+    expect(text).toContain("no longer lists a Black Templars pack");
   });
 
   it.each([
