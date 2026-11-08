@@ -13,6 +13,7 @@ import { fuzzySearch, normalizeName, rankByName, scoreName } from "../lib/search
 import { shouldCrossOver, STRONG_MATCH, withCrossSystemNote } from "../lib/cross-system.js";
 import { findHeresyRules, formatHeresyRule, heresyStamp, scoreHeresyRule, splitRuleQuery, HERESY_LABEL } from "../lib/heresy-format.js";
 import type { KeywordDefinition, GameMode } from "../types.js";
+import { faqFor } from "../lib/faq-11e.js";
 
 function formatCuratedKeyword(kw: KeywordDefinition): string {
   const sections: string[] = [];
@@ -393,6 +394,8 @@ export function registerLookupKeyword(server: McpServer): void {
         return reply(heresy.text);
       }
 
+      // 40K answers carry any official ruling about that rule, so one lookup is enough.
+      const withFaq = (text: string, name?: string) => text + faqFor(name || keyword);
       const fortyK = lookup40kKeyword(keyword, game_mode as GameMode | undefined);
       const heresy = lookupHeresyRule(keyword, HERESY_NAMED_RULES);
       // Army rules and other datasheet abilities come after the keywords and core rules.
@@ -402,11 +405,11 @@ export function registerLookupKeyword(server: McpServer): void {
         const stratagem = fortyKStratagemNamed(keyword);
         // An ability named exactly this beats a stratagem that only contains the term.
         const namedExactly = stratagem && normalizeName(stratagem.name) === normalizeName(keyword);
-        if (army && army.score >= 0.95 && !namedExactly) return reply(army.text);
+        if (army && army.score >= 0.95 && !namedExactly) return reply(withFaq(army.text));
         if (stratagem) {
           const also = heresy.score >= STRONG_MATCH ? ` Horus Heresy also has "${heresy.closest}" (game_mode "heresy").` : "";
           const ref = stratagem.faction === "Core" ? CORE_STRATAGEM_REFS[stratagem.name] : undefined;
-          return reply(withCrossSystemNote(formatStratagem(stratagem), "", `This is a Warhammer 40,000 stratagem${ref ? ` (Core Rules ${ref})` : ""}.${also}`));
+          return reply(withFaq(withCrossSystemNote(formatStratagem(stratagem), "", `This is a Warhammer 40,000 stratagem${ref ? ` (Core Rules ${ref})` : ""}.${also}`), stratagem.name));
         }
       }
       if (shouldCrossOver(fortyK.score, heresy.score)) {
@@ -417,8 +420,8 @@ export function registerLookupKeyword(server: McpServer): void {
           return reply(withCrossSystemNote(heresy.text, heresyStamp(), `Found in Horus Heresy, not 40K.${closest}`));
         }
       }
-      if (army && army.score > fortyK.score) return reply(army.text);
-      return reply(fortyK.text);
+      if (army && army.score > fortyK.score) return reply(withFaq(army.text));
+      return reply(withFaq(fortyK.text, fortyK.closest));
     },
   );
 }

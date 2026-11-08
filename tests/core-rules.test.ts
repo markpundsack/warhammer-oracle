@@ -210,4 +210,10 @@ describe("lookup_keyword existing behaviour", () => {
     const anti = await client.callTool({ name: "lookup_keyword", arguments: { keyword: "Anti-Infantry 4+" } });
     expect((anti.content as Array<{ type: string; text: string }>)[0].text).toContain("critical wound");
   });
+
+  it("a rule's answer brings its official clarifications along", async () => {
+    const r = await client.callTool({ name: "lookup_keyword", arguments: { keyword: "Disembark" } });
+    const text = (r.content as Array<{ type: string; text: string }>)[0].text;
+    expect(text).toContain("Official clarifications");
+  });
 });

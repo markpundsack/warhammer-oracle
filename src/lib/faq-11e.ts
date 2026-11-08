@@ -28,3 +28,19 @@ export function formatFaq11eSearch(query: string, faction?: string): string {
     "_Summaries of GW's published updates and FAQs. Answer from one only if it is clearly the same question, and name the source._",
   ].join("\n\n");
 }
+
+/**
+ * Rulings that clearly concern a named rule, appended to that rule's own answer so the
+ * clarification comes with the first lookup ("emergency disembark" brings the disembark
+ * rulings). Only rulings whose question or answer names the rule, and that rank well.
+ */
+export function faqFor(ruleName: string, faction?: string, limit = 2): string {
+  const words = ruleName.toLowerCase().replace(/[^a-z0-9' -]/g, " ").trim();
+  if (words.length < 4) return "";
+  const stem = words.replace(/(ing|s)$/, "");
+  const hits = searchFaq11e(ruleName, faction, 6)
+    .filter((h) => h.score >= 0.35 && `${h.entry.question} ${h.entry.answer}`.toLowerCase().includes(stem))
+    .slice(0, limit);
+  if (!hits.length) return "";
+  return "\n\n## Official clarifications\n\n" + hits.map((h) => formatEntry(h.entry)).join("\n\n");
+}
