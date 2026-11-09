@@ -305,6 +305,7 @@ const KIND_LABEL: Record<HeresyRuleKind, string> = {
   mission: "Mission Rule",
   "rite of war": "Rite of War",
   "army rule": "Army Rule",
+  "cybertheurgic rite": "Cybertheurgic Rite",
 };
 
 export function heresyRuleKindLabel(rule: HeresySpecialRule): string {

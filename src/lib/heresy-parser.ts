@@ -370,6 +370,13 @@ export function buildHeresyIndex(files: HeresySourceFile[]): HeresyIndex {
   for (const e of entries.values()) {
     for (const p of arr(e.profiles)) if (p?.id && !profiles.has(p.id)) profiles.set(p.id, p);
   }
+  // Rules written directly on an entry rather than linked from sharedRules: most named characters'
+  // own rules (Fulgrim's "Sublime Swordsman"), Prime Advantages, Primarchs' "Sire of ..." rules.
+  for (const [id, e] of entries) {
+    for (const r of arr(e.rules)) {
+      if (r?.id && !rules.has(r.id)) rules.set(r.id, { rule: r, home: entryHome.get(id) ?? "" });
+    }
+  }
 
   return { catalogues, entries, entryHome, rules, profiles };
 }
@@ -774,8 +781,22 @@ function extractWargear(root: WNode, count: ModelCount | null, index: HeresyInde
 
 type RuleHit = { name: string; conditional: boolean };
 
-function linkedRules(w: WNode, index: HeresyIndex, env: Env): RuleHit[] {
+/** Rules written on the entry itself (not linked from sharedRules). */
+function inlineRules(w: WNode, env: Env): RuleHit[] {
   const out: RuleHit[] = [];
+  for (const h of holders(w)) {
+    for (const r of arr(h.rules)) {
+      if (!clean(r?.name)) continue;
+      const conditional = isConditionallyShown([r], env);
+      if (isHidden([r], env) && !conditional) continue;
+      out.push({ name: applyNameModifiers(clean(r.name), [r], env).name, conditional });
+    }
+  }
+  return out;
+}
+
+function linkedRules(w: WNode, index: HeresyIndex, env: Env): RuleHit[] {
+  const out: RuleHit[] = inlineRules(w, env);
   for (const h of holders(w)) {
     for (const link of arr(h.infoLinks)) {
       if (link.type !== "rule") continue;
@@ -844,6 +865,13 @@ function parseUnit(
 
   // Rules on the unit itself and on its model entries ("Sergeant"-only rules).
   const unitRules = linkedRules(root, index, env);
+  // A few units carry their own rules on mandatory upgrades named after the rule (Horus Lupercal's
+  // "Sire of the Sons of Horus" and "Master of War": min 1, max 1). Those are simply the unit's rules.
+  for (const c of children(root, index, env)) {
+    // Only rules written on the upgrade itself: a mandatory weapon upgrade links its weapon's rules
+    // (Breaching, Blast...), which belong to the weapon, not the unit.
+    if (c.type === "upgrade" && (c.range?.min ?? 0) >= 1 && !isPool(c)) unitRules.push(...inlineRules(c, env));
+  }
   const modelRules: { model: string; rules: RuleHit[] }[] = [];
 
   walk(root, index, env, (w, e) => {
@@ -1059,6 +1087,8 @@ const PROFILE_RULE_KINDS: Record<string, HeresyRuleKind> = {
   Wargear: "wargear",
   Asset: "asset",
   "Detachment Description": "detachment",
+  "Cybertheurgic Rite": "cybertheurgic rite",
+  "Cybertheurgic Rite:": "cybertheurgic rite", // sic: one catalogue's typeName has a trailing colon
 };
 
 /** Group labels that say what a profile is, not who grants it ("Advanced Reaction", "Gambit"). */

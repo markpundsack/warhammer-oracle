@@ -24,7 +24,7 @@ export const HERESY_RULE_CORPUS: HeresySpecialRule[] = [
 ];
 
 /** Rulebook entries with a distinctive game-term name, as opposed to section prose ("Line of Sight", "Measuring"). */
-const NAMED_KINDS = new Set(["reaction", "gambit", "status", "rite of war"]);
+const NAMED_KINDS = new Set(["reaction", "gambit", "status", "rite of war", "cybertheurgic rite"]);
 
 /**
  * The named rules only (no core rules prose or missions). Used when no

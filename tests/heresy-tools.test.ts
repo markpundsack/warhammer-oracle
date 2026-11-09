@@ -172,6 +172,37 @@ describe("lookup_keyword with game_mode heresy (special rules)", () => {
   });
 });
 
+describe("Heresy rules written on entries (not linked from sharedRules)", () => {
+  const unit = (name: string) => {
+    const u = HERESY_UNITS.find((x) => x.name === name);
+    expect(u, name).toBeDefined();
+    return u!;
+  };
+
+  it("gives Primarchs their own rules", () => {
+    expect(unit("Fulgrim").specialRules).toEqual(
+      expect.arrayContaining(["Sublime Swordsman", "Sire of the Emperor's Children"]),
+    );
+    // Horus's rules sit on mandatory upgrades, alongside his weapons.
+    const horus = unit("Horus Lupercal").specialRules;
+    expect(horus).toEqual(expect.arrayContaining(["Sire of the Sons of Horus", "Master of War"]));
+    // Weapon rules stay on the weapons.
+    for (const r of horus) expect(r).not.toMatch(/^(Breaching|Shred|Critical Hit)/);
+  });
+
+  it("keeps weapon rules off the Tactical Squad", () => {
+    expect(unit("Tactical Squad").specialRules).toEqual(["Line (2)", "Fury of the Legion"]);
+  });
+
+  it("finds Prime Advantages and Cybertheurgic Rites with lookup_keyword", async () => {
+    const prime = await call("lookup_keyword", { keyword: "Logistical Benefit", game_mode: "heresy" });
+    expect(prime).toContain("# Logistical Benefit");
+    const rite = await call("lookup_keyword", { keyword: "Overcharge Reactors", game_mode: "heresy" });
+    expect(rite).toContain("# Overcharge Reactors");
+    expect(rite).toContain("Cybertheurgic Rite");
+  });
+});
+
 describe("search_units with game_mode heresy", () => {
   it("returns edition-labelled compact results", async () => {
     const text = await call("search_units", { query: "Tactical", game_mode: "heresy" });

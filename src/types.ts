@@ -294,7 +294,8 @@ export type HeresyRuleKind =
   | "core rule"
   | "mission"
   | "rite of war"
-  | "army rule";
+  | "army rule"
+  | "cybertheurgic rite";
 
 export type HeresyFaction = {
   /** Cleaned catalogue name, e.g. "Ultramarines". */
