@@ -2,6 +2,7 @@
 import { FAQ_11E, FAQ_SOURCES, type Faq11eEntry } from "../data/faq-11e.js";
 import { stratagemFactionLabel } from "../data/stratagem-sources.js";
 import { buildFaqSearch } from "./faq-search.js";
+import { attachRulings, registerFaqSource } from "./faq-attach.js";
 
 const search = buildFaqSearch(FAQ_11E, "warhammer 40k 40000 official faq ruling errata update");
 
@@ -29,20 +30,15 @@ export function formatFaq11eSearch(query: string, faction?: string): string {
   ].join("\n\n");
 }
 
-/**
- * Rulings that clearly concern a named rule, appended to that rule's own answer so the
- * clarification comes with the first lookup ("emergency disembark" brings the disembark
- * rulings). Only rulings whose question or answer names the rule, and that rank well.
- */
+// 40K rulings can come along with any lookup's answer (src/lib/faq-attach.ts).
+registerFaqSource("40k", {
+  search: (query, limit) => search(query, limit),
+  army: (e: Faq11eEntry) => e.faction,
+  sameArmy: (e: Faq11eEntry, army: string) => e.faction === stratagemFactionLabel(army),
+  format: formatEntry,
+});
+
+/** Rulings about a named rule, for appending to its answer. */
 export function faqFor(ruleName: string, faction?: string, limit = 2): string {
-  const words = ruleName.toLowerCase().replace(/[^a-z0-9' -]/g, " ").trim();
-  if (words.length < 4) return "";
-  const stem = words.replace(/(ing|s)$/, "");
-  const hits = searchFaq11e(ruleName, faction, 6)
-    // Faction rulings ("Hive Tyrant with Tyrant Guard") only belong on that faction's answers.
-    .filter((h) => (faction || !h.entry.faction) && h.score >= 0.35 &&
-      `${h.entry.question} ${h.entry.answer}`.toLowerCase().includes(stem))
-    .slice(0, limit);
-  if (!hits.length) return "";
-  return "\n\n## Official clarifications\n\n" + hits.map((h) => formatEntry(h.entry)).join("\n\n");
+  return attachRulings({ system: "40k", names: [ruleName], army: faction, limit });
 }

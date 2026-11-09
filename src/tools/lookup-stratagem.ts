@@ -1,4 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { attachRulings } from "../lib/faq-attach.js";
+import "../lib/faq-11e.js";
 import { z } from "zod";
 import { STRATAGEMS } from "../data/stratagems.js";
 import { fuzzySearch } from "../lib/search.js";
@@ -104,7 +106,8 @@ export function registerLookupStratagem(server: McpServer): void {
         content: [
           {
             type: "text" as const,
-            text: formatStratagem(pool[0]),
+            text: formatStratagem(pool[0]) + attachRulings({ system: "40k", names: [pool[0].name],
+              army: pool[0].faction, specific: true }),
           },
         ],
       };

@@ -1,4 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { attachRulings } from "../lib/faq-attach.js";
+import "../lib/faq-11e.js";
 import { z } from "zod";
 import { UNITS } from "../data/units.js";
 import { UNITS_11E } from "../data/current-11e.js";
@@ -331,7 +333,8 @@ export function registerLookupWeapon(server: McpServer): void {
           return reply(withCrossSystemNote(fortyK.text, stamp, otherGamePointer("heresy", heresy.closest!)));
         }
       }
-      return reply(fortyK.text);
+      return reply(fortyK.text + (fortyK.score >= STRONG_MATCH
+        ? attachRulings({ system: "40k", names: [fortyK.closest], army: faction, specific: true }) : ""));
     },
   );
 }
