@@ -1089,6 +1089,8 @@ const PROFILE_RULE_KINDS: Record<string, HeresyRuleKind> = {
   "Detachment Description": "detachment",
   "Cybertheurgic Rite": "cybertheurgic rite",
   "Cybertheurgic Rite:": "cybertheurgic rite", // sic: one catalogue's typeName has a trailing colon
+  // Most Traits profiles are bare tags; the few with text are rules (Cybertheurgist, Golden Exemplar)
+  Traits: "trait",
 };
 
 /** Group labels that say what a profile is, not who grants it ("Advanced Reaction", "Gambit"). */
@@ -1131,6 +1133,8 @@ export function parseHeresyProfileRules(files: HeresySourceFile[]): HeresySpecia
         if (!name || name === "New Profile") continue;
         const { summary, description } = profileText(p);
         if (!description && !summary) continue;
+        // A trait whose "text" is just a tag name ("Iron Tercio") isn't a rule
+        if (kind === "trait" && !/[.!?]/.test(description)) continue;
         const key = `${kind}::${name.toLowerCase()}::${description}`;
         if (seen.has(key)) continue;
         seen.add(key);

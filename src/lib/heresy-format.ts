@@ -306,6 +306,7 @@ const KIND_LABEL: Record<HeresyRuleKind, string> = {
   "rite of war": "Rite of War",
   "army rule": "Army Rule",
   "cybertheurgic rite": "Cybertheurgic Rite",
+  trait: "Trait",
 };
 
 export function heresyRuleKindLabel(rule: HeresySpecialRule): string {

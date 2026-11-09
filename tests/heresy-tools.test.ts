@@ -200,6 +200,10 @@ describe("Heresy rules written on entries (not linked from sharedRules)", () => 
     const rite = await call("lookup_keyword", { keyword: "Overcharge Reactors", game_mode: "heresy" });
     expect(rite).toContain("# Overcharge Reactors");
     expect(rite).toContain("Cybertheurgic Rite");
+    // A Traits profile with rules text
+    const trait = await call("lookup_keyword", { keyword: "Cybertheurgist", game_mode: "heresy" });
+    expect(trait).toContain("# Cybertheurgist");
+    expect(trait).toContain("Cybertheurgic Rites");
   });
 });
 
