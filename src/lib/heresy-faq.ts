@@ -5,6 +5,7 @@
  */
 import { HERESY_FAQ } from "../data/heresy-faq.js";
 import type { HeresyFaqEntry } from "../types.js";
+import { normalizeForMatch, registerFaqSource } from "./faq-attach.js";
 import { buildFaqSearch } from "./faq-search.js";
 import { heresyStamp } from "./heresy-format.js";
 
@@ -14,17 +15,31 @@ export function searchHeresyFaq(query: string, limit = 3): { entry: HeresyFaqEnt
   return search(query, limit);
 }
 
-/** FAQ rulings whose question names `ruleName` (e.g. "Vanguard (X)" → rulings about Vanguard). */
-export function faqForRule(ruleName: string, limit = 2): HeresyFaqEntry[] {
-  const base = ruleName.replace(/\s*\([^)]*\)\s*$/, "").trim();
-  if (base.length < 4) return [];
-  const re = new RegExp(`\\b${base.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i");
-  return HERESY_FAQ.filter((e) => re.test(e.question)).slice(0, limit);
-}
-
 export function formatFaqEntry(e: HeresyFaqEntry): string {
   return `**Q:** ${e.question}\n**A:** ${e.answer}\n_${e.source} — ${e.url}_`;
 }
+
+/** "Mechanicum (Forces of the Taghmata) FAQ" → "mechanicum"; the core "Horus Heresy FAQ" → undefined. */
+function faqArmy(e: HeresyFaqEntry): string | undefined {
+  if (e.source === "Horus Heresy FAQ") return undefined;
+  return e.source.replace(/\s*FAQ$/, "").replace(/\s*\(.*\)$/, "");
+}
+
+// Heresy rulings can come along with any Heresy lookup's answer (src/lib/faq-attach.ts).
+registerFaqSource("heresy", {
+  // Only rulings whose question names it: answers mention things in passing ("bayonets" in a Line of Sight ruling)
+  search: (query, limit) => {
+    const stem = normalizeForMatch(query).replace(/(ing|s)$/, "");
+    return search(query, limit).filter((h) => normalizeForMatch(h.entry.question).includes(stem));
+  },
+  army: faqArmy,
+  sameArmy: (e: HeresyFaqEntry, army: string) => {
+    const a = army.toLowerCase();
+    const mine = faqArmy(e)?.toLowerCase() ?? "";
+    return !!mine && (a.includes(mine) || mine.includes(a));
+  },
+  format: formatFaqEntry,
+});
 
 export function formatFaqSearch(query: string): string {
   const hits = searchHeresyFaq(query);

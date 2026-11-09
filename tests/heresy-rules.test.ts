@@ -299,7 +299,7 @@ describe("Heresy FAQ", () => {
 
   it("lookup_keyword appends FAQ rulings that name the rule", async () => {
     const text = await call("lookup_keyword", { keyword: "Vanguard", game_mode: "heresy" });
-    expect(text).toContain("### FAQ");
+    expect(text).toContain("## Official clarifications");
   });
 });
 

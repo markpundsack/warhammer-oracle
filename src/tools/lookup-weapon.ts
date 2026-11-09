@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { attachRulings } from "../lib/faq-attach.js";
 import "../lib/faq-11e.js";
+import "../lib/heresy-faq.js";
 import { z } from "zod";
 import { UNITS } from "../data/units.js";
 import { UNITS_11E } from "../data/current-11e.js";
@@ -278,6 +279,7 @@ function lookupWeaponHeresy(weaponName: string, faction: string | undefined): Lo
   if (WEAPON_NAMES_40K.has(normalizeName(name))) {
     text += `\n\n_"${name}" is also a 40K weapon; ask with game_mode "40k" for that profile._`;
   }
+  text += attachRulings({ system: "heresy", names: [name], specific: true });
   return { score: weaponMatchScore(score), closest: name, text };
 }
 

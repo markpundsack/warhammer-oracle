@@ -35,8 +35,13 @@ export function registerFaqSource<T extends AttachableRuling>(system: FaqSystem,
 export const MIN_SCORE = 0.35;
 export const HEADING = "## Official clarifications";
 
+/** Lowercase, punctuation as spaces: "Force (X)" and "the Force (X) Special Rule" compare as "force x". */
+export function normalizeForMatch(text: string): string {
+  return text.toLowerCase().replace(/[^a-z0-9' -]/g, " ").replace(/\s+/g, " ").trim();
+}
+
 function stemOf(name: string): string {
-  return name.toLowerCase().replace(/[^a-z0-9' -]/g, " ").replace(/\s+/g, " ").trim().replace(/(ing|s)$/, "");
+  return normalizeForMatch(name).replace(/(ing|s)$/, "");
 }
 
 export function attachRulings(opts: {
@@ -60,7 +65,7 @@ export function attachRulings(opts: {
       if (score < MIN_SCORE || picked.includes(entry)) continue;
       const armyOnly = source.army(entry);
       if (armyOnly && !(opts.specific || (opts.army && source.sameArmy(entry, opts.army)))) continue;
-      if (!`${entry.question} ${entry.answer}`.toLowerCase().includes(stem)) continue;
+      if (!normalizeForMatch(`${entry.question} ${entry.answer}`).includes(stem)) continue;
       picked.push(entry);
     }
   }

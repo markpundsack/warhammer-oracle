@@ -8,7 +8,8 @@ import { HERESY_SPECIAL_RULES } from "../data/heresy-rules.js";
 import { STRATAGEMS } from "../data/stratagems.js";
 import { formatStratagem } from "./lookup-stratagem.js";
 import { findHeresyRuleMentioning, HERESY_NAMED_RULES, HERESY_RULE_CORPUS } from "../lib/heresy-corpus.js";
-import { faqForRule, formatFaqEntry } from "../lib/heresy-faq.js";
+import { attachRulings } from "../lib/faq-attach.js";
+import "../lib/heresy-faq.js";
 import { fuzzySearch, normalizeName, rankByName, scoreName } from "../lib/search.js";
 import { shouldCrossOver, STRONG_MATCH, withCrossSystemNote } from "../lib/cross-system.js";
 import { findHeresyRules, formatHeresyRule, heresyStamp, scoreHeresyRule, splitRuleQuery, HERESY_LABEL } from "../lib/heresy-format.js";
@@ -251,9 +252,9 @@ function lookupHeresyRule(keyword: string, corpus = HERESY_RULE_CORPUS): LookupR
   const topBase = normalizeName(top.name.replace(/\s*\([^)]*\)\s*$/, ""));
   const related = matches.slice(1, 6).filter((r) => normalizeName(r.name).includes(topBase) || topBase.includes(normalizeName(r.name)));
   let text = formatHeresyRule(top, keyword, related);
-  const rulings = faqForRule(top.name);
-  if (rulings.length) text += `\n\n### FAQ\n\n${rulings.map(formatFaqEntry).join("\n\n")}`;
   const base = splitRuleQuery(top.name).base;
+  // "Force (X)", not just "Force": a ruling about Force Organisation is not about this rule
+  text += attachRulings({ system: "heresy", names: [top.name], army: top.source });
   if (KEYWORDS.some((kw) => normalizeName(kw.name) === base)) {
     text += `\n\n_"${top.name}" is also a 40K keyword; ask with game_mode "40k" for that rule._`;
   }

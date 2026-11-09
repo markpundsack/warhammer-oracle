@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { attachRulings } from "../lib/faq-attach.js";
 import "../lib/faq-11e.js";
+import "../lib/heresy-faq.js";
 import { z } from "zod";
 import { UNITS } from "../data/units.js";
 import { UNITS_11E } from "../data/current-11e.js";
@@ -262,7 +263,12 @@ function lookupHeresyUnit(unitName: string, faction?: string, datasheetId?: stri
         `Re-run \`lookup_unit\` with game_mode "heresy" and the \`faction\` (or \`datasheet_id\`) set to one of:\n\n${lines.join("\n")}`,
     };
   }
-  return { score, closest: top.name, text: formatHeresyUnit(top, HERESY_FACTIONS, alsoIn) + fortyKHint(top.name) };
+  return {
+    score,
+    closest: top.name,
+    text: formatHeresyUnit(top, HERESY_FACTIONS, alsoIn) + fortyKHint(top.name) +
+      attachRulings({ system: "heresy", names: [top.name], army: top.faction, specific: true }),
+  };
 }
 
 function lookup40kUnit(
