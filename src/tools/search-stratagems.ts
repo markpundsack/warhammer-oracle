@@ -37,13 +37,15 @@ export function registerSearchStratagems(server: McpServer): void {
       include_core: z
         .boolean()
         .optional()
-        .describe("With detachment: also return the Core stratagems every army can use."),
+        .describe("With faction or detachment: also return the Core stratagems every army can use."),
     },
     async ({ query, faction, phase, detachment, include_core }) => {
       let candidates: Stratagem[] = [...STRATAGEMS];
 
       if (faction) {
-        candidates = fuzzySearch(candidates, faction, ["faction"]);
+        // include_core keeps Core stratagems through the faction filter too, not only with detachment
+        const core = include_core ? candidates.filter((s) => s.faction === "Core") : [];
+        candidates = [...new Set([...core, ...fuzzySearch(candidates, faction, ["faction"])])];
       }
       if (phase) {
         // "Any phase" stratagems (e.g. Command Re-Roll) are usable in every phase.
@@ -70,7 +72,11 @@ export function registerSearchStratagems(server: McpServer): void {
         };
       }
 
-      const matches = query ? fuzzySearch(candidates, query, ["name", "effect", "phase"]) : candidates;
+      const found = query ? fuzzySearch(candidates, query, ["name", "effect", "phase"]) : candidates;
+      // Core first when asked for: results are capped, and a whole faction can fill the cap
+      const matches = include_core
+        ? [...found.filter((s) => s.faction === "Core"), ...found.filter((s) => s.faction !== "Core")]
+        : found;
       const limited = matches.slice(0, query ? 10 : 25);
 
       if (limited.length === 0) {

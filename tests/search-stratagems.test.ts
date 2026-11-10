@@ -58,6 +58,16 @@ describe("search_stratagems", () => {
     expect(text).toContain("Command Re-Roll");
   });
 
+  it("include_core also works with a faction (no detachment known)", async () => {
+    const result = await client.callTool({
+      name: "search_stratagems",
+      arguments: { faction: "Orks", phase: "Shooting", include_core: true },
+    });
+    const text = (result.content as Array<{ type: string; text: string }>)[0].text;
+    expect(text).toContain("Dakkastorm");
+    expect(text).toContain("Command Re-Roll");
+  });
+
   it("asks for something when given nothing at all", async () => {
     const result = await client.callTool({ name: "search_stratagems", arguments: {} });
     const text = (result.content as Array<{ type: string; text: string }>)[0].text;
