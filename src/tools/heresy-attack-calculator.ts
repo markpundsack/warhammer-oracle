@@ -38,11 +38,13 @@ export function spokenAnswer(i: HeresyAttackInput): string {
         (r.expectedDamage < 0.05 && glance < 0.05 ? ", and nothing gets through." : ", then ")
       : "";
     if (sh && r.expectedDamage < 0.05 && glance < 0.05) return shieldText.replace(/^./, (c) => c.toUpperCase());
-    if (i.attacks === 1 && !sh) {
+    if (i.attacks === 1 && !sh && !i.titan) {
       const g = glance > 0 ? `, and a ${percent(glance)} chance of a Glancing Hit` : ", and no Glancing Hits";
       return pen > 0 ? `A ${percent(pen)} chance of a Penetrating Hit${g}.` : `No chance of a Penetrating Hit${g}.`;
     }
-    const hp = `${spokenCount(r.expectedDamage, "Hull Point")} lost`;
+    const hp = r.titanCriticalRolls !== undefined
+      ? `${spokenCount(r.titanCriticalRolls, "roll", "rolls")} on the Titan Critical Damage Table (the profile is Crippled)`
+      : `${spokenCount(r.expectedDamage, "Hull Point")} lost`;
     return `${shieldText}${spokenCount(pen, "Penetrating Hit")} and ${spokenCount(glance, "Glancing Hit")}: ${hp}.`.replace(/^./, (c) => c.toUpperCase());
   }
   const damage = spokenCount(r.expectedDamage, "point of damage", "points of damage");
@@ -83,10 +85,22 @@ export function formatHeresyAttack(i: HeresyAttackInput): string {
       );
     }
     lines.push(`- **Saves:** vs Penetrating: ${saveText(r.penSave!)} (no Armour Tests against Penetrating Hits); vs Glancing: ${saveText(r.save)}`);
-    lines.push(
-      `- **Result:** about **${n(r.expectedDamage)} Hull Points** lost from ${n(r.unsaved)} unsaved Penetrating Hits (Damage ${i.damage}), ` +
-        `plus ${n(r.unsavedGlancing!)} Glancing Hits, each a roll on the Vehicle Damage Table.`,
-    );
+    if (r.titanCriticalRolls !== undefined) {
+      lines.push(
+        `- **Result:** the profile is Crippled: Glancing Hits count as Penetrating (Damage -1), and every hit that gets through is a roll on the Titan Critical Damage Table: ` +
+          `about **${n(r.titanCriticalRolls)} rolls**. No Hull Points are lost.`,
+      );
+    } else if (r.titanGlanceHp !== undefined) {
+      lines.push(
+        `- **Result:** about **${n(r.expectedDamage)} Hull Points** lost: ${n(r.unsaved)} unsaved Penetrating Hits (Damage ${i.damage}), ` +
+          `plus ${n(r.unsavedGlancing!)} Glancing Hits on the Titan Damage Table (1-4 Armour Scar: 1 Hull Point; 5-6 System Burnout).`,
+      );
+    } else {
+      lines.push(
+        `- **Result:** about **${n(r.expectedDamage)} Hull Points** lost from ${n(r.unsaved)} unsaved Penetrating Hits (Damage ${i.damage}), ` +
+          `plus ${n(r.unsavedGlancing!)} Glancing Hits, each a roll on the Vehicle Damage Table.`,
+      );
+    }
   } else {
     const woundExtras: string[] = [];
     if (r.breachingWounds > 0) woundExtras.push(`${n(r.breachingWounds)} Breaching (AP 2, on ${r.rules.breaching}+)`);
@@ -123,7 +137,7 @@ export function formatResolvedAttack(req: AttackRequest): string {
   // Several profiles: the answers up front, so a voice reply can name them or ask which.
   const answers = attacks.map((a) => `- **${a.label}:** ${spokenAnswer(a.input)}`).join("\n");
   const details = attacks.map((a) => `## ${a.label}\n\n${formatHeresyAttack(a.input).split("\n").slice(3).join("\n").trim()}`).join("\n\n");
-  return `${heresyStamp()}\n\n# Horus Heresy attack${head}\n\n**Answer, by weapon profile:**\n${answers}\n\n${details}`;
+  return `${heresyStamp()}\n\n# Horus Heresy attack${head}\n\n**Answer, by ${attacks.some((a) => a.input.titan) ? "location" : "weapon profile"}:**\n${answers}\n\n${details}`;
 }
 
 export function registerHeresyAttackCalculator(server: McpServer): void {
@@ -137,8 +151,9 @@ export function registerHeresyAttackCalculator(server: McpServer): void {
       target: z.string().optional().describe("Target unit or model name, e.g. 'Legionaries', 'Rhino'. Its Toughness or Armour, saves and Wounds are looked up for you"),
       attacker: z.string().optional().describe("Firing or attacking unit or model, if the querent named one. Omitted: BS/WS 4, Strength 4, and the answer says so"),
       facing: z.enum(["front", "side", "rear"]).optional().describe("Vehicle target's facing (default front). Knights have only front and rear; ion shields give 5+ front, 6+ rear"),
-      location: z.string().optional().describe("Titan or Ordinatus: the profile targeted, e.g. 'legs', 'carapace', 'head', 'arms', 'gun'"),
-      crippled: z.boolean().optional().describe("Titan or Ordinatus: that profile is Crippled (Exposed Armour)"),
+      location: z.string().optional().describe("Titan or Ordinatus: the profile targeted, e.g. 'legs', 'carapace', 'head', 'arms', 'gun'. Omit to compare every location ('which part should I shoot?')"),
+      crippled: z.boolean().optional().describe("Titan or Ordinatus: the named location is Crippled (Exposed Armour)"),
+      crippled_locations: z.array(z.string()).optional().describe("Titan or Ordinatus: every location already Crippled (0 Hull Points), e.g. ['arms']"),
       shields_up: z.number().min(0).optional().describe("Void shields still up on the target, if some are down (default: all of them)"),
       firing_models: z.number().min(1).optional().describe("How many models attack, when the querent gives models, not shots ('five bolters')"),
       attack_type: z.enum(["ranged", "melee"]).optional().describe("Shooting Attack ('ranged') or melee ('melee'); only needed for a weapon with both"),
@@ -181,6 +196,7 @@ export function registerHeresyAttackCalculator(server: McpServer): void {
         facing: a.facing,
         location: a.location,
         crippled: a.crippled,
+        crippledLocations: a.crippled_locations,
         shieldsUp: a.shields_up,
         firingModels: a.firing_models,
         attackType: a.attack_type,

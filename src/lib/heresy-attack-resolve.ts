@@ -23,6 +23,8 @@ export type AttackRequest = Partial<HeresyAttackInput> & {
   location?: string;
   /** That profile is Crippled: use its Exposed Armour. */
   crippled?: boolean;
+  /** Titan or Ordinatus profiles already Crippled ("arms", "legs"), for comparing locations. */
+  crippledLocations?: string[];
   /** Void shields still up, when the querent says (otherwise the unit's full X). */
   shieldsUp?: number;
 };
@@ -59,19 +61,35 @@ function stat(stats: { name: string; value: string }[], ...names: string[]): num
  * Primary and Exposed Armour (Exposed once that profile is Crippled); other vehicles and Knights
  * have one profile with an Armour Value per facing. Knights have only Front and Rear.
  */
-function armourValue(unit: HeresyUnit, r: AttackRequest, notes: string[]): { av?: number; error?: string; label: string } {
+type Location = { name: string; av: number; label: string; crippled: boolean; titan: boolean };
+
+/**
+ * The Armour Value(s) an attack tests against. Titans and Ordinatus have a profile per location with
+ * Primary and Exposed Armour (Exposed once that profile is Crippled): one location if named, else all
+ * of them, to compare. Other vehicles and Knights have one profile with an Armour Value per facing;
+ * Knights have only Front and Rear.
+ */
+function armourValues(unit: HeresyUnit, r: AttackRequest, notes: string[]): { locations: Location[]; error?: string } {
   const located = unit.armoured.filter((a) => stat(a.stats, "primary armour", "primary") !== undefined);
   if (located.length) {
-    const want = r.location?.toLowerCase();
-    const prof = (want && located.find((a) => a.name.toLowerCase().includes(want) || want.includes(a.name.toLowerCase()))) || located[0];
-    if (want && !prof.name.toLowerCase().includes(want) && !want.includes(prof.name.toLowerCase())) {
-      notes.push(`No "${r.location}" profile; using ${prof.name}.`);
-    } else if (!want) {
-      notes.push(`No location given: assuming the ${prof.name} (profiles: ${located.map((a) => a.name).join(", ")}).`);
+    const titan = unit.armoured.some((a) => /^titan/i.test(a.kind));
+    const crippled = new Set((r.crippledLocations ?? []).map((c) => c.toLowerCase().replace(/s$/, "")));
+    if (r.crippled && r.location) crippled.add(r.location.toLowerCase().replace(/s$/, ""));
+    const isCrippled = (name: string) => [...crippled].some((c) => name.toLowerCase().replace(/s$/, "").includes(c));
+    const want = r.location?.toLowerCase().replace(/s$/, "");
+    let chosen = want ? located.filter((a) => a.name.toLowerCase().includes(want) || want.includes(a.name.toLowerCase().replace(/s$/, ""))) : located;
+    if (want && !chosen.length) {
+      notes.push(`No "${r.location}" profile; comparing all of them.`);
+      chosen = located;
     }
-    const av = r.crippled ? stat(prof.stats, "exposed armour", "exposed") : stat(prof.stats, "primary armour", "primary");
-    const hp = stat(prof.stats, "hp");
-    return { av, label: `${prof.name}, ${r.crippled ? "Exposed" : "Primary"} Armour ${av}${hp !== undefined ? `, ${hp} Hull Points` : ""}` };
+    const locations = chosen.map((prof) => {
+      const c = isCrippled(prof.name);
+      const av = (c ? stat(prof.stats, "exposed armour", "exposed") : stat(prof.stats, "primary armour", "primary"))!;
+      const hp = stat(prof.stats, "hp");
+      return { name: prof.name, av, crippled: c, titan, label: `${prof.name}: ${c ? "Crippled, Exposed" : "Primary"} Armour ${av}${hp !== undefined ? `, ${hp} Hull Points` : ""}` };
+    });
+    if (locations.length > 1) notes.push("No location named: comparing every profile.");
+    return { locations };
   }
   const stats = unit.armoured[0]?.stats ?? [];
   let facing = (r.facing ?? "front").toLowerCase();
@@ -80,9 +98,9 @@ function armourValue(unit: HeresyUnit, r: AttackRequest, notes: string[]): { av?
     facing = "front";
   }
   const av = stat(stats, `${facing} armour`, facing);
-  if (av === undefined) return { error: `No ${facing} armour value found for "${unit.name}".`, label: "" };
+  if (av === undefined) return { locations: [], error: `No ${facing} armour value found for "${unit.name}".` };
   const hp = stat(stats, "hp", "hull points");
-  return { av, label: `${facing} armour ${av}${hp !== undefined ? `, ${hp} Hull Points` : ""}` };
+  return { locations: [{ name: "", av, crippled: false, titan: false, label: `${facing} armour ${av}${hp !== undefined ? `, ${hp} Hull Points` : ""}` }] };
 }
 
 /** "Void Shields (3)" → 3. */
@@ -132,10 +150,13 @@ export function resolveHeresyAttack(r: AttackRequest): Resolution {
   const notes: string[] = [];
 
   let attacker: HeresyModelProfile | undefined;
+  let attackerKnight = false;
   if (r.attacker) {
     const m = findHeresyUnit(r.attacker);
     if (!m) return { attacks: [], notes, error: `No Horus Heresy unit found matching attacker "${r.attacker}".` };
     attacker = mainModel(m.unit, m.kind === "model" ? m.model : undefined) ?? vehicleAsModel(m.unit);
+    attackerKnight = m.unit.armoured.some((a) => /knight|antigrav/i.test(a.stats.find((s) => s.name.toLowerCase() === "type")?.value ?? "")) ||
+      m.unit.models.some((x) => /knight|antigrav/i.test(x.type));
     if (attacker && attacker.type === "Vehicle") notes.push(`Attacker: ${m.unit.name}: BS ${attacker.ballisticSkill}, WS ${attacker.weaponSkill}, S ${attacker.strength}, A ${attacker.attacks}.`);
   }
 
@@ -143,6 +164,7 @@ export function resolveHeresyAttack(r: AttackRequest): Resolution {
   const target: Partial<HeresyAttackInput> = {};
   /** Target stats that apply to Shooting Attacks only (an ion shield's save). */
   const vsShooting: Partial<HeresyAttackInput> = {};
+  let locations: Location[] = [];
   if (r.target) {
     const m = findHeresyUnit(r.target);
     if (!m) return { attacks: [], notes, error: `No Horus Heresy unit found matching target "${r.target}".` };
@@ -155,12 +177,13 @@ export function resolveHeresyAttack(r: AttackRequest): Resolution {
       target.woundsPerModel = num(model.wounds);
       notes.push(`Target: ${model.name} (${m.unit.name}): T${model.toughness}, W${model.wounds}, SAV ${model.save}, INV ${model.invulnerableSave}.`);
     } else {
-      const a = armourValue(m.unit, r, notes);
-      if (a.error || a.av === undefined) return { attacks: [], notes, error: a.error ?? `No armour value found for "${m.unit.name}".` };
-      target.targetArmour = a.av;
+      const a = armourValues(m.unit, r, notes);
+      if (a.error || !a.locations.length) return { attacks: [], notes, error: a.error ?? `No armour value found for "${m.unit.name}".` };
+      locations = a.locations;
+      target.targetArmour = a.locations[0].av;
       const ws = num(vehicleAsModel(m.unit)?.weaponSkill);
-      if (ws !== undefined) target.targetWeaponSkill = ws; // Knights and Titans fight back with a WS
-      notes.push(`Target: ${m.unit.name}, ${a.label}.`);
+      if (ws !== undefined) target.targetWeaponSkill = ws; // Knights fight back with a WS
+      notes.push(`Target: ${m.unit.name}${a.locations.length === 1 ? `, ${a.locations[0].label}` : ""}.`);
       const titan = ruleValue(m.unit.specialRules, /^titan void shield array\s*\((\d+)\)/i);
       const voids = ruleValue(m.unit.specialRules, /^void shields\s*\((\d+)\)/i);
       if (titan !== undefined || voids !== undefined) {
@@ -247,5 +270,37 @@ export function resolveHeresyAttack(r: AttackRequest): Resolution {
     if (r.attacks === undefined) notes.push(`${r.firingModels ?? 1} model${(r.firingModels ?? 1) === 1 ? "" : "s"} firing, at the weapon's Firepower.`);
   }
   if (!attacks.length) return { attacks: [], notes, error: `"${entry.name}" has no profile the calculator can use.` };
-  return { attacks, notes };
+  return { attacks: perLocation(attacks, locations, attackerKnight, notes), notes };
+}
+
+/**
+ * One result per Titan or Ordinatus profile targeted, with the Titan targeting rules: Shooting at the
+ * Head is Snap Shots; Template weapons may only hit the Legs; in a Combat only Knights and Antigrav
+ * models may attack anything but the Legs, hitting against WS 1 (WS 4 at the Head).
+ */
+function perLocation(attacks: ResolvedAttack[], locations: Location[], attackerKnight: boolean, notes: string[]): ResolvedAttack[] {
+  if (!locations.length || !locations[0].name) return attacks;
+  const out: ResolvedAttack[] = [];
+  for (const a of attacks) {
+    const melee = a.input.attackType === "melee";
+    const template = !melee && (a.input.specialRules ?? []).some((r) => /^template/i.test(r));
+    let locs = locations;
+    if (locations[0].titan && ((melee && !attackerKnight) || template)) {
+      const legs = locations.filter((l) => /leg/i.test(l.name));
+      if (legs.length) {
+        if (locations.some((l) => !/leg/i.test(l.name))) {
+          notes.push(melee ? "In a Combat only Knights and Antigrav models may attack anything but a Titan's Legs." : "Template weapons may only hit a Titan's Legs.");
+        }
+        locs = legs;
+      }
+    }
+    for (const l of locs) {
+      const head = /head/i.test(l.name);
+      const input: HeresyAttackInput = { ...a.input, targetArmour: l.av, ...(l.titan ? { titan: l.crippled ? ("crippled" as const) : ("intact" as const) } : {}) };
+      if (l.titan && !melee && head) input.snapShots = true;
+      if (l.titan && melee) input.targetWeaponSkill = head ? 4 : 1;
+      out.push({ label: [a.label, locs.length > 1 || locations.length > 1 ? l.label : ""].filter(Boolean).join(" → "), input });
+    }
+  }
+  return out;
 }

@@ -173,6 +173,11 @@ export type HeresyAttackInput = {
   titanVoidShields?: number;
   /** A flare shield: no Armourbane against this target. */
   noArmourbane?: boolean;
+  /**
+   * A Titan profile: a Glancing Hit on an intact profile rolls on the Titan Damage Table (1-4: lose 1 Hull Point);
+   * on a Crippled one it counts as Penetrating at Damage -1, and Damage becomes rolls on the Critical Damage Table.
+   */
+  titan?: "intact" | "crippled";
 };
 
 export type HeresyAttackResult = {
@@ -200,6 +205,9 @@ export type HeresyAttackResult = {
   averageDamage: number;
   expectedDamage: number;
   modelsKilled?: number;
+  /** Titans: Hull Points the Glancing Hits are expected to take (Armour Scar), or Critical Damage Table rolls once Crippled. */
+  titanGlanceHp?: number;
+  titanCriticalRolls?: number;
   /** Void shields: how many were up, how many the attack is expected to collapse, and the share of hits (or Penetrating Hits) that got past them. */
   shields?: { kind: "void" | "titan"; up: number; collapsed: number; throughShare: number };
 };
@@ -300,10 +308,22 @@ export function calculateHeresyAttack(i: HeresyAttackInput): HeresyAttackResult 
     const unsaved = penetrating * penKeep;
     const critPens = n * crit * penP * penShare * penKeep;
     const unsavedGlancing = glancing * (1 - pSuccess(save.target)) * mitigateP;
+    if (i.titan === "crippled") {
+      // Every Penetrating or Glancing Hit (Glancing as Penetrating, Damage -1) is a roll on the Critical Damage Table.
+      return {
+        hitTarget, criticalOn: critX, hits, criticalHits: n * crit, rendingHits: 0, breachingWounds: 0, bonusDamageWounds: 0, rules,
+        glancing, penetrating, save, penSave, unsaved, unsavedGlancing, averageDamage,
+        expectedDamage: 0, titanCriticalRolls: unsaved + unsavedGlancing,
+        ...(shields ? { shields } : {}),
+      };
+    }
+    // Intact Titan profile: a Glancing Hit rolls on the Titan Damage Table, losing 1 Hull Point on a 1-4.
+    const titanGlanceHp = i.titan === "intact" ? unsavedGlancing * (4 / 6) : undefined;
     return {
       hitTarget, criticalOn: critX, hits, criticalHits: n * crit, rendingHits: 0, breachingWounds: 0, bonusDamageWounds: critPens, rules,
       glancing, penetrating, save, penSave, unsaved, unsavedGlancing, averageDamage,
-      expectedDamage: unsaved * averageDamage + critPens,
+      expectedDamage: unsaved * averageDamage + critPens + (titanGlanceHp ?? 0),
+      ...(titanGlanceHp !== undefined ? { titanGlanceHp } : {}),
       ...(shields ? { shields } : {}),
     };
   }

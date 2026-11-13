@@ -172,9 +172,9 @@ describe("Void shields and ion shields", () => {
   it("looks up a Warhound's shields and profiles, and takes shields_up", () => {
     const full = formatResolvedAttack({ weapon: "lascannon", target: "Warhound Titan", firingModels: 4 });
     expect(full).toContain("Titan Void Shield Array: 2 up");
-    expect(full).toMatch(/\*\*Answer:\*\* Collapses about/);
+    expect(full).toMatch(/\*\*Legs: Primary Armour 14, 10 Hull Points:\*\* Collapses about/);
     const down = formatResolvedAttack({ weapon: "lascannon", target: "Warhound Titan", firingModels: 4, shieldsUp: 0, location: "legs" });
-    expect(down).toContain("Legs, Primary Armour 14, 10 Hull Points");
+    expect(down).toContain("Legs: Primary Armour 14, 10 Hull Points");
     expect(down).not.toContain("**Void shields:**");
   });
 
@@ -192,5 +192,33 @@ describe("Void shields and ion shields", () => {
     const t = formatResolvedAttack({ weapon: "lascannon", target: "Questoris Knight Styrix" });
     expect(t).toContain("no Armourbane");
     expect(t).not.toContain("Glancing results count as Penetrating");
+  });
+});
+
+describe("Titan locations", () => {
+  it("with no location, compares every profile; the Head is shot at with Snap Shots", () => {
+    const t = formatResolvedAttack({ weapon: "lascannon", target: "Warhound Titan", firingModels: 4, shieldsUp: 0 });
+    expect(t).toContain("**Answer, by location:**");
+    for (const loc of ["Head", "Carapace", "Arms", "Legs"]) expect(t).toContain(`**${loc}: Primary Armour`);
+    expect(t).toMatch(/## Head[^#]*Snap Shots/);
+  });
+
+  it("a Crippled location uses Exposed Armour and turns hits into Critical Damage rolls", () => {
+    const t = formatResolvedAttack({ weapon: "lascannon", target: "Warhound Titan", shieldsUp: 0, location: "arms", crippled: true });
+    expect(t).toContain("Arms: Crippled, Exposed Armour 10");
+    expect(t).toContain("Titan Critical Damage Table");
+  });
+
+  it("an intact location loses a Hull Point on most Glancing Hits", () => {
+    const r = calculateHeresyAttack({ attackType: "ranged", attacks: 6, ballisticSkill: 4, strength: 8, targetArmour: 14, damage: "1", titan: "intact" });
+    expect(r.titanGlanceHp).toBeCloseTo(r.unsavedGlancing! * 4 / 6);
+  });
+
+  it("in a Combat, only Knights may attack above the Legs, against WS 1", () => {
+    const fist = formatResolvedAttack({ weapon: "power fist", target: "Warhound Titan", attacker: "Tactical Squad" });
+    expect(fist).toContain("only Knights and Antigrav models may attack anything but a Titan's Legs");
+    expect(fist).toContain("vs WS 1");
+    const knight = formatResolvedAttack({ weapon: "Thunderstrike Gauntlet", target: "Warhound Titan", attacker: "Knight Questoris" });
+    expect(knight).toContain("**Arms: Primary Armour");
   });
 });
