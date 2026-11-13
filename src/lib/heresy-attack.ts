@@ -117,6 +117,8 @@ export type ModelledRules = {
   breaching?: number;
   shred?: number;
   armourbane?: boolean;
+  /** Shield-breaker (X): collapses X void shields instead of 1. */
+  shieldBreaker?: number;
   /** Rules given but not modelled (Template, Heavy, Pinning, …), for the "not modelled" note. */
   ignored: string[];
 };
@@ -125,6 +127,11 @@ export function parseWeaponRules(rules: string[] = []): ModelledRules {
   const out: ModelledRules = { ignored: [] };
   for (const raw of rules) {
     const r = raw.trim();
+    const sb = r.match(/^shield-?breaker\s*\(\s*(\d+)\s*\)$/i);
+    if (sb) {
+      out.shieldBreaker = Number(sb[1]);
+      continue;
+    }
     const m = r.match(/^(rending|critical hit|breaching|shred)\s*\(\s*(\d)\s*\+?\s*\)$/i);
     if (m) {
       const key = m[1].toLowerCase();
@@ -160,6 +167,12 @@ export type HeresyAttackInput = {
   woundsPerModel?: number;
   /** The weapon's special rules as listed on its profile, e.g. ["Breaching (6+)", "Heavy (FP)"]. */
   specialRules?: string[];
+  /** Void Shields (X) still up: each Penetrating Hit from a Shooting Attack is reduced to Damage 0 and takes one down. */
+  voidShields?: number;
+  /** Titan Void Shield Array (X) still up: every Shooting hit goes to a shield first (Armour 13; a Glancing or Penetrating Hit collapses it). */
+  titanVoidShields?: number;
+  /** A flare shield: no Armourbane against this target. */
+  noArmourbane?: boolean;
 };
 
 export type HeresyAttackResult = {
@@ -187,7 +200,37 @@ export type HeresyAttackResult = {
   averageDamage: number;
   expectedDamage: number;
   modelsKilled?: number;
+  /** Void shields: how many were up, how many the attack is expected to collapse, and the share of hits (or Penetrating Hits) that got past them. */
+  shields?: { kind: "void" | "titan"; up: number; collapsed: number; throughShare: number };
 };
+
+/**
+ * Expected value of a sequence of `dice` attack dice against `up` shields. Each die
+ * collapses `perCollapse` shields with probability `pCollapse` while any are up; once
+ * none are, it gets through with probability `pPass`. Returns the expected number of
+ * dice that got through and of shields collapsed.
+ */
+export function throughShields(dice: number, up: number, pCollapse: number, pPass: number, perCollapse = 1): { through: number; collapsed: number } {
+  let dist = new Array(up + 1).fill(0); // dist[k]: chance that k shields are still up
+  dist[up] = 1;
+  let through = 0;
+  const whole = Math.floor(dice);
+  const step = (weight: number) => {
+    const next = new Array(up + 1).fill(0);
+    through += dist[0] * pPass * weight;
+    next[0] += dist[0];
+    for (let k = 1; k <= up; k++) {
+      const c = pCollapse * weight;
+      next[Math.max(0, k - perCollapse)] += dist[k] * c;
+      next[k] += dist[k] * (1 - c);
+    }
+    dist = next;
+  };
+  for (let d = 0; d < whole; d++) step(1);
+  if (dice > whole) step(dice - whole); // a fractional die (an average Firepower) counts in proportion
+  const remaining = dist.reduce((a, p, k) => a + p * k, 0);
+  return { through, collapsed: up - remaining };
+}
 
 const D6 = [1, 2, 3, 4, 5, 6];
 
@@ -230,20 +273,38 @@ export function calculateHeresyAttack(i: HeresyAttackInput): HeresyAttackResult 
     // Rending and Shred do nothing against vehicles; a Critical Hit's auto-wound is a Wound Test rule, so its hits
     // still make Armour Penetration Tests here (the +1 Damage is kept).
     const { glance, pen } = penetration(i.strength, i.targetArmour!);
-    const glanceP = rules.armourbane ? 0 : glance;
-    const penP = rules.armourbane ? glance + pen : pen;
-    const glancing = hits * glanceP;
-    const penetrating = hits * penP;
+    const armourbane = rules.armourbane && !i.noArmourbane;
+    const glanceP = armourbane ? 0 : glance;
+    const penP = armourbane ? glance + pen : pen;
+    const ranged = i.attackType === "ranged";
+    const hitP = plain + crit + rend;
+    // Void shields only stop Shooting Attacks. A titan's take every hit first; a Void Shields (X) model's only Penetrating Hits.
+    let glanceShare = 1, penShare = 1;
+    let shields: HeresyAttackResult["shields"];
+    const per = rules.shieldBreaker ?? 1;
+    if (ranged && i.titanVoidShields && hitP > 0) {
+      const v = penetration(i.strength, 13);
+      const t = throughShields(n, i.titanVoidShields, hitP * (v.glance + v.pen), hitP, per);
+      glanceShare = penShare = t.through / (n * hitP);
+      shields = { kind: "titan", up: i.titanVoidShields, collapsed: t.collapsed, throughShare: glanceShare };
+    } else if (ranged && i.voidShields && hitP * penP > 0) {
+      const t = throughShields(n, i.voidShields, hitP * penP, hitP * penP, per);
+      penShare = t.through / (n * hitP * penP);
+      shields = { kind: "void", up: i.voidShields, collapsed: t.collapsed, throughShare: penShare };
+    }
+    const glancing = hits * glanceP * glanceShare;
+    const penetrating = hits * penP * penShare;
     const save = saveFor(i.ap);
     const penSave = saveFor(i.ap, { penetratingHit: true });
     const penKeep = (1 - pSuccess(penSave.target)) * mitigateP;
     const unsaved = penetrating * penKeep;
-    const critPens = n * crit * penP * penKeep;
+    const critPens = n * crit * penP * penShare * penKeep;
     const unsavedGlancing = glancing * (1 - pSuccess(save.target)) * mitigateP;
     return {
       hitTarget, criticalOn: critX, hits, criticalHits: n * crit, rendingHits: 0, breachingWounds: 0, bonusDamageWounds: critPens, rules,
       glancing, penetrating, save, penSave, unsaved, unsavedGlancing, averageDamage,
       expectedDamage: unsaved * averageDamage + critPens,
+      ...(shields ? { shields } : {}),
     };
   }
 

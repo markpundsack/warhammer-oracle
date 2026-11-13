@@ -32,11 +32,18 @@ export function spokenAnswer(i: HeresyAttackInput): string {
   if (i.targetArmour !== undefined) {
     const pen = r.penetrating ?? 0;
     const glance = r.glancing ?? 0;
-    if (i.attacks === 1) {
+    const sh = r.shields;
+    const shieldText = sh
+      ? `${sh.kind === "titan" ? "Collapses" : "Takes down"} ${spokenCount(sh.collapsed, "void shield")} of ${sh.up}` +
+        (r.expectedDamage < 0.05 && glance < 0.05 ? ", and nothing gets through." : ", then ")
+      : "";
+    if (sh && r.expectedDamage < 0.05 && glance < 0.05) return shieldText.replace(/^./, (c) => c.toUpperCase());
+    if (i.attacks === 1 && !sh) {
       const g = glance > 0 ? `, and a ${percent(glance)} chance of a Glancing Hit` : ", and no Glancing Hits";
       return pen > 0 ? `A ${percent(pen)} chance of a Penetrating Hit${g}.` : `No chance of a Penetrating Hit${g}.`;
     }
-    return `${spokenCount(pen, "Penetrating Hit")} and ${spokenCount(glance, "Glancing Hit")}.`.replace(/^./, (c) => c.toUpperCase());
+    const hp = `${spokenCount(r.expectedDamage, "Hull Point")} lost`;
+    return `${shieldText}${spokenCount(pen, "Penetrating Hit")} and ${spokenCount(glance, "Glancing Hit")}: ${hp}.`.replace(/^./, (c) => c.toUpperCase());
   }
   const damage = spokenCount(r.expectedDamage, "point of damage", "points of damage");
   let text = damage;
@@ -66,8 +73,15 @@ export function formatHeresyAttack(i: HeresyAttackInput): string {
   if (i.targetArmour !== undefined) {
     lines.push(
       `- **Armour Penetration:** D6 + S${i.strength} vs Armour ${i.targetArmour} → **${n(r.penetrating!)} Penetrating**, **${n(r.glancing!)} Glancing**` +
-        (r.rules.armourbane ? " (Armourbane: Glancing results count as Penetrating)" : ""),
+        (r.rules.armourbane ? (i.noArmourbane ? " (Armourbane cancelled by the target's flare shield)" : " (Armourbane: Glancing results count as Penetrating)") : ""),
     );
+    if (r.shields) {
+      const what = r.shields.kind === "titan" ? "every hit goes to a void shield first (Armour 13; a Glancing or Penetrating Hit collapses it)" : "each Penetrating Hit is reduced to Damage 0 and takes a shield down";
+      lines.push(
+        `- **Void shields:** ${r.shields.up} up; ${what}${r.rules.shieldBreaker ? ` (Shield-breaker (${r.rules.shieldBreaker}): ${r.rules.shieldBreaker} per collapse)` : ""}. ` +
+          `About **${n(r.shields.collapsed)} collapsed**; ${percent(r.shields.throughShare)} of ${r.shields.kind === "titan" ? "hits" : "Penetrating Hits"} get through (counted below).`,
+      );
+    }
     lines.push(`- **Saves:** vs Penetrating: ${saveText(r.penSave!)} (no Armour Tests against Penetrating Hits); vs Glancing: ${saveText(r.save)}`);
     lines.push(
       `- **Result:** about **${n(r.expectedDamage)} Hull Points** lost from ${n(r.unsaved)} unsaved Penetrating Hits (Damage ${i.damage}), ` +
@@ -93,7 +107,7 @@ export function formatHeresyAttack(i: HeresyAttackInput): string {
   const ignored = r.rules.ignored.length ? `the weapon's ${r.rules.ignored.join(", ")}; ` : "";
   lines.push(
     "",
-    "_Expected values. Modelled: Rending, Critical Hit, Breaching, Shred, Armourbane (when listed in special_rules). " +
+    "_Expected values. Modelled: Rending, Critical Hit, Breaching, Shred, Armourbane, Shield-breaker (when listed in special_rules); void shields and ion shields on the target. " +
       `Not modelled: ${ignored}other special rules, characteristic modifiers and re-rolls. Melee Strength is the bearer's Strength after the weapon's modifier._`,
   );
   return lines.join("\n");
@@ -122,7 +136,10 @@ export function registerHeresyAttackCalculator(server: McpServer): void {
       weapon: z.string().optional().describe("Weapon name, e.g. 'bolter', 'power fist'. Its stats and special rules are looked up for you; a weapon with several profiles gets a result for each"),
       target: z.string().optional().describe("Target unit or model name, e.g. 'Legionaries', 'Rhino'. Its Toughness or Armour, saves and Wounds are looked up for you"),
       attacker: z.string().optional().describe("Firing or attacking unit or model, if the querent named one. Omitted: BS/WS 4, Strength 4, and the answer says so"),
-      facing: z.enum(["front", "side", "rear"]).optional().describe("Vehicle target's facing (default front)"),
+      facing: z.enum(["front", "side", "rear"]).optional().describe("Vehicle target's facing (default front). Knights have only front and rear; ion shields give 5+ front, 6+ rear"),
+      location: z.string().optional().describe("Titan or Ordinatus: the profile targeted, e.g. 'legs', 'carapace', 'head', 'arms', 'gun'"),
+      crippled: z.boolean().optional().describe("Titan or Ordinatus: that profile is Crippled (Exposed Armour)"),
+      shields_up: z.number().min(0).optional().describe("Void shields still up on the target, if some are down (default: all of them)"),
       firing_models: z.number().min(1).optional().describe("How many models attack, when the querent gives models, not shots ('five bolters')"),
       attack_type: z.enum(["ranged", "melee"]).optional().describe("Shooting Attack ('ranged') or melee ('melee'); only needed for a weapon with both"),
       attacks: z.number().min(1).optional().describe("Number of Hit Test dice, when the querent gives shots ('ten shots')"),
@@ -162,6 +179,9 @@ export function registerHeresyAttackCalculator(server: McpServer): void {
         target: a.target,
         attacker: a.attacker,
         facing: a.facing,
+        location: a.location,
+        crippled: a.crippled,
+        shieldsUp: a.shields_up,
         firingModels: a.firing_models,
         attackType: a.attack_type,
         attacks: a.attacks,

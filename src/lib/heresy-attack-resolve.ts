@@ -19,6 +19,12 @@ export type AttackRequest = Partial<HeresyAttackInput> & {
   attacker?: string;
   firingModels?: number;
   facing?: "front" | "side" | "rear";
+  /** A Titan's or Ordinatus's profile to target ("legs", "carapace", "gun"…). */
+  location?: string;
+  /** That profile is Crippled: use its Exposed Armour. */
+  crippled?: boolean;
+  /** Void shields still up, when the querent says (otherwise the unit's full X). */
+  shieldsUp?: number;
 };
 
 export type ResolvedAttack = { label: string; input: HeresyAttackInput };
@@ -40,11 +46,60 @@ function mainModel(unit: HeresyUnit, named?: string): HeresyModelProfile | undef
   return [...unit.models].sort((a, b) => maxOf(b) - maxOf(a))[0];
 }
 
-function armourValue(unit: HeresyUnit, facing: string): number | undefined {
+function stat(stats: { name: string; value: string }[], ...names: string[]): number | undefined {
+  for (const n of names) {
+    const s = stats.find((x) => x.name.toLowerCase() === n);
+    if (s && num(s.value) !== undefined) return num(s.value);
+  }
+  return undefined;
+}
+
+/**
+ * The Armour Value an attack tests against. Titans and Ordinatus have a profile per location with
+ * Primary and Exposed Armour (Exposed once that profile is Crippled); other vehicles and Knights
+ * have one profile with an Armour Value per facing. Knights have only Front and Rear.
+ */
+function armourValue(unit: HeresyUnit, r: AttackRequest, notes: string[]): { av?: number; error?: string; label: string } {
+  const located = unit.armoured.filter((a) => stat(a.stats, "primary armour", "primary") !== undefined);
+  if (located.length) {
+    const want = r.location?.toLowerCase();
+    const prof = (want && located.find((a) => a.name.toLowerCase().includes(want) || want.includes(a.name.toLowerCase()))) || located[0];
+    if (want && !prof.name.toLowerCase().includes(want) && !want.includes(prof.name.toLowerCase())) {
+      notes.push(`No "${r.location}" profile; using ${prof.name}.`);
+    } else if (!want) {
+      notes.push(`No location given: assuming the ${prof.name} (profiles: ${located.map((a) => a.name).join(", ")}).`);
+    }
+    const av = r.crippled ? stat(prof.stats, "exposed armour", "exposed") : stat(prof.stats, "primary armour", "primary");
+    const hp = stat(prof.stats, "hp");
+    return { av, label: `${prof.name}, ${r.crippled ? "Exposed" : "Primary"} Armour ${av}${hp !== undefined ? `, ${hp} Hull Points` : ""}` };
+  }
   const stats = unit.armoured[0]?.stats ?? [];
-  const f = facing.toLowerCase();
-  const stat = stats.find((s) => s.name.toLowerCase() === `${f} armour`) ?? stats.find((s) => s.name.toLowerCase() === f);
-  return num(stat?.value);
+  let facing = (r.facing ?? "front").toLowerCase();
+  if (facing === "side" && stat(stats, "side armour", "side") === undefined && stat(stats, "front armour", "front") !== undefined) {
+    notes.push("This profile has only Front and Rear armour: using Front.");
+    facing = "front";
+  }
+  const av = stat(stats, `${facing} armour`, facing);
+  if (av === undefined) return { error: `No ${facing} armour value found for "${unit.name}".`, label: "" };
+  const hp = stat(stats, "hp", "hull points");
+  return { av, label: `${facing} armour ${av}${hp !== undefined ? `, ${hp} Hull Points` : ""}` };
+}
+
+/** "Void Shields (3)" → 3. */
+function ruleValue(rules: string[], name: RegExp): number | undefined {
+  for (const r of rules) {
+    const m = r.match(name);
+    if (m) return Number(m[1]);
+  }
+  return undefined;
+}
+
+/** Ion shields: 5+ Invulnerable against Shooting at the Front, 6+ at the Rear (and against Glancing Hits). */
+function ionShield(unit: HeresyUnit): { name: string; flare: boolean } | undefined {
+  const names = [...(unit.wargearRules ?? []).map((w) => w.name), ...unit.specialRules];
+  const ion = names.find((n) => /^ion(ic flare)? shield$/i.test(n));
+  if (ion) return { name: ion, flare: /flare/i.test(ion) };
+  return names.some((n) => /^flare shield$/i.test(n)) ? { name: "Flare Shield", flare: true } : undefined;
 }
 
 /** The bearer's Strength with a melee weapon's modifier: "S" → S, "+4" → S+4, "x2" → S×2, "8" → 8. */
@@ -59,6 +114,20 @@ function meleeAttacks(modifier: string, bearer: number): number {
   return Math.max(1, meleeStrength(modifier, bearer));
 }
 
+/**
+ * A vehicle, Knight or Titan as the attacker: its BS, WS, S and A from its armoured profile(s).
+ * A Titan's BS sits on its Arms profile, so take the first profile that has each value.
+ */
+function vehicleAsModel(unit: HeresyUnit): HeresyModelProfile | undefined {
+  if (!unit.armoured.length) return undefined;
+  const pick = (name: string) => unit.armoured.map((a) => a.stats.find((s) => s.name.toLowerCase() === name)?.value).find((v) => num(v) !== undefined) ?? "-";
+  return {
+    name: unit.armoured[0].name, type: "Vehicle", movement: pick("m"), weaponSkill: pick("ws"), ballisticSkill: pick("bs"),
+    strength: pick("s"), toughness: "-", wounds: "-", initiative: pick("i"), attacks: pick("a"),
+    leadership: "-", cool: "-", willpower: "-", intelligence: "-", save: "-", invulnerableSave: "-",
+  };
+}
+
 export function resolveHeresyAttack(r: AttackRequest): Resolution {
   const notes: string[] = [];
 
@@ -66,11 +135,14 @@ export function resolveHeresyAttack(r: AttackRequest): Resolution {
   if (r.attacker) {
     const m = findHeresyUnit(r.attacker);
     if (!m) return { attacks: [], notes, error: `No Horus Heresy unit found matching attacker "${r.attacker}".` };
-    attacker = mainModel(m.unit, m.kind === "model" ? m.model : undefined);
+    attacker = mainModel(m.unit, m.kind === "model" ? m.model : undefined) ?? vehicleAsModel(m.unit);
+    if (attacker && attacker.type === "Vehicle") notes.push(`Attacker: ${m.unit.name}: BS ${attacker.ballisticSkill}, WS ${attacker.weaponSkill}, S ${attacker.strength}, A ${attacker.attacks}.`);
   }
 
   // Target
   const target: Partial<HeresyAttackInput> = {};
+  /** Target stats that apply to Shooting Attacks only (an ion shield's save). */
+  const vsShooting: Partial<HeresyAttackInput> = {};
   if (r.target) {
     const m = findHeresyUnit(r.target);
     if (!m) return { attacks: [], notes, error: `No Horus Heresy unit found matching target "${r.target}".` };
@@ -83,20 +155,37 @@ export function resolveHeresyAttack(r: AttackRequest): Resolution {
       target.woundsPerModel = num(model.wounds);
       notes.push(`Target: ${model.name} (${m.unit.name}): T${model.toughness}, W${model.wounds}, SAV ${model.save}, INV ${model.invulnerableSave}.`);
     } else {
-      const facing = r.facing ?? "front";
-      const av = armourValue(m.unit, facing);
-      if (av === undefined) return { attacks: [], notes, error: `No ${facing} armour value found for "${m.unit.name}".` };
-      target.targetArmour = av;
-      notes.push(`Target: ${m.unit.name}, ${facing} armour ${av}.`);
+      const a = armourValue(m.unit, r, notes);
+      if (a.error || a.av === undefined) return { attacks: [], notes, error: a.error ?? `No armour value found for "${m.unit.name}".` };
+      target.targetArmour = a.av;
+      const ws = num(vehicleAsModel(m.unit)?.weaponSkill);
+      if (ws !== undefined) target.targetWeaponSkill = ws; // Knights and Titans fight back with a WS
+      notes.push(`Target: ${m.unit.name}, ${a.label}.`);
+      const titan = ruleValue(m.unit.specialRules, /^titan void shield array\s*\((\d+)\)/i);
+      const voids = ruleValue(m.unit.specialRules, /^void shields\s*\((\d+)\)/i);
+      if (titan !== undefined || voids !== undefined) {
+        const up = r.shieldsUp ?? titan ?? voids!;
+        if (titan !== undefined) target.titanVoidShields = up;
+        else target.voidShields = up;
+        notes.push(`${titan !== undefined ? "Titan Void Shield Array" : "Void Shields"}: ${up} up${r.shieldsUp === undefined ? " (all of them; say how many are left if some are down)" : ""}. Shields only stop Shooting Attacks.`);
+      }
+      const ion = ionShield(m.unit);
+      if (ion) {
+        const facing = (r.facing ?? "front").toLowerCase();
+        vsShooting.invulnerableSave = facing === "rear" ? 6 : 5;
+        if (ion.flare) target.noArmourbane = true;
+        notes.push(`${ion.name}: ${facing === "rear" ? "6+" : "5+"} Invulnerable Save against Shooting at this facing, also against Glancing Hits${ion.flare ? "; no Armourbane" : ""}. Not against melee.`);
+      }
     }
   }
 
   const base = (extra: Partial<HeresyAttackInput>): HeresyAttackInput => {
     // Numbers given explicitly always win over looked-up ones.
     const defined = Object.fromEntries(
-      Object.entries(r).filter(([k, v]) => v !== undefined && !["weapon", "target", "attacker", "firingModels", "facing"].includes(k)),
+      Object.entries(r).filter(([k, v]) => v !== undefined && !["weapon", "target", "attacker", "firingModels", "facing", "location", "crippled", "shieldsUp"].includes(k)),
     );
-    return { attackType: "ranged", attacks: 1, strength: 4, damage: "1", ...target, ...extra, ...defined } as HeresyAttackInput;
+    const shooting = (extra.attackType ?? r.attackType ?? "ranged") === "ranged" ? vsShooting : {};
+    return { attackType: "ranged", attacks: 1, strength: 4, damage: "1", ...target, ...shooting, ...extra, ...defined } as HeresyAttackInput;
   };
 
   if (!r.weapon) {

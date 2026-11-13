@@ -5,9 +5,10 @@ import {
   meleeHitTarget,
   penetration,
   rangedHitTarget,
+  throughShields,
   woundTarget,
 } from "../src/lib/heresy-attack.js";
-import { formatHeresyAttack } from "../src/tools/heresy-attack-calculator.js";
+import { formatHeresyAttack, formatResolvedAttack } from "../src/tools/heresy-attack-calculator.js";
 
 describe("Heresy tables", () => {
   it("Wound Table: every cell of the published S vs T chart", () => {
@@ -139,5 +140,57 @@ describe("calculateHeresyAttack: weapon special rules", () => {
     const text = formatHeresyAttack({ attackType: "ranged", attacks: 1, ballisticSkill: 4, strength: 9, targetArmour: 12, damage: "1", specialRules: ["Heavy (D)", "Armourbane"] });
     expect(text).toContain("Armourbane: Glancing results count as Penetrating");
     expect(text).toContain("Not modelled: the weapon's Heavy (D);");
+  });
+});
+
+describe("Void shields and ion shields", () => {
+  it("throughShields: certain collapses take exactly one die per shield", () => {
+    const t = throughShields(5, 2, 1, 1);
+    expect(t.collapsed).toBeCloseTo(2);
+    expect(t.through).toBeCloseTo(3);
+    // Shield-breaker (2) takes both with one die
+    expect(throughShields(5, 2, 1, 1, 2).through).toBeCloseTo(4);
+  });
+
+  it("a Titan's shields soak hits first; with them down the same shots do damage", () => {
+    const base = { attackType: "ranged" as const, attacks: 4, ballisticSkill: 4, strength: 9, targetArmour: 14, damage: "1", specialRules: ["Armourbane"] };
+    const up = calculateHeresyAttack({ ...base, titanVoidShields: 2 });
+    const down = calculateHeresyAttack(base);
+    expect(up.shields?.kind).toBe("titan");
+    expect(up.shields!.collapsed).toBeGreaterThan(1);
+    expect(up.expectedDamage).toBeLessThan(down.expectedDamage / 5);
+  });
+
+  it("Void Shields (X) stop Penetrating Hits only, and only Shooting Attacks", () => {
+    const base = { attacks: 6, ballisticSkill: 4, weaponSkill: 4, strength: 10, targetArmour: 12, damage: "2", voidShields: 3 };
+    const shot = calculateHeresyAttack({ ...base, attackType: "ranged" });
+    expect(shot.shields?.kind).toBe("void");
+    const melee = calculateHeresyAttack({ ...base, attackType: "melee" });
+    expect(melee.shields).toBeUndefined();
+  });
+
+  it("looks up a Warhound's shields and profiles, and takes shields_up", () => {
+    const full = formatResolvedAttack({ weapon: "lascannon", target: "Warhound Titan", firingModels: 4 });
+    expect(full).toContain("Titan Void Shield Array: 2 up");
+    expect(full).toMatch(/\*\*Answer:\*\* Collapses about/);
+    const down = formatResolvedAttack({ weapon: "lascannon", target: "Warhound Titan", firingModels: 4, shieldsUp: 0, location: "legs" });
+    expect(down).toContain("Legs, Primary Armour 14, 10 Hull Points");
+    expect(down).not.toContain("**Void shields:**");
+  });
+
+  it("a Knight's ion shield is 5+ at the front, 6+ at the rear, and not in melee", () => {
+    const front = formatResolvedAttack({ weapon: "lascannon", target: "Knight Questoris" });
+    expect(front).toContain("vs Penetrating: Invulnerable 5+");
+    const rear = formatResolvedAttack({ weapon: "lascannon", target: "Knight Questoris", facing: "rear" });
+    expect(rear).toContain("vs Penetrating: Invulnerable 6+");
+    const melee = formatResolvedAttack({ weapon: "Thunderstrike Gauntlet", target: "Knight Questoris", attacker: "Knight Questoris" });
+    expect(melee).toContain("vs Penetrating: no save");
+    expect(melee).toContain("Attacker: Knight Questoris: BS 4, WS 4, S 8, A 4");
+  });
+
+  it("an ionic flare shield cancels Armourbane", () => {
+    const t = formatResolvedAttack({ weapon: "lascannon", target: "Questoris Knight Styrix" });
+    expect(t).toContain("no Armourbane");
+    expect(t).not.toContain("Glancing results count as Penetrating");
   });
 });
