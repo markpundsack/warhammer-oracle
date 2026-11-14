@@ -244,9 +244,15 @@ function aliasesFor(title: string): string[] {
     if (rite[1] === "Astartes") out.add(`${legion} Rite of War`).add(`${legion} Legion Tactica`);
     else out.add(`${legion} Hereticus Rite of War`).add(`${legion} Legiones Hereticus`);
   }
+  for (const extra of SPOKEN_ALIASES[title] ?? []) out.add(extra);
   out.delete(title);
   return [...out];
 }
+
+/** What players call a section when it isn't the rulebook's name. */
+const SPOKEN_ALIASES: Record<string, string[]> = {
+  "4. Make Volley Attacks": ["Volley Attacks", "Volley Attack", "Volley Fire"],
+};
 
 function armyKindFor(path: string[], title: string): HeresyRuleKind {
   const p = path.map((x) => x.toLowerCase());

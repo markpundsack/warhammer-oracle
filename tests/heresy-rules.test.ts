@@ -297,6 +297,12 @@ describe("Heresy FAQ", () => {
     expect(text).toContain("Horus Heresy FAQ — https://wahapedia.ru/heresy3/the-rules/faq/");
   });
 
+  it("finds Volley Attacks by what players say ('volley fire')", async () => {
+    const text = await call("lookup_keyword", { keyword: "Volley Fire", game_mode: "heresy" });
+    expect(text).toContain("# 4. Make Volley Attacks");
+    expect(text).toContain("all attacks are made as Snap Shots");
+  });
+
   it("lookup_keyword appends FAQ rulings that name the rule", async () => {
     const text = await call("lookup_keyword", { keyword: "Vanguard", game_mode: "heresy" });
     expect(text).toContain("## Official clarifications");
