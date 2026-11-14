@@ -13,10 +13,12 @@
 import { HERESY_ARMY_RULES } from "../data/heresy-army-rules.js";
 import { HERESY_CORE_RULES } from "../data/heresy-core-rules.js";
 import { HERESY_PROFILE_RULES } from "../data/heresy-profile-rules.js";
+import { HERESY_CURATED_RULES } from "../data/heresy-curated-rules.js";
 import { HERESY_SPECIAL_RULES } from "../data/heresy-rules.js";
 import type { HeresySpecialRule } from "../types.js";
 
 export const HERESY_RULE_CORPUS: HeresySpecialRule[] = [
+  ...HERESY_CURATED_RULES,
   ...HERESY_SPECIAL_RULES,
   ...HERESY_PROFILE_RULES,
   ...HERESY_CORE_RULES,

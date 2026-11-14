@@ -1,0 +1,3321 @@
+[
+ {
+  "keyword": "snap shots",
+  "accept": [
+   "Hit Tests",
+   "Ranged Hit Tests"
+  ],
+  "why": "Snap Shots row is in the Hit Tests / Ranged Hit Tests table; no entry named Snap Shots"
+ },
+ {
+  "keyword": "snap shot",
+  "accept": [
+   "Hit Tests",
+   "Ranged Hit Tests"
+  ],
+  "why": "Snap Shots row is in the Hit Tests / Ranged Hit Tests table; no entry named Snap Shots"
+ },
+ {
+  "keyword": "snapshot",
+  "accept": [
+   "Hit Tests",
+   "Ranged Hit Tests"
+  ],
+  "why": "Snap Shots row is in the Hit Tests / Ranged Hit Tests table; no entry named Snap Shots"
+ },
+ {
+  "keyword": "snapshots",
+  "accept": [
+   "Hit Tests",
+   "Ranged Hit Tests"
+  ],
+  "why": "Snap Shots row is in the Hit Tests / Ranged Hit Tests table; no entry named Snap Shots"
+ },
+ {
+  "keyword": "snap fire",
+  "accept": [
+   "Hit Tests",
+   "Ranged Hit Tests"
+  ],
+  "why": "Snap Shots row is in the Hit Tests / Ranged Hit Tests table; no entry named Snap Shots"
+ },
+ {
+  "keyword": "snap firing",
+  "accept": [
+   "Hit Tests",
+   "Ranged Hit Tests"
+  ],
+  "why": "Snap Shots row is in the Hit Tests / Ranged Hit Tests table; no entry named Snap Shots"
+ },
+ {
+  "keyword": "shooting as snap shots",
+  "accept": [
+   "Hit Tests",
+   "Ranged Hit Tests"
+  ],
+  "why": "Snap Shots row is in the Hit Tests / Ranged Hit Tests table; no entry named Snap Shots"
+ },
+ {
+  "keyword": "snap shot table",
+  "accept": [
+   "Hit Tests",
+   "Ranged Hit Tests"
+  ],
+  "why": "Snap Shots row is in the Hit Tests / Ranged Hit Tests table; no entry named Snap Shots"
+ },
+ {
+  "keyword": "snap shots to hit",
+  "accept": [
+   "Hit Tests",
+   "Ranged Hit Tests"
+  ],
+  "why": "Snap Shots row is in the Hit Tests / Ranged Hit Tests table; no entry named Snap Shots"
+ },
+ {
+  "keyword": "snap shots after rushing",
+  "accept": [
+   "Rush",
+   "Light",
+   "Rapid",
+   "Vehicles and Rushing"
+  ],
+  "why": "Light/Rapid sub-types may shoot as Snap Shots after Rushing"
+ },
+ {
+  "keyword": "snap shots multiple targets",
+  "accept": [
+   "Attacking Multiple Target Units",
+   "Vehicles in the Shooting Phase"
+  ],
+  "why": "vehicles shooting multiple targets fire Snap Shots"
+ },
+ {
+  "keyword": "volley fire",
+  "accept": [
+   "4. Make Volley Attacks"
+  ],
+  "why": "entry is '4. Make Volley Attacks'"
+ },
+ {
+  "keyword": "volley attack",
+  "accept": [
+   "4. Make Volley Attacks"
+  ],
+  "why": "entry is '4. Make Volley Attacks'"
+ },
+ {
+  "keyword": "volley attacks",
+  "accept": [
+   "4. Make Volley Attacks"
+  ],
+  "why": "entry is '4. Make Volley Attacks'"
+ },
+ {
+  "keyword": "volley",
+  "accept": [
+   "4. Make Volley Attacks"
+  ],
+  "why": "entry is '4. Make Volley Attacks'"
+ },
+ {
+  "keyword": "volly fire",
+  "accept": [
+   "4. Make Volley Attacks"
+  ],
+  "why": "entry is '4. Make Volley Attacks'"
+ },
+ {
+  "keyword": "volleys",
+  "accept": [
+   "4. Make Volley Attacks"
+  ],
+  "why": "entry is '4. Make Volley Attacks'"
+ },
+ {
+  "keyword": "shooting at chargers",
+  "accept": [
+   "4. Make Volley Attacks",
+   "Assault Phase: Overwatch"
+  ],
+  "why": "entry is '4. Make Volley Attacks'"
+ },
+ {
+  "keyword": "shoot when charged",
+  "accept": [
+   "4. Make Volley Attacks",
+   "Assault Phase: Overwatch"
+  ],
+  "why": "entry is '4. Make Volley Attacks'"
+ },
+ {
+  "keyword": "knight volley attacks",
+  "accept": [
+   "Knights and Volley Attacks"
+  ],
+  "why": "Knight-specific volley rule"
+ },
+ {
+  "keyword": "titan volley attacks",
+  "accept": [
+   "Titans and the Assault Phase"
+  ],
+  "why": "Titans volley with Defensive Weapons at full BS"
+ },
+ {
+  "keyword": "overwatch",
+  "accept": [
+   "Assault Phase: Overwatch"
+  ],
+  "why": "core reaction 'Assault Phase: Overwatch'"
+ },
+ {
+  "keyword": "over watch",
+  "accept": [
+   "Assault Phase: Overwatch"
+  ],
+  "why": "core reaction 'Assault Phase: Overwatch'"
+ },
+ {
+  "keyword": "overwatch reaction",
+  "accept": [
+   "Assault Phase: Overwatch"
+  ],
+  "why": "core reaction 'Assault Phase: Overwatch'"
+ },
+ {
+  "keyword": "stand and shoot",
+  "accept": [
+   "Assault Phase: Overwatch"
+  ],
+  "why": "core reaction 'Assault Phase: Overwatch'"
+ },
+ {
+  "keyword": "return fire",
+  "accept": [
+   "Shooting Phase: Return Fire"
+  ],
+  "why": "core reaction"
+ },
+ {
+  "keyword": "returning fire",
+  "accept": [
+   "Shooting Phase: Return Fire"
+  ],
+  "why": "core reaction"
+ },
+ {
+  "keyword": "return fire reaction",
+  "accept": [
+   "Shooting Phase: Return Fire"
+  ],
+  "why": "core reaction"
+ },
+ {
+  "keyword": "shoot back",
+  "accept": [
+   "Shooting Phase: Return Fire"
+  ],
+  "why": "core reaction"
+ },
+ {
+  "keyword": "reposition",
+  "accept": [
+   "Movement Phase: Reposition"
+  ],
+  "why": "core reaction"
+ },
+ {
+  "keyword": "reposition reaction",
+  "accept": [
+   "Movement Phase: Reposition"
+  ],
+  "why": "core reaction"
+ },
+ {
+  "keyword": "reaction allotment",
+  "accept": [
+   "Reaction Allotments",
+   "Base Reaction Allotment",
+   "Reactions"
+  ],
+  "why": "reaction allotment rules"
+ },
+ {
+  "keyword": "reaction points",
+  "accept": [
+   "Reaction Allotments",
+   "Base Reaction Allotment",
+   "Reactions"
+  ],
+  "why": "reaction allotment rules"
+ },
+ {
+  "keyword": "how many reactions",
+  "accept": [
+   "Reaction Allotments",
+   "Base Reaction Allotment",
+   "Reactions"
+  ],
+  "why": "reaction allotment rules"
+ },
+ {
+  "keyword": "reactions",
+  "accept": [
+   "Reaction Allotments",
+   "Base Reaction Allotment",
+   "Reactions"
+  ],
+  "why": "reaction allotment rules"
+ },
+ {
+  "keyword": "additional reaction point",
+  "accept": [
+   "Additional Reaction Point"
+  ],
+  "why": "army-list bonus reaction point (several factions)"
+ },
+ {
+  "keyword": "core reactions",
+  "accept": [
+   "Core Reactions"
+  ],
+  "why": "section name"
+ },
+ {
+  "keyword": "advanced reactions",
+  "accept": [
+   "Advanced Reactions \u2014 Principles of Combat"
+  ],
+  "why": "section name"
+ },
+ {
+  "keyword": "death or glory",
+  "accept": [
+   "Death or Glory"
+  ],
+  "why": "advanced reaction"
+ },
+ {
+  "keyword": "intercept",
+  "accept": [
+   "Intercept"
+  ],
+  "why": "advanced reaction"
+ },
+ {
+  "keyword": "evade",
+  "accept": [
+   "Evade"
+  ],
+  "why": "advanced reaction"
+ },
+ {
+  "keyword": "nullify",
+  "accept": [
+   "Nullify"
+  ],
+  "why": "advanced reaction"
+ },
+ {
+  "keyword": "heroic intervention",
+  "accept": [
+   "Heroic Intervention"
+  ],
+  "why": "advanced reaction"
+ },
+ {
+  "keyword": "combat air patrol",
+  "accept": [
+   "Advanced Reaction: Combat Air Patrol",
+   "Combat Air Patrol"
+  ],
+  "why": "advanced reaction"
+ },
+ {
+  "keyword": "using reactions",
+  "accept": [
+   "Using Reactions"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "to hit",
+  "accept": [
+   "Hit Tests",
+   "Ranged Hit Tests",
+   "6. Make Hit Tests"
+  ],
+  "why": "hit test table"
+ },
+ {
+  "keyword": "to hit chart",
+  "accept": [
+   "Hit Tests",
+   "Ranged Hit Tests",
+   "6. Make Hit Tests"
+  ],
+  "why": "hit test table"
+ },
+ {
+  "keyword": "hit chart",
+  "accept": [
+   "Hit Tests",
+   "Ranged Hit Tests",
+   "6. Make Hit Tests"
+  ],
+  "why": "hit test table"
+ },
+ {
+  "keyword": "hit roll",
+  "accept": [
+   "Hit Tests",
+   "Ranged Hit Tests",
+   "6. Make Hit Tests"
+  ],
+  "why": "hit test table"
+ },
+ {
+  "keyword": "hit test",
+  "accept": [
+   "Hit Tests",
+   "Ranged Hit Tests",
+   "6. Make Hit Tests"
+  ],
+  "why": "hit test table"
+ },
+ {
+  "keyword": "hit tests",
+  "accept": [
+   "Hit Tests",
+   "Ranged Hit Tests",
+   "6. Make Hit Tests"
+  ],
+  "why": "hit test table"
+ },
+ {
+  "keyword": "rolling to hit",
+  "accept": [
+   "Hit Tests",
+   "Ranged Hit Tests",
+   "6. Make Hit Tests"
+  ],
+  "why": "hit test table"
+ },
+ {
+  "keyword": "ballistic skill",
+  "accept": [
+   "Hit Tests",
+   "Ranged Hit Tests",
+   "6. Make Hit Tests"
+  ],
+  "why": "hit test table"
+ },
+ {
+  "keyword": "BS to hit",
+  "accept": [
+   "Hit Tests",
+   "Ranged Hit Tests",
+   "6. Make Hit Tests"
+  ],
+  "why": "hit test table"
+ },
+ {
+  "keyword": "melee hit test",
+  "accept": [
+   "Melee Hit Tests",
+   "5. Make Hit Tests"
+  ],
+  "why": "WS vs WS table"
+ },
+ {
+  "keyword": "weapon skill chart",
+  "accept": [
+   "Melee Hit Tests"
+  ],
+  "why": "WS comparison table"
+ },
+ {
+  "keyword": "to wound",
+  "accept": [
+   "Wound Tests",
+   "7. Make Wound Tests"
+  ],
+  "why": "wound test table"
+ },
+ {
+  "keyword": "to wound chart",
+  "accept": [
+   "Wound Tests",
+   "7. Make Wound Tests"
+  ],
+  "why": "wound test table"
+ },
+ {
+  "keyword": "wound roll",
+  "accept": [
+   "Wound Tests",
+   "7. Make Wound Tests"
+  ],
+  "why": "wound test table"
+ },
+ {
+  "keyword": "wound test",
+  "accept": [
+   "Wound Tests",
+   "7. Make Wound Tests"
+  ],
+  "why": "wound test table"
+ },
+ {
+  "keyword": "wound tests",
+  "accept": [
+   "Wound Tests",
+   "7. Make Wound Tests"
+  ],
+  "why": "wound test table"
+ },
+ {
+  "keyword": "strength vs toughness",
+  "accept": [
+   "Wound Tests",
+   "7. Make Wound Tests"
+  ],
+  "why": "wound test table"
+ },
+ {
+  "keyword": "armour penetration",
+  "accept": [
+   "Armour Penetration Test"
+  ],
+  "why": "exact entry 'Armour Penetration Test'"
+ },
+ {
+  "keyword": "armor penetration",
+  "accept": [
+   "Armour Penetration Test"
+  ],
+  "why": "exact entry 'Armour Penetration Test'"
+ },
+ {
+  "keyword": "armour pen",
+  "accept": [
+   "Armour Penetration Test"
+  ],
+  "why": "exact entry 'Armour Penetration Test'"
+ },
+ {
+  "keyword": "pen roll",
+  "accept": [
+   "Armour Penetration Test"
+  ],
+  "why": "exact entry 'Armour Penetration Test'"
+ },
+ {
+  "keyword": "penetration test",
+  "accept": [
+   "Armour Penetration Test"
+  ],
+  "why": "exact entry 'Armour Penetration Test'"
+ },
+ {
+  "keyword": "rolling to penetrate",
+  "accept": [
+   "Armour Penetration Test"
+  ],
+  "why": "exact entry 'Armour Penetration Test'"
+ },
+ {
+  "keyword": "glancing hit",
+  "accept": [
+   "Armour Penetration Test",
+   "Resolving Damage",
+   "9. Make Saving Throws & Damage Mitigation Tests"
+  ],
+  "why": "glancing/penetrating results in Armour Penetration Test and damage resolution"
+ },
+ {
+  "keyword": "glancing hits",
+  "accept": [
+   "Armour Penetration Test",
+   "Resolving Damage",
+   "9. Make Saving Throws & Damage Mitigation Tests"
+  ],
+  "why": "glancing/penetrating results in Armour Penetration Test and damage resolution"
+ },
+ {
+  "keyword": "glance",
+  "accept": [
+   "Armour Penetration Test",
+   "Resolving Damage",
+   "9. Make Saving Throws & Damage Mitigation Tests"
+  ],
+  "why": "glancing/penetrating results in Armour Penetration Test and damage resolution"
+ },
+ {
+  "keyword": "glancing",
+  "accept": [
+   "Armour Penetration Test",
+   "Resolving Damage",
+   "9. Make Saving Throws & Damage Mitigation Tests"
+  ],
+  "why": "glancing/penetrating results in Armour Penetration Test and damage resolution"
+ },
+ {
+  "keyword": "penetrating hit",
+  "accept": [
+   "Armour Penetration Test",
+   "Resolving Damage",
+   "9. Make Saving Throws & Damage Mitigation Tests"
+  ],
+  "why": "glancing/penetrating results in Armour Penetration Test and damage resolution"
+ },
+ {
+  "keyword": "penetrating hits",
+  "accept": [
+   "Armour Penetration Test",
+   "Resolving Damage",
+   "9. Make Saving Throws & Damage Mitigation Tests"
+  ],
+  "why": "glancing/penetrating results in Armour Penetration Test and damage resolution"
+ },
+ {
+  "keyword": "pen hit",
+  "accept": [
+   "Armour Penetration Test",
+   "Resolving Damage",
+   "9. Make Saving Throws & Damage Mitigation Tests"
+  ],
+  "why": "glancing/penetrating results in Armour Penetration Test and damage resolution"
+ },
+ {
+  "keyword": "vehicle damage table",
+  "accept": [
+   "Vehicle Damage Table"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "vehicle damage chart",
+  "accept": [
+   "Vehicle Damage Table"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "damage table vehicles",
+  "accept": [
+   "Vehicle Damage Table"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "vehicle damage",
+  "accept": [
+   "Vehicle Damage Table"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "hull points",
+  "accept": [
+   "Damage Characteristics",
+   "Vehicle Characteristics",
+   "Vehicle Damage Table"
+  ],
+  "why": "no entry named Hull Points; HP defined in characteristics"
+ },
+ {
+  "keyword": "losing hull points",
+  "accept": [
+   "Vehicle Damage Table",
+   "Resolving Damage"
+  ],
+  "why": "HP loss in damage resolution"
+ },
+ {
+  "keyword": "wrecked",
+  "accept": [
+   "Wrecked Vehicles",
+   "Removing Vehicle Models as Casualties"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "vehicle destroyed",
+  "accept": [
+   "Removing Vehicle Models as Casualties",
+   "Wrecked Vehicles"
+  ],
+  "why": "vehicle casualty"
+ },
+ {
+  "keyword": "explodes",
+  "accept": [
+   "Explodes (X)"
+  ],
+  "why": "special rule"
+ },
+ {
+  "keyword": "vehicle explodes",
+  "accept": [
+   "Explodes (X)",
+   "Wrecked Vehicles"
+  ],
+  "why": "special rule; 3e has no generic explosion result"
+ },
+ {
+  "keyword": "armour facing",
+  "accept": [
+   "Vehicles and Damage",
+   "Armour Penetration Test"
+  ],
+  "why": "facings defined in Vehicles and Damage"
+ },
+ {
+  "keyword": "rear armour",
+  "accept": [
+   "Vehicles and Damage"
+  ],
+  "why": "facing determination"
+ },
+ {
+  "keyword": "side armour",
+  "accept": [
+   "Vehicles and Damage"
+  ],
+  "why": "facing determination"
+ },
+ {
+  "keyword": "shooting at vehicles",
+  "accept": [
+   "Vehicles and Damage",
+   "Vehicles in the Shooting Phase"
+  ],
+  "why": "targeting vehicles"
+ },
+ {
+  "keyword": "vehicle statuses",
+  "accept": [
+   "Vehicles and Tactical Statuses"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "repair",
+  "accept": [
+   "Repair Tests"
+  ],
+  "why": "vehicles remove statuses via Repair Tests"
+ },
+ {
+  "keyword": "repair test",
+  "accept": [
+   "Repair Tests"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "armour save",
+  "accept": [
+   "Armour Tests",
+   "Saving Throws"
+  ],
+  "why": "Armour Tests"
+ },
+ {
+  "keyword": "armor save",
+  "accept": [
+   "Armour Tests",
+   "Saving Throws"
+  ],
+  "why": "Armour Tests"
+ },
+ {
+  "keyword": "armour saves",
+  "accept": [
+   "Armour Tests",
+   "Saving Throws"
+  ],
+  "why": "Armour Tests"
+ },
+ {
+  "keyword": "save roll",
+  "accept": [
+   "Armour Tests",
+   "Saving Throws"
+  ],
+  "why": "Armour Tests"
+ },
+ {
+  "keyword": "cover save",
+  "accept": [
+   "Cover Tests"
+  ],
+  "why": "Cover Tests"
+ },
+ {
+  "keyword": "cover saves",
+  "accept": [
+   "Cover Tests"
+  ],
+  "why": "Cover Tests"
+ },
+ {
+  "keyword": "cover",
+  "accept": [
+   "Cover Tests",
+   "Area Terrain"
+  ],
+  "why": "Cover Tests"
+ },
+ {
+  "keyword": "in cover",
+  "accept": [
+   "Cover Tests",
+   "Area Terrain"
+  ],
+  "why": "Cover Tests"
+ },
+ {
+  "keyword": "cover test",
+  "accept": [
+   "Cover Tests"
+  ],
+  "why": "Cover Tests"
+ },
+ {
+  "keyword": "invulnerable save",
+  "accept": [
+   "Invulnerable Tests"
+  ],
+  "why": "Invulnerable Tests"
+ },
+ {
+  "keyword": "invuln",
+  "accept": [
+   "Invulnerable Tests"
+  ],
+  "why": "Invulnerable Tests"
+ },
+ {
+  "keyword": "invul save",
+  "accept": [
+   "Invulnerable Tests"
+  ],
+  "why": "Invulnerable Tests"
+ },
+ {
+  "keyword": "invulnerable",
+  "accept": [
+   "Invulnerable Tests"
+  ],
+  "why": "Invulnerable Tests"
+ },
+ {
+  "keyword": "vehicle saves",
+  "accept": [
+   "Vehicles and Saving Throws"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "feel no pain",
+  "accept": [
+   "Feel No Pain (X)",
+   "Damage Mitigation Tests"
+  ],
+  "why": "special rule"
+ },
+ {
+  "keyword": "damage mitigation",
+  "accept": [
+   "Damage Mitigation Tests"
+  ],
+  "why": "exact (two entries same name)"
+ },
+ {
+  "keyword": "shrouded",
+  "accept": [
+   "Shrouded (X)"
+  ],
+  "why": "special rule"
+ },
+ {
+  "keyword": "line of sight",
+  "accept": [
+   "Line of Sight",
+   "2. Check Target"
+  ],
+  "why": "Line of Sight"
+ },
+ {
+  "keyword": "LOS",
+  "accept": [
+   "Line of Sight",
+   "2. Check Target"
+  ],
+  "why": "Line of Sight"
+ },
+ {
+  "keyword": "true line of sight",
+  "accept": [
+   "Line of Sight",
+   "2. Check Target"
+  ],
+  "why": "Line of Sight"
+ },
+ {
+  "keyword": "can I see",
+  "accept": [
+   "Line of Sight"
+  ],
+  "why": "Line of Sight"
+ },
+ {
+  "keyword": "firing arc",
+  "accept": [
+   "Firing Arcs",
+   "Vehicle Firing Arcs and Weapon Mounts",
+   "Weapon Mounts"
+  ],
+  "why": "vehicle arcs and weapon mounts"
+ },
+ {
+  "keyword": "firing arcs",
+  "accept": [
+   "Firing Arcs",
+   "Vehicle Firing Arcs and Weapon Mounts",
+   "Weapon Mounts"
+  ],
+  "why": "vehicle arcs and weapon mounts"
+ },
+ {
+  "keyword": "weapon arc",
+  "accept": [
+   "Firing Arcs",
+   "Vehicle Firing Arcs and Weapon Mounts",
+   "Weapon Mounts"
+  ],
+  "why": "vehicle arcs and weapon mounts"
+ },
+ {
+  "keyword": "fire arc",
+  "accept": [
+   "Firing Arcs",
+   "Vehicle Firing Arcs and Weapon Mounts",
+   "Weapon Mounts"
+  ],
+  "why": "vehicle arcs and weapon mounts"
+ },
+ {
+  "keyword": "sponson",
+  "accept": [
+   "Firing Arcs",
+   "Vehicle Firing Arcs and Weapon Mounts",
+   "Weapon Mounts"
+  ],
+  "why": "vehicle arcs and weapon mounts"
+ },
+ {
+  "keyword": "sponsons",
+  "accept": [
+   "Firing Arcs",
+   "Vehicle Firing Arcs and Weapon Mounts",
+   "Weapon Mounts"
+  ],
+  "why": "vehicle arcs and weapon mounts"
+ },
+ {
+  "keyword": "hull mounted",
+  "accept": [
+   "Firing Arcs",
+   "Vehicle Firing Arcs and Weapon Mounts",
+   "Weapon Mounts"
+  ],
+  "why": "vehicle arcs and weapon mounts"
+ },
+ {
+  "keyword": "turret",
+  "accept": [
+   "Firing Arcs",
+   "Vehicle Firing Arcs and Weapon Mounts",
+   "Weapon Mounts"
+  ],
+  "why": "vehicle arcs and weapon mounts"
+ },
+ {
+  "keyword": "knight firing arcs",
+  "accept": [
+   "Knight Firing Arcs",
+   "Knight Facings and Arcs"
+  ],
+  "why": "knight-specific"
+ },
+ {
+  "keyword": "titan firing arcs",
+  "accept": [
+   "Titan Firing Arcs"
+  ],
+  "why": "titan-specific"
+ },
+ {
+  "keyword": "blast",
+  "accept": [
+   "Blast (X)",
+   "Templates & Blast Markers",
+   "Template and Blast Weapons"
+  ],
+  "why": "Blast (X) + template/blast rules"
+ },
+ {
+  "keyword": "blast marker",
+  "accept": [
+   "Blast (X)",
+   "Templates & Blast Markers",
+   "Template and Blast Weapons"
+  ],
+  "why": "Blast (X) + template/blast rules"
+ },
+ {
+  "keyword": "large blast",
+  "accept": [
+   "Blast (X)",
+   "Templates & Blast Markers",
+   "Template and Blast Weapons"
+  ],
+  "why": "Blast (X) + template/blast rules"
+ },
+ {
+  "keyword": "blast weapons",
+  "accept": [
+   "Blast (X)",
+   "Templates & Blast Markers",
+   "Template and Blast Weapons"
+  ],
+  "why": "Blast (X) + template/blast rules"
+ },
+ {
+  "keyword": "template",
+  "accept": [
+   "Template",
+   "Templates & Blast Markers",
+   "Template and Blast Weapons"
+  ],
+  "why": "Template rule"
+ },
+ {
+  "keyword": "flame template",
+  "accept": [
+   "Template",
+   "Templates & Blast Markers",
+   "Template and Blast Weapons"
+  ],
+  "why": "Template rule"
+ },
+ {
+  "keyword": "flamer template",
+  "accept": [
+   "Template",
+   "Templates & Blast Markers",
+   "Template and Blast Weapons"
+  ],
+  "why": "Template rule"
+ },
+ {
+  "keyword": "template weapons",
+  "accept": [
+   "Template",
+   "Templates & Blast Markers",
+   "Template and Blast Weapons"
+  ],
+  "why": "Template rule"
+ },
+ {
+  "keyword": "scatter",
+  "accept": [
+   "Scatter Dice",
+   "Scatter Rolls",
+   "Indirect Scatter Rolls"
+  ],
+  "why": "scatter rules"
+ },
+ {
+  "keyword": "scatter dice",
+  "accept": [
+   "Scatter Dice",
+   "Scatter Rolls",
+   "Indirect Scatter Rolls"
+  ],
+  "why": "scatter rules"
+ },
+ {
+  "keyword": "scattering",
+  "accept": [
+   "Scatter Dice",
+   "Scatter Rolls",
+   "Indirect Scatter Rolls"
+  ],
+  "why": "scatter rules"
+ },
+ {
+  "keyword": "blast scatter",
+  "accept": [
+   "Scatter Dice",
+   "Scatter Rolls",
+   "Indirect Scatter Rolls"
+  ],
+  "why": "scatter rules"
+ },
+ {
+  "keyword": "barrage",
+  "accept": [
+   "Barrage (X)",
+   "Indirect Scatter Rolls"
+  ],
+  "why": "Barrage special rule"
+ },
+ {
+  "keyword": "indirect fire",
+  "accept": [
+   "Barrage (X)",
+   "Indirect Scatter Rolls"
+  ],
+  "why": "Barrage special rule"
+ },
+ {
+  "keyword": "indirect",
+  "accept": [
+   "Barrage (X)",
+   "Indirect Scatter Rolls"
+  ],
+  "why": "Barrage special rule"
+ },
+ {
+  "keyword": "split fire",
+  "accept": [
+   "Attacking Multiple Target Units",
+   "Vehicles in the Shooting Phase",
+   "Splitting Fire Groups"
+  ],
+  "why": "vehicle multiple Shooting Attacks; fire groups split"
+ },
+ {
+  "keyword": "splitting fire",
+  "accept": [
+   "Attacking Multiple Target Units",
+   "Vehicles in the Shooting Phase",
+   "Splitting Fire Groups"
+  ],
+  "why": "vehicle multiple Shooting Attacks; fire groups split"
+ },
+ {
+  "keyword": "shooting multiple targets",
+  "accept": [
+   "Attacking Multiple Target Units",
+   "Vehicles in the Shooting Phase",
+   "Splitting Fire Groups"
+  ],
+  "why": "vehicle multiple Shooting Attacks; fire groups split"
+ },
+ {
+  "keyword": "multiple shooting attacks",
+  "accept": [
+   "Attacking Multiple Target Units",
+   "Vehicles in the Shooting Phase",
+   "Splitting Fire Groups"
+  ],
+  "why": "vehicle multiple Shooting Attacks; fire groups split"
+ },
+ {
+  "keyword": "shoot two targets",
+  "accept": [
+   "Attacking Multiple Target Units",
+   "Vehicles in the Shooting Phase",
+   "Splitting Fire Groups"
+  ],
+  "why": "vehicle multiple Shooting Attacks; fire groups split"
+ },
+ {
+  "keyword": "fire at different targets",
+  "accept": [
+   "Attacking Multiple Target Units",
+   "Vehicles in the Shooting Phase",
+   "Splitting Fire Groups"
+  ],
+  "why": "vehicle multiple Shooting Attacks; fire groups split"
+ },
+ {
+  "keyword": "fire groups",
+  "accept": [
+   "4. Set Fire Groups",
+   "Splitting Fire Groups"
+  ],
+  "why": "fire group step"
+ },
+ {
+  "keyword": "independent fire",
+  "accept": [
+   "Independent Fire"
+  ],
+  "why": "special rule"
+ },
+ {
+  "keyword": "defensive weapons",
+  "accept": [
+   "Defensive Weapons and Battle Weapons"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "defensive weapon",
+  "accept": [
+   "Defensive Weapons and Battle Weapons"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "battle weapons",
+  "accept": [
+   "Defensive Weapons and Battle Weapons"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "ordnance",
+  "accept": [
+   "Ordnance (X)"
+  ],
+  "why": "special rule (ordinance is a common mis-say)"
+ },
+ {
+  "keyword": "ordinance",
+  "accept": [
+   "Ordnance (X)"
+  ],
+  "why": "special rule (ordinance is a common mis-say)"
+ },
+ {
+  "keyword": "ordnance weapons",
+  "accept": [
+   "Ordnance (X)"
+  ],
+  "why": "special rule (ordinance is a common mis-say)"
+ },
+ {
+  "keyword": "heavy",
+  "accept": [
+   "Heavy (X)"
+  ],
+  "why": "Heavy (X) special rule (bonus when Stationary)"
+ },
+ {
+  "keyword": "heavy weapons",
+  "accept": [
+   "Heavy (X)"
+  ],
+  "why": "Heavy (X) special rule (bonus when Stationary)"
+ },
+ {
+  "keyword": "moving and shooting heavy weapons",
+  "accept": [
+   "Heavy (X)",
+   "Moved vs Stationary"
+  ],
+  "why": "Heavy (X) special rule (bonus when Stationary)"
+ },
+ {
+  "keyword": "heavy weapon moved",
+  "accept": [
+   "Heavy (X)",
+   "Moved vs Stationary"
+  ],
+  "why": "Heavy (X) special rule (bonus when Stationary)"
+ },
+ {
+  "keyword": "stationary",
+  "accept": [
+   "Moved vs Stationary"
+  ],
+  "why": "definition"
+ },
+ {
+  "keyword": "rush",
+  "accept": [
+   "Rush"
+  ],
+  "why": "HH3 'Rush' replaces 40K run/advance"
+ },
+ {
+  "keyword": "rushing",
+  "accept": [
+   "Rush"
+  ],
+  "why": "HH3 'Rush' replaces 40K run/advance"
+ },
+ {
+  "keyword": "run",
+  "accept": [
+   "Rush"
+  ],
+  "why": "HH3 'Rush' replaces 40K run/advance"
+ },
+ {
+  "keyword": "running",
+  "accept": [
+   "Rush"
+  ],
+  "why": "HH3 'Rush' replaces 40K run/advance"
+ },
+ {
+  "keyword": "advance",
+  "accept": [
+   "Rush"
+  ],
+  "why": "HH3 'Rush' replaces 40K run/advance"
+ },
+ {
+  "keyword": "shooting after rushing",
+  "accept": [
+   "Rush",
+   "Vehicles and Rushing"
+  ],
+  "why": "HH3 'Rush' replaces 40K run/advance"
+ },
+ {
+  "keyword": "vehicles rushing",
+  "accept": [
+   "Vehicles and Rushing"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "knights rushing",
+  "accept": [
+   "Knights and Rushing"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "flyer",
+  "accept": [
+   "Flyers",
+   "The Flyer Sub-Type"
+  ],
+  "why": "flyer rules"
+ },
+ {
+  "keyword": "flyers",
+  "accept": [
+   "Flyers",
+   "The Flyer Sub-Type"
+  ],
+  "why": "flyer rules"
+ },
+ {
+  "keyword": "flier",
+  "accept": [
+   "Flyers",
+   "The Flyer Sub-Type"
+  ],
+  "why": "flyer rules"
+ },
+ {
+  "keyword": "aircraft",
+  "accept": [
+   "Flyers",
+   "The Flyer Sub-Type"
+  ],
+  "why": "flyer rules"
+ },
+ {
+  "keyword": "shooting at flyers",
+  "accept": [
+   "Flyers",
+   "The Flyer Sub-Type",
+   "Skyfire"
+  ],
+  "why": "flyer rules"
+ },
+ {
+  "keyword": "skyfire",
+  "accept": [
+   "Skyfire"
+  ],
+  "why": "special rule"
+ },
+ {
+  "keyword": "strafing run",
+  "accept": [
+   "Combat Assignment: Strafing Run"
+  ],
+  "why": "flyer combat assignment"
+ },
+ {
+  "keyword": "combat assignment",
+  "accept": [
+   "Flyer Combat Assignments"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "pistol",
+  "accept": [
+   "Pistol"
+  ],
+  "why": "special rule"
+ },
+ {
+  "keyword": "precision",
+  "accept": [
+   "Precision (X)"
+  ],
+  "why": "special rule"
+ },
+ {
+  "keyword": "breaching",
+  "accept": [
+   "Breaching (X)"
+  ],
+  "why": "special rule"
+ },
+ {
+  "keyword": "rending",
+  "accept": [
+   "Rending (X)"
+  ],
+  "why": "special rule"
+ },
+ {
+  "keyword": "armourbane",
+  "accept": [
+   "Armourbane"
+  ],
+  "why": "special rule"
+ },
+ {
+  "keyword": "melta",
+  "accept": [
+   "Melta (X)"
+  ],
+  "why": "special rule"
+ },
+ {
+  "keyword": "pinning weapons",
+  "accept": [
+   "Pinning (X)"
+  ],
+  "why": "special rule"
+ },
+ {
+  "keyword": "power hungry",
+  "accept": [
+   "Power Hungry"
+  ],
+  "why": "titan weapon rule forcing snap shots"
+ },
+ {
+  "keyword": "difficult terrain",
+  "accept": [
+   "Difficult Terrain",
+   "Moving into Difficult Terrain",
+   "Moving within Difficult Terrain"
+  ],
+  "why": "Difficult Terrain"
+ },
+ {
+  "keyword": "rough terrain",
+  "accept": [
+   "Difficult Terrain",
+   "Moving into Difficult Terrain",
+   "Moving within Difficult Terrain"
+  ],
+  "why": "Difficult Terrain"
+ },
+ {
+  "keyword": "moving through terrain",
+  "accept": [
+   "Difficult Terrain",
+   "Moving into Difficult Terrain",
+   "Moving within Difficult Terrain"
+  ],
+  "why": "Difficult Terrain"
+ },
+ {
+  "keyword": "difficult ground",
+  "accept": [
+   "Difficult Terrain",
+   "Moving into Difficult Terrain",
+   "Moving within Difficult Terrain"
+  ],
+  "why": "Difficult Terrain"
+ },
+ {
+  "keyword": "charging through terrain",
+  "accept": [
+   "Charging through Difficult Terrain"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "dangerous terrain",
+  "accept": [
+   "Dangerous Terrain",
+   "Dangerous Terrain Tests"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "dangerous terrain test",
+  "accept": [
+   "Dangerous Terrain",
+   "Dangerous Terrain Tests"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "impassable terrain",
+  "accept": [
+   "Impassable Terrain"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "pivot",
+  "accept": [
+   "Vehicles in the Movement Phase",
+   "Titans and the Movement Phase"
+  ],
+  "why": "pivot rules in vehicle/titan movement"
+ },
+ {
+  "keyword": "pivoting",
+  "accept": [
+   "Vehicles in the Movement Phase",
+   "Titans and the Movement Phase"
+  ],
+  "why": "pivot rules in vehicle/titan movement"
+ },
+ {
+  "keyword": "turning a tank",
+  "accept": [
+   "Vehicles in the Movement Phase",
+   "Titans and the Movement Phase"
+  ],
+  "why": "pivot rules in vehicle/titan movement"
+ },
+ {
+  "keyword": "vehicle turning",
+  "accept": [
+   "Vehicles in the Movement Phase",
+   "Titans and the Movement Phase"
+  ],
+  "why": "pivot rules in vehicle/titan movement"
+ },
+ {
+  "keyword": "vehicle movement",
+  "accept": [
+   "Vehicles in the Movement Phase"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "embark",
+  "accept": [
+   "Embarking",
+   "Embarking and Disembarking"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "embarking",
+  "accept": [
+   "Embarking",
+   "Embarking and Disembarking"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "getting in a transport",
+  "accept": [
+   "Embarking",
+   "Embarking and Disembarking"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "disembark",
+  "accept": [
+   "Disembarking",
+   "Embarking and Disembarking",
+   "Placing Disembarked Models",
+   "Disembarkation and Shooting or Charging"
+  ],
+  "why": "disembark rules"
+ },
+ {
+  "keyword": "disembarking",
+  "accept": [
+   "Disembarking",
+   "Embarking and Disembarking",
+   "Placing Disembarked Models",
+   "Disembarkation and Shooting or Charging"
+  ],
+  "why": "disembark rules"
+ },
+ {
+  "keyword": "getting out of a transport",
+  "accept": [
+   "Disembarking",
+   "Embarking and Disembarking",
+   "Placing Disembarked Models",
+   "Disembarkation and Shooting or Charging"
+  ],
+  "why": "disembark rules"
+ },
+ {
+  "keyword": "disembark and charge",
+  "accept": [
+   "Disembarking",
+   "Embarking and Disembarking",
+   "Placing Disembarked Models",
+   "Disembarkation and Shooting or Charging"
+  ],
+  "why": "disembark rules"
+ },
+ {
+  "keyword": "access points",
+  "accept": [
+   "Access Points"
+  ],
+  "why": "exact (core + rule duplicates)"
+ },
+ {
+  "keyword": "emergency disembark",
+  "accept": [
+   "Emergency Disembarkation",
+   "Removing Transports as Casualties"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "transport destroyed",
+  "accept": [
+   "Emergency Disembarkation",
+   "Removing Transports as Casualties"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "transport blown up",
+  "accept": [
+   "Emergency Disembarkation",
+   "Removing Transports as Casualties"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "deep strike",
+  "accept": [
+   "Deep Strike"
+  ],
+  "why": "special rule"
+ },
+ {
+  "keyword": "deepstrike",
+  "accept": [
+   "Deep Strike"
+  ],
+  "why": "special rule"
+ },
+ {
+  "keyword": "deep striking",
+  "accept": [
+   "Deep Strike"
+  ],
+  "why": "special rule"
+ },
+ {
+  "keyword": "deep streak",
+  "accept": [
+   "Deep Strike"
+  ],
+  "why": "special rule"
+ },
+ {
+  "keyword": "outflank",
+  "accept": [
+   "Outflank"
+  ],
+  "why": "special rule"
+ },
+ {
+  "keyword": "outflanking",
+  "accept": [
+   "Outflank"
+  ],
+  "why": "special rule"
+ },
+ {
+  "keyword": "out flank",
+  "accept": [
+   "Outflank"
+  ],
+  "why": "special rule"
+ },
+ {
+  "keyword": "reserves",
+  "accept": [
+   "Reserves",
+   "Reserves Sub-Phase",
+   "Entering Play From Reserves"
+  ],
+  "why": "reserves"
+ },
+ {
+  "keyword": "reserve",
+  "accept": [
+   "Reserves",
+   "Reserves Sub-Phase",
+   "Entering Play From Reserves"
+  ],
+  "why": "reserves"
+ },
+ {
+  "keyword": "coming in from reserves",
+  "accept": [
+   "Reserves",
+   "Reserves Sub-Phase",
+   "Entering Play From Reserves"
+  ],
+  "why": "reserves"
+ },
+ {
+  "keyword": "reserve roll",
+  "accept": [
+   "Reserves",
+   "Reserves Sub-Phase",
+   "Entering Play From Reserves"
+  ],
+  "why": "reserves"
+ },
+ {
+  "keyword": "tunnel",
+  "accept": [
+   "Subterranean",
+   "Seismic Macro-drill"
+  ],
+  "why": "Subterranean rule; no entry named Tunnel"
+ },
+ {
+  "keyword": "tunnels",
+  "accept": [
+   "Subterranean",
+   "Seismic Macro-drill"
+  ],
+  "why": "Subterranean rule; no entry named Tunnel"
+ },
+ {
+  "keyword": "tunnelling",
+  "accept": [
+   "Subterranean",
+   "Seismic Macro-drill"
+  ],
+  "why": "Subterranean rule; no entry named Tunnel"
+ },
+ {
+  "keyword": "subterranean",
+  "accept": [
+   "Subterranean",
+   "Seismic Macro-drill"
+  ],
+  "why": "Subterranean rule; no entry named Tunnel"
+ },
+ {
+  "keyword": "subterranean assault",
+  "accept": [
+   "Subterranean",
+   "Seismic Macro-drill"
+  ],
+  "why": "Subterranean rule; no entry named Tunnel"
+ },
+ {
+  "keyword": "infiltrate",
+  "accept": [
+   "Infiltrate (X)"
+  ],
+  "why": "special rule"
+ },
+ {
+  "keyword": "scout move",
+  "accept": [
+   "Infiltrate (X)"
+  ],
+  "why": "no Scout rule; Infiltrate (X) is nearest (pre-game redeploy)"
+ },
+ {
+  "keyword": "unit coherency",
+  "accept": [
+   "Unit Coherency",
+   "Out of Coherency"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "measuring",
+  "accept": [
+   "Measuring",
+   "Measuring the Distance Between Models"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "moving through units",
+  "accept": [
+   "Moving Through Other Units"
+  ],
+  "why": "vehicles moving through units"
+ },
+ {
+  "keyword": "tank shock",
+  "accept": [
+   "Moving Through Other Units",
+   "Death or Glory",
+   "Shock Ram"
+  ],
+  "why": "no Tank Shock/Ram entry; HH3 equivalent is vehicles moving through units + Death or Glory reaction"
+ },
+ {
+  "keyword": "tank shocking",
+  "accept": [
+   "Moving Through Other Units",
+   "Death or Glory",
+   "Shock Ram"
+  ],
+  "why": "no Tank Shock/Ram entry; HH3 equivalent is vehicles moving through units + Death or Glory reaction"
+ },
+ {
+  "keyword": "tank shot",
+  "accept": [
+   "Moving Through Other Units",
+   "Death or Glory",
+   "Shock Ram"
+  ],
+  "why": "no Tank Shock/Ram entry; HH3 equivalent is vehicles moving through units + Death or Glory reaction"
+ },
+ {
+  "keyword": "ramming",
+  "accept": [
+   "Moving Through Other Units",
+   "Death or Glory",
+   "Shock Ram"
+  ],
+  "why": "no Tank Shock/Ram entry; HH3 equivalent is vehicles moving through units + Death or Glory reaction"
+ },
+ {
+  "keyword": "ram",
+  "accept": [
+   "Moving Through Other Units",
+   "Death or Glory",
+   "Shock Ram"
+  ],
+  "why": "no Tank Shock/Ram entry; HH3 equivalent is vehicles moving through units + Death or Glory reaction"
+ },
+ {
+  "keyword": "ram a tank",
+  "accept": [
+   "Moving Through Other Units",
+   "Death or Glory",
+   "Shock Ram"
+  ],
+  "why": "no Tank Shock/Ram entry; HH3 equivalent is vehicles moving through units + Death or Glory reaction"
+ },
+ {
+  "keyword": "running over infantry",
+  "accept": [
+   "Moving Through Other Units",
+   "Death or Glory",
+   "Shock Ram"
+  ],
+  "why": "no Tank Shock/Ram entry; HH3 equivalent is vehicles moving through units + Death or Glory reaction"
+ },
+ {
+  "keyword": "moving through infantry",
+  "accept": [
+   "Moving Through Other Units",
+   "Death or Glory",
+   "Shock Ram"
+  ],
+  "why": "no Tank Shock/Ram entry; HH3 equivalent is vehicles moving through units + Death or Glory reaction"
+ },
+ {
+  "keyword": "shock ram",
+  "accept": [
+   "Shock Ram"
+  ],
+  "why": "special rule"
+ },
+ {
+  "keyword": "charge",
+  "accept": [
+   "Charge Sub-Phase",
+   "5. Make Charge Move"
+  ],
+  "why": "charge rules"
+ },
+ {
+  "keyword": "charging",
+  "accept": [
+   "Charge Sub-Phase",
+   "5. Make Charge Move"
+  ],
+  "why": "charge rules"
+ },
+ {
+  "keyword": "charges",
+  "accept": [
+   "Charge Sub-Phase",
+   "5. Make Charge Move"
+  ],
+  "why": "charge rules"
+ },
+ {
+  "keyword": "declare charge",
+  "accept": [
+   "Charge Sub-Phase",
+   "5. Make Charge Move"
+  ],
+  "why": "charge rules"
+ },
+ {
+  "keyword": "charging a titan",
+  "accept": [
+   "Titans and the Assault Phase"
+  ],
+  "why": "charge rules"
+ },
+ {
+  "keyword": "charging a knight",
+  "accept": [
+   "Knights, Charging and Attacks",
+   "Attacking Knights in Combat"
+  ],
+  "why": "charge rules"
+ },
+ {
+  "keyword": "charging a tank",
+  "accept": [
+   "Charging a Vehicle"
+  ],
+  "why": "charge rules"
+ },
+ {
+  "keyword": "charge distance",
+  "accept": [
+   "5. Make Charge Move",
+   "2. Check Line of Sight and Maximum Charge Range",
+   "Set-up Move Distance"
+  ],
+  "why": "charge roll in '5. Make Charge Move'; max range in step 2"
+ },
+ {
+  "keyword": "charge range",
+  "accept": [
+   "5. Make Charge Move",
+   "2. Check Line of Sight and Maximum Charge Range",
+   "Set-up Move Distance"
+  ],
+  "why": "charge roll in '5. Make Charge Move'; max range in step 2"
+ },
+ {
+  "keyword": "charge roll",
+  "accept": [
+   "5. Make Charge Move",
+   "2. Check Line of Sight and Maximum Charge Range",
+   "Set-up Move Distance"
+  ],
+  "why": "charge roll in '5. Make Charge Move'; max range in step 2"
+ },
+ {
+  "keyword": "how far can I charge",
+  "accept": [
+   "5. Make Charge Move",
+   "2. Check Line of Sight and Maximum Charge Range",
+   "Set-up Move Distance"
+  ],
+  "why": "charge roll in '5. Make Charge Move'; max range in step 2"
+ },
+ {
+  "keyword": "failed charge",
+  "accept": [
+   "5. Make Charge Move",
+   "Knights and Failed Charges"
+  ],
+  "why": "no 'failed charge' entry; covered in charge move"
+ },
+ {
+  "keyword": "set up move",
+  "accept": [
+   "3. Make Set-up Move",
+   "Set-up Move Distance"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "set-up move",
+  "accept": [
+   "3. Make Set-up Move",
+   "Set-up Move Distance"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "setup move",
+  "accept": [
+   "3. Make Set-up Move",
+   "Set-up Move Distance"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "disordered charge",
+  "accept": [
+   "Disordered Charge"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "pile in",
+  "accept": [
+   "Pile-in Moves",
+   "2. Make Pile-in Moves for Combatants",
+   "5. Make Final Pile-in Moves"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "pile-in",
+  "accept": [
+   "Pile-in Moves",
+   "2. Make Pile-in Moves for Combatants",
+   "5. Make Final Pile-in Moves"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "pile in move",
+  "accept": [
+   "Pile-in Moves",
+   "2. Make Pile-in Moves for Combatants",
+   "5. Make Final Pile-in Moves"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "piling in",
+  "accept": [
+   "Pile-in Moves",
+   "2. Make Pile-in Moves for Combatants",
+   "5. Make Final Pile-in Moves"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "challenge",
+  "accept": [
+   "Challenge Sub-Phase",
+   "1. Declare Challenge"
+  ],
+  "why": "challenge sub-phase"
+ },
+ {
+  "keyword": "challenges",
+  "accept": [
+   "Challenge Sub-Phase",
+   "1. Declare Challenge"
+  ],
+  "why": "challenge sub-phase"
+ },
+ {
+  "keyword": "issue a challenge",
+  "accept": [
+   "Challenge Sub-Phase",
+   "1. Declare Challenge"
+  ],
+  "why": "challenge sub-phase"
+ },
+ {
+  "keyword": "duel",
+  "accept": [
+   "Challenge Sub-Phase",
+   "1. Declare Challenge"
+  ],
+  "why": "challenge sub-phase"
+ },
+ {
+  "keyword": "gambit",
+  "accept": [
+   "Core Gambits",
+   "2. Face-Off"
+  ],
+  "why": "Core Gambits / Face-Off"
+ },
+ {
+  "keyword": "gambits",
+  "accept": [
+   "Core Gambits",
+   "2. Face-Off"
+  ],
+  "why": "Core Gambits / Face-Off"
+ },
+ {
+  "keyword": "face off",
+  "accept": [
+   "Core Gambits",
+   "2. Face-Off"
+  ],
+  "why": "Core Gambits / Face-Off"
+ },
+ {
+  "keyword": "flurry of blows",
+  "accept": [
+   "Flurry of Blows"
+  ],
+  "why": "core gambit"
+ },
+ {
+  "keyword": "seize the initiative gambit",
+  "accept": [
+   "Seize the Initiative"
+  ],
+  "why": "core gambit"
+ },
+ {
+  "keyword": "guard up",
+  "accept": [
+   "Guard Up"
+  ],
+  "why": "core gambit"
+ },
+ {
+  "keyword": "feint and riposte",
+  "accept": [
+   "Feint and Riposte"
+  ],
+  "why": "core gambit"
+ },
+ {
+  "keyword": "finishing blow",
+  "accept": [
+   "Finishing Blow"
+  ],
+  "why": "core gambit"
+ },
+ {
+  "keyword": "taunt and bait",
+  "accept": [
+   "Taunt and Bait"
+  ],
+  "why": "core gambit"
+ },
+ {
+  "keyword": "withdraw gambit",
+  "accept": [
+   "Withdraw"
+  ],
+  "why": "core gambit"
+ },
+ {
+  "keyword": "test the foe",
+  "accept": [
+   "Test the Foe"
+  ],
+  "why": "core gambit"
+ },
+ {
+  "keyword": "grandstand",
+  "accept": [
+   "Grandstand"
+  ],
+  "why": "core gambit"
+ },
+ {
+  "keyword": "disgraced",
+  "accept": [
+   "The Disgraced Status"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "fight",
+  "accept": [
+   "Fight Sub-Phase",
+   "The Assault Phase"
+  ],
+  "why": "fight sub-phase"
+ },
+ {
+  "keyword": "fighting",
+  "accept": [
+   "Fight Sub-Phase",
+   "The Assault Phase"
+  ],
+  "why": "fight sub-phase"
+ },
+ {
+  "keyword": "melee",
+  "accept": [
+   "Fight Sub-Phase",
+   "The Assault Phase"
+  ],
+  "why": "fight sub-phase"
+ },
+ {
+  "keyword": "close combat",
+  "accept": [
+   "Fight Sub-Phase",
+   "The Assault Phase"
+  ],
+  "why": "fight sub-phase"
+ },
+ {
+  "keyword": "fight phase",
+  "accept": [
+   "Fight Sub-Phase"
+  ],
+  "why": "fight sub-phase"
+ },
+ {
+  "keyword": "initiative step",
+  "accept": [
+   "2. Declare Weapons and Set Initiative Steps",
+   "Resolving an Initiative Step",
+   "Fight Sub-Phase Terminology",
+   "3. Resolve First Initiative Step",
+   "4. Continue Resolving Initiative Steps"
+  ],
+  "why": "initiative step resolution"
+ },
+ {
+  "keyword": "initiative steps",
+  "accept": [
+   "2. Declare Weapons and Set Initiative Steps",
+   "Resolving an Initiative Step",
+   "Fight Sub-Phase Terminology",
+   "3. Resolve First Initiative Step",
+   "4. Continue Resolving Initiative Steps"
+  ],
+  "why": "initiative step resolution"
+ },
+ {
+  "keyword": "who strikes first",
+  "accept": [
+   "2. Declare Weapons and Set Initiative Steps",
+   "Resolving an Initiative Step",
+   "Fight Sub-Phase Terminology",
+   "3. Resolve First Initiative Step",
+   "4. Continue Resolving Initiative Steps"
+  ],
+  "why": "initiative step resolution"
+ },
+ {
+  "keyword": "initiative order",
+  "accept": [
+   "2. Declare Weapons and Set Initiative Steps",
+   "Resolving an Initiative Step",
+   "Fight Sub-Phase Terminology",
+   "3. Resolve First Initiative Step",
+   "4. Continue Resolving Initiative Steps"
+  ],
+  "why": "initiative step resolution"
+ },
+ {
+  "keyword": "combat initiative",
+  "accept": [
+   "Combat Initiative"
+  ],
+  "why": "exact (two entries)"
+ },
+ {
+  "keyword": "strike groups",
+  "accept": [
+   "4. Set Strike Groups",
+   "Splitting Strike Groups"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "combat resolution",
+  "accept": [
+   "Resolution Sub-Phase",
+   "1. Total Combat Resolution Points",
+   "2. Declare Winner"
+  ],
+  "why": "resolution sub-phase"
+ },
+ {
+  "keyword": "who won the combat",
+  "accept": [
+   "Resolution Sub-Phase",
+   "1. Total Combat Resolution Points",
+   "2. Declare Winner"
+  ],
+  "why": "resolution sub-phase"
+ },
+ {
+  "keyword": "combat result",
+  "accept": [
+   "Resolution Sub-Phase",
+   "1. Total Combat Resolution Points",
+   "2. Declare Winner"
+  ],
+  "why": "resolution sub-phase"
+ },
+ {
+  "keyword": "resolution points",
+  "accept": [
+   "Resolution Sub-Phase",
+   "1. Total Combat Resolution Points",
+   "2. Declare Winner"
+  ],
+  "why": "resolution sub-phase"
+ },
+ {
+  "keyword": "massacre",
+  "accept": [
+   "Massacres"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "sweeping advance",
+  "accept": [
+   "Aftermath Options",
+   "4. Aftermath"
+  ],
+  "why": "Aftermath Options (Hold/Disengage/Fall Back/Pursue/Gun Down/Consolidate); no Sweeping Advance entry"
+ },
+ {
+  "keyword": "pursue",
+  "accept": [
+   "Aftermath Options",
+   "4. Aftermath"
+  ],
+  "why": "Aftermath Options (Hold/Disengage/Fall Back/Pursue/Gun Down/Consolidate); no Sweeping Advance entry"
+ },
+ {
+  "keyword": "consolidate",
+  "accept": [
+   "Aftermath Options",
+   "4. Aftermath"
+  ],
+  "why": "Aftermath Options (Hold/Disengage/Fall Back/Pursue/Gun Down/Consolidate); no Sweeping Advance entry"
+ },
+ {
+  "keyword": "consolidation",
+  "accept": [
+   "Aftermath Options",
+   "4. Aftermath"
+  ],
+  "why": "Aftermath Options (Hold/Disengage/Fall Back/Pursue/Gun Down/Consolidate); no Sweeping Advance entry"
+ },
+ {
+  "keyword": "disengage",
+  "accept": [
+   "Aftermath Options",
+   "4. Aftermath"
+  ],
+  "why": "Aftermath Options (Hold/Disengage/Fall Back/Pursue/Gun Down/Consolidate); no Sweeping Advance entry"
+ },
+ {
+  "keyword": "hold",
+  "accept": [
+   "Aftermath Options",
+   "4. Aftermath"
+  ],
+  "why": "Aftermath Options (Hold/Disengage/Fall Back/Pursue/Gun Down/Consolidate); no Sweeping Advance entry"
+ },
+ {
+  "keyword": "locked in combat",
+  "accept": [
+   "Assault Terminology",
+   "Fight Sub-Phase Terminology",
+   "1. Determine Combat Units"
+  ],
+  "why": "definition"
+ },
+ {
+  "keyword": "engaged",
+  "accept": [
+   "3. Declare Engaged Models",
+   "Fight Sub-Phase Terminology"
+  ],
+  "why": "engaged models"
+ },
+ {
+  "keyword": "attacking vehicles in combat",
+  "accept": [
+   "Attacking Vehicles in Combat"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "hitting a tank in melee",
+  "accept": [
+   "Attacking Vehicles in Combat",
+   "Charging a Vehicle"
+  ],
+  "why": "vehicle melee"
+ },
+ {
+  "keyword": "vehicle combat resolution",
+  "accept": [
+   "Combat Resolution"
+  ],
+  "why": "vehicle combat resolution"
+ },
+ {
+  "keyword": "outside support",
+  "accept": [
+   "Outside Support"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "morale",
+  "accept": [
+   "Morale Sub-Phase",
+   "3. Make Panic Checks"
+  ],
+  "why": "panic checks"
+ },
+ {
+  "keyword": "morale check",
+  "accept": [
+   "Morale Sub-Phase",
+   "3. Make Panic Checks"
+  ],
+  "why": "panic checks"
+ },
+ {
+  "keyword": "panic check",
+  "accept": [
+   "Morale Sub-Phase",
+   "3. Make Panic Checks"
+  ],
+  "why": "panic checks"
+ },
+ {
+  "keyword": "panic test",
+  "accept": [
+   "Morale Sub-Phase",
+   "3. Make Panic Checks"
+  ],
+  "why": "panic checks"
+ },
+ {
+  "keyword": "leadership test",
+  "accept": [
+   "Morale Sub-Phase",
+   "3. Make Panic Checks",
+   "Characteristic Checks"
+  ],
+  "why": "panic checks"
+ },
+ {
+  "keyword": "pinned",
+  "accept": [
+   "Pinned"
+  ],
+  "why": "tactical status"
+ },
+ {
+  "keyword": "pinning",
+  "accept": [
+   "Pinned",
+   "Pinning (X)"
+  ],
+  "why": "tactical status"
+ },
+ {
+  "keyword": "pinned status",
+  "accept": [
+   "Pinned"
+  ],
+  "why": "tactical status"
+ },
+ {
+  "keyword": "suppressed",
+  "accept": [
+   "Suppressed"
+  ],
+  "why": "tactical status"
+ },
+ {
+  "keyword": "suppression",
+  "accept": [
+   "Suppressed"
+  ],
+  "why": "tactical status"
+ },
+ {
+  "keyword": "suppressive fire",
+  "accept": [
+   "Suppressed",
+   "Suppressive (X)"
+  ],
+  "why": "tactical status"
+ },
+ {
+  "keyword": "stunned",
+  "accept": [
+   "Stunned"
+  ],
+  "why": "tactical status"
+ },
+ {
+  "keyword": "stun",
+  "accept": [
+   "Stunned",
+   "Stun (X)"
+  ],
+  "why": "tactical status"
+ },
+ {
+  "keyword": "routed",
+  "accept": [
+   "Routed",
+   "Rout Sub-Phase"
+  ],
+  "why": "tactical status"
+ },
+ {
+  "keyword": "rout",
+  "accept": [
+   "Routed",
+   "Rout Sub-Phase"
+  ],
+  "why": "tactical status"
+ },
+ {
+  "keyword": "routing",
+  "accept": [
+   "Routed",
+   "Rout Sub-Phase"
+  ],
+  "why": "tactical status"
+ },
+ {
+  "keyword": "running away",
+  "accept": [
+   "Routed",
+   "Rout Sub-Phase"
+  ],
+  "why": "tactical status"
+ },
+ {
+  "keyword": "falling back",
+  "accept": [
+   "Falling Back",
+   "Rout Sub-Phase",
+   "Aftermath Options"
+  ],
+  "why": "HH3 Falling Back = routed movement; 40K fall back ~ Disengage in Aftermath"
+ },
+ {
+  "keyword": "fall back",
+  "accept": [
+   "Falling Back",
+   "Rout Sub-Phase",
+   "Aftermath Options"
+  ],
+  "why": "HH3 Falling Back = routed movement; 40K fall back ~ Disengage in Aftermath"
+ },
+ {
+  "keyword": "tactical statuses",
+  "accept": [
+   "Tactical Statuses"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "remove statuses",
+  "accept": [
+   "The Statuses Sub-Phase",
+   "Repair Tests"
+  ],
+  "why": "statuses removed in End Phase / Repair Tests for vehicles"
+ },
+ {
+  "keyword": "cool check",
+  "accept": [
+   "Characteristic Checks",
+   "Advanced Characteristics"
+  ],
+  "why": "Cool is an advanced characteristic checked"
+ },
+ {
+  "keyword": "knight",
+  "accept": [
+   "The Knight Sub-type"
+  ],
+  "why": "Knight sub-type section"
+ },
+ {
+  "keyword": "knights",
+  "accept": [
+   "The Knight Sub-type"
+  ],
+  "why": "Knight sub-type section"
+ },
+ {
+  "keyword": "knight rules",
+  "accept": [
+   "The Knight Sub-type"
+  ],
+  "why": "Knight sub-type section"
+ },
+ {
+  "keyword": "imperial knight",
+  "accept": [
+   "The Knight Sub-type"
+  ],
+  "why": "Knight sub-type section"
+ },
+ {
+  "keyword": "ion shield",
+  "accept": [
+   "Ion Shield",
+   "Rotate Ion Shields"
+  ],
+  "why": "Ion Shield wargear + Rotate Ion Shields reaction"
+ },
+ {
+  "keyword": "ion shields",
+  "accept": [
+   "Ion Shield",
+   "Rotate Ion Shields"
+  ],
+  "why": "Ion Shield wargear + Rotate Ion Shields reaction"
+ },
+ {
+  "keyword": "rotate ion shields",
+  "accept": [
+   "Ion Shield",
+   "Rotate Ion Shields"
+  ],
+  "why": "Ion Shield wargear + Rotate Ion Shields reaction"
+ },
+ {
+  "keyword": "ion shield facing",
+  "accept": [
+   "Ion Shield",
+   "Rotate Ion Shields"
+  ],
+  "why": "Ion Shield wargear + Rotate Ion Shields reaction"
+ },
+ {
+  "keyword": "stomp",
+  "accept": [
+   "Stomp"
+  ],
+  "why": "knight reaction"
+ },
+ {
+  "keyword": "joust",
+  "accept": [
+   "Joust!"
+  ],
+  "why": "knight reaction"
+ },
+ {
+  "keyword": "targeting knights",
+  "accept": [
+   "Targeting Knights"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "knight line of sight",
+  "accept": [
+   "Knights and Line of Sight"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "knight terrain",
+  "accept": [
+   "Knights and Terrain"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "knights moving over infantry",
+  "accept": [
+   "Knights and Other Models"
+  ],
+  "why": "Knights ignore models when moving"
+ },
+ {
+  "keyword": "knight combat resolution",
+  "accept": [
+   "Knights and Combat Resolution"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "knight facings",
+  "accept": [
+   "Knight Facings and Arcs"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "titan",
+  "accept": [
+   "Titan",
+   "The Titan Sub-Type",
+   "Using Titans in Age of Darkness Battles"
+  ],
+  "why": "titan section"
+ },
+ {
+  "keyword": "titans",
+  "accept": [
+   "Titan",
+   "The Titan Sub-Type",
+   "Using Titans in Age of Darkness Battles"
+  ],
+  "why": "titan section"
+ },
+ {
+  "keyword": "titan rules",
+  "accept": [
+   "Titan",
+   "The Titan Sub-Type",
+   "Using Titans in Age of Darkness Battles"
+  ],
+  "why": "titan section"
+ },
+ {
+  "keyword": "void shield",
+  "accept": [
+   "Titan Void Shield Array (X)",
+   "Void Shields (X)"
+  ],
+  "why": "Void Shield rules"
+ },
+ {
+  "keyword": "void shields",
+  "accept": [
+   "Titan Void Shield Array (X)",
+   "Void Shields (X)"
+  ],
+  "why": "Void Shield rules"
+ },
+ {
+  "keyword": "void shield array",
+  "accept": [
+   "Titan Void Shield Array (X)",
+   "Void Shields (X)"
+  ],
+  "why": "Void Shield rules"
+ },
+ {
+  "keyword": "void field",
+  "accept": [
+   "Titan Void Shield Array (X)",
+   "Void Shields (X)"
+  ],
+  "why": "Void Shield rules"
+ },
+ {
+  "keyword": "collapsing void shields",
+  "accept": [
+   "Titan Void Shield Array (X)",
+   "Void Shields (X)",
+   "Shield-breaker (X)"
+  ],
+  "why": "Void Shield rules"
+ },
+ {
+  "keyword": "shield breaker",
+  "accept": [
+   "Shield-breaker (X)"
+  ],
+  "why": "special rule"
+ },
+ {
+  "keyword": "shooting at a titan",
+  "accept": [
+   "Targeting a Titan",
+   "Damaging a Titan",
+   "Titans and Profiles"
+  ],
+  "why": "titans have per-location profiles"
+ },
+ {
+  "keyword": "titan locations",
+  "accept": [
+   "Targeting a Titan",
+   "Damaging a Titan",
+   "Titans and Profiles"
+  ],
+  "why": "titans have per-location profiles"
+ },
+ {
+  "keyword": "titan hit location",
+  "accept": [
+   "Targeting a Titan",
+   "Damaging a Titan",
+   "Titans and Profiles"
+  ],
+  "why": "titans have per-location profiles"
+ },
+ {
+  "keyword": "targeting a titan",
+  "accept": [
+   "Targeting a Titan",
+   "Damaging a Titan",
+   "Titans and Profiles"
+  ],
+  "why": "titans have per-location profiles"
+ },
+ {
+  "keyword": "titan legs",
+  "accept": [
+   "Targeting a Titan",
+   "Damaging a Titan",
+   "Titans and Profiles",
+   "Crippling and Destroying Titans"
+  ],
+  "why": "titans have per-location profiles"
+ },
+ {
+  "keyword": "titan head",
+  "accept": [
+   "Targeting a Titan",
+   "Damaging a Titan",
+   "Titans and Profiles",
+   "Crippling and Destroying Titans"
+  ],
+  "why": "titans have per-location profiles"
+ },
+ {
+  "keyword": "titan damage table",
+  "accept": [
+   "Titan Damage Table",
+   "Damaging a Titan"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "titan damage",
+  "accept": [
+   "Titan Damage Table",
+   "Damaging a Titan"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "damaging a titan",
+  "accept": [
+   "Titan Damage Table",
+   "Damaging a Titan"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "critical damage",
+  "accept": [
+   "Titan Critical Damage Table",
+   "Secondary Explosions"
+  ],
+  "why": "Titan Critical Damage Table + Secondary Explosions"
+ },
+ {
+  "keyword": "titan critical damage",
+  "accept": [
+   "Titan Critical Damage Table",
+   "Secondary Explosions"
+  ],
+  "why": "Titan Critical Damage Table + Secondary Explosions"
+ },
+ {
+  "keyword": "titan crit table",
+  "accept": [
+   "Titan Critical Damage Table",
+   "Secondary Explosions"
+  ],
+  "why": "Titan Critical Damage Table + Secondary Explosions"
+ },
+ {
+  "keyword": "reactor",
+  "accept": [
+   "Titan Critical Damage Table",
+   "Secondary Explosions"
+  ],
+  "why": "Titan Critical Damage Table + Secondary Explosions"
+ },
+ {
+  "keyword": "reactor meltdown",
+  "accept": [
+   "Titan Critical Damage Table",
+   "Secondary Explosions"
+  ],
+  "why": "Titan Critical Damage Table + Secondary Explosions"
+ },
+ {
+  "keyword": "reactor failure",
+  "accept": [
+   "Titan Critical Damage Table",
+   "Secondary Explosions"
+  ],
+  "why": "Titan Critical Damage Table + Secondary Explosions"
+ },
+ {
+  "keyword": "secondary explosions",
+  "accept": [
+   "Titan Critical Damage Table",
+   "Secondary Explosions"
+  ],
+  "why": "Titan Critical Damage Table + Secondary Explosions"
+ },
+ {
+  "keyword": "crippled",
+  "accept": [
+   "Crippling and Destroying Titans"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "titan crippled",
+  "accept": [
+   "Crippling and Destroying Titans"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "crippling a titan",
+  "accept": [
+   "Crippling and Destroying Titans"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "destroying a titan",
+  "accept": [
+   "Crippling and Destroying Titans"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "killing a titan",
+  "accept": [
+   "Crippling and Destroying Titans"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "titan falls over",
+  "accept": [
+   "Falling Titans"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "titan armour facings",
+  "accept": [
+   "Titans and Armour Facings"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "titan reactions",
+  "accept": [
+   "Titans and Reactions"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "titan line of sight",
+  "accept": [
+   "Titans and Line of Sight"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "titan movement",
+  "accept": [
+   "Titans and the Movement Phase"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "titan shooting",
+  "accept": [
+   "Titans and the Shooting Phase",
+   "Titan Weapons"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "titans and objectives",
+  "accept": [
+   "Titans and Objectives"
+  ],
+  "why": "titans cannot hold objectives"
+ },
+ {
+  "keyword": "titan blast templates",
+  "accept": [
+   "Titans, Blast Markers and Templates"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "strategic attack",
+  "accept": [
+   "Strategic Attacks"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "swarm assault",
+  "accept": [
+   "Tactic of Desperation: Swarm Assault"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "war horn",
+  "accept": [
+   "Titan War Horn (X)"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "macro weapons",
+  "accept": [
+   "Macro"
+  ],
+  "why": "Macro special rule"
+ },
+ {
+  "keyword": "reinforced structure",
+  "accept": [
+   "Reinforced Structure (X)"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "super heavy",
+  "accept": [
+   "Super-heavy"
+  ],
+  "why": "vehicle sub-type"
+ },
+ {
+  "keyword": "super-heavy",
+  "accept": [
+   "Super-heavy"
+  ],
+  "why": "vehicle sub-type"
+ },
+ {
+  "keyword": "superheavy",
+  "accept": [
+   "Super-heavy"
+  ],
+  "why": "vehicle sub-type"
+ },
+ {
+  "keyword": "walker",
+  "accept": [
+   "Walker"
+  ],
+  "why": "model type"
+ },
+ {
+  "keyword": "dreadnought",
+  "accept": [
+   "Walker"
+  ],
+  "why": "dreadnoughts are Walkers"
+ },
+ {
+  "keyword": "antigrav",
+  "accept": [
+   "Antigrav"
+  ],
+  "why": "sub-type; skimmer is 40K term"
+ },
+ {
+  "keyword": "skimmer",
+  "accept": [
+   "Antigrav"
+  ],
+  "why": "40K term for antigrav"
+ },
+ {
+  "keyword": "fast vehicle",
+  "accept": [
+   "Rapid",
+   "Fast (X)"
+  ],
+  "why": "Rapid sub-type"
+ },
+ {
+  "keyword": "transport",
+  "accept": [
+   "Transport",
+   "Transports"
+  ],
+  "why": "model sub-type + section"
+ },
+ {
+  "keyword": "start phase",
+  "accept": [
+   "The Start Phase",
+   "The Effects Sub-Phase"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "start of turn",
+  "accept": [
+   "The Start Phase",
+   "The Effects Sub-Phase"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "end phase",
+  "accept": [
+   "The End Phase",
+   "The Statuses Sub-Phase",
+   "The Victory Sub-Phase"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "end of turn",
+  "accept": [
+   "The End Phase",
+   "The Statuses Sub-Phase",
+   "The Victory Sub-Phase"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "turn sequence",
+  "accept": [
+   "The Turn Sequence"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "order of phases",
+  "accept": [
+   "The Turn Sequence"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "phases",
+  "accept": [
+   "The Turn Sequence"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "objectives",
+  "accept": [
+   "Core Mission Primary Objectives",
+   "4. Deploy Objectives"
+  ],
+  "why": "objective control in Core Mission Primary Objectives"
+ },
+ {
+  "keyword": "objective",
+  "accept": [
+   "Core Mission Primary Objectives",
+   "4. Deploy Objectives"
+  ],
+  "why": "objective control in Core Mission Primary Objectives"
+ },
+ {
+  "keyword": "holding objectives",
+  "accept": [
+   "Core Mission Primary Objectives",
+   "4. Deploy Objectives"
+  ],
+  "why": "objective control in Core Mission Primary Objectives"
+ },
+ {
+  "keyword": "controlling objectives",
+  "accept": [
+   "Core Mission Primary Objectives",
+   "4. Deploy Objectives"
+  ],
+  "why": "objective control in Core Mission Primary Objectives"
+ },
+ {
+  "keyword": "objective control",
+  "accept": [
+   "Core Mission Primary Objectives",
+   "4. Deploy Objectives"
+  ],
+  "why": "objective control in Core Mission Primary Objectives"
+ },
+ {
+  "keyword": "victory points",
+  "accept": [
+   "The Victory Sub-Phase",
+   "Core Mission Primary Objectives",
+   "Core Mission Secondary Objectives"
+  ],
+  "why": "VP scoring"
+ },
+ {
+  "keyword": "scoring",
+  "accept": [
+   "The Victory Sub-Phase",
+   "Core Mission Primary Objectives",
+   "Core Mission Secondary Objectives"
+  ],
+  "why": "VP scoring"
+ },
+ {
+  "keyword": "how do I score",
+  "accept": [
+   "The Victory Sub-Phase",
+   "Core Mission Primary Objectives",
+   "Core Mission Secondary Objectives"
+  ],
+  "why": "VP scoring"
+ },
+ {
+  "keyword": "secondary objectives",
+  "accept": [
+   "Core Mission Secondary Objectives"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "deployment",
+  "accept": [
+   "Deployment",
+   "7. Deploy Armies",
+   "5. Select Deployment Map"
+  ],
+  "why": "deployment step"
+ },
+ {
+  "keyword": "deploy",
+  "accept": [
+   "Deployment",
+   "7. Deploy Armies",
+   "5. Select Deployment Map"
+  ],
+  "why": "deployment step"
+ },
+ {
+  "keyword": "deploying",
+  "accept": [
+   "Deployment",
+   "7. Deploy Armies",
+   "5. Select Deployment Map"
+  ],
+  "why": "deployment step"
+ },
+ {
+  "keyword": "deployment zones",
+  "accept": [
+   "Deployment",
+   "7. Deploy Armies",
+   "5. Select Deployment Map"
+  ],
+  "why": "deployment step"
+ },
+ {
+  "keyword": "who goes first",
+  "accept": [
+   "Seize The Initiative",
+   "8. Play Core Mission"
+  ],
+  "why": "first turn"
+ },
+ {
+  "keyword": "how many turns",
+  "accept": [
+   "8. Play Core Mission",
+   "Sudden Death"
+  ],
+  "why": "core missions last four battle turns"
+ },
+ {
+  "keyword": "sudden death",
+  "accept": [
+   "Sudden Death"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "warlord",
+  "accept": [
+   "Warlord Detachments",
+   "Warlords and Lords of War"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "lord of war",
+  "accept": [
+   "Lord of War Detachments",
+   "Warlords and Lords of War"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "force org chart",
+  "accept": [
+   "The Crusade Force Organisation Chart"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "perils of the warp",
+  "accept": [
+   "Perils of the Warp",
+   "The Perils of the Warp Table"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "psychic powers",
+  "accept": [
+   "Psychic Powers"
+  ],
+  "why": "exact"
+ },
+ {
+  "keyword": "jink",
+  "accept": [],
+  "why": "not in data (no jink in HH3)"
+ },
+ {
+  "keyword": "gets hot",
+  "accept": [],
+  "why": "not in data (no Gets Hot rule; plasma uses Breaching etc.)"
+ },
+ {
+  "keyword": "twin-linked",
+  "accept": [],
+  "why": "not in data"
+ },
+ {
+  "keyword": "look out sir",
+  "accept": [],
+  "why": "not in data (no Look Out Sir; Precision (X) is the inverse)"
+ }
+]

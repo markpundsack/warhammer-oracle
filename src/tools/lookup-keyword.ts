@@ -8,6 +8,7 @@ import { HERESY_SPECIAL_RULES } from "../data/heresy-rules.js";
 import { STRATAGEMS } from "../data/stratagems.js";
 import { formatStratagem } from "./lookup-stratagem.js";
 import { findHeresyRuleMentioning, HERESY_NAMED_RULES, HERESY_RULE_CORPUS } from "../lib/heresy-corpus.js";
+import { buildHeresySearch } from "../lib/heresy-search.js";
 import { attachRulings } from "../lib/faq-attach.js";
 import "../lib/heresy-faq.js";
 import { fuzzySearch, normalizeName, rankByName, scoreName } from "../lib/search.js";
@@ -223,9 +224,35 @@ function byScore<T extends { name: string }>(items: T[], query: string): T[] {
  * (6)", "bulky" and "Bulky (X)" all find "Bulky (X)"; a value in the query is
  * echoed back as X.
  */
-function lookupHeresyRule(keyword: string, corpus = HERESY_RULE_CORPUS): LookupResult {
+const searchHeresy = buildHeresySearch(HERESY_RULE_CORPUS);
+
+/**
+ * Explicit Heresy mode: rank every rule by the player's words (name, summary and text), so
+ * "volley fire", "snapshot" or "glancing hits" find the rule that covers them. The best match's
+ * full text, plus the next few names so the model can look one of those up instead.
+ */
+function searchHeresyRule(keyword: string): LookupResult {
+  const hits = searchHeresy(keyword, 6);
+  if (!hits.length) return lookupHeresyRule(keyword, HERESY_RULE_CORPUS, false);
+  const top = hits[0].rule;
+  const named = scoreHeresyRule(top, keyword) >= 0.88;
+  let text = formatHeresyRule(top, keyword);
+  if (!named) {
+    text = withCrossSystemNote(text, heresyStamp(), `No Heresy rule is named "${keyword}"; this is the rule that covers it best. Check it answers the question, or look up one of the others listed at the end.`);
+  }
+  const others = hits.slice(1, 5).map((h) => h.rule.name).filter((n) => n !== top.name);
+  if (others.length) text += `\n\n_Other Horus Heresy rules that may cover "${keyword}":_ ${[...new Set(others)].join("; ")}`;
+  text += attachRulings({ system: "heresy", names: [top.name], army: top.source });
+  const base = splitRuleQuery(top.name).base;
+  if (KEYWORDS.some((kw) => normalizeName(kw.name) === base)) {
+    text += `\n\n_"${top.name}" is also a 40K keyword; ask with game_mode "40k" for that rule._`;
+  }
+  return { text, score: named ? scoreHeresyRule(top, keyword) : 0.5, closest: top.name };
+}
+
+function lookupHeresyRule(keyword: string, corpus = HERESY_RULE_CORPUS, mentioningFallback = true): LookupResult {
   const matches = findHeresyRules(corpus, keyword);
-  if (matches.length === 0 && corpus === HERESY_RULE_CORPUS) {
+  if (matches.length === 0 && corpus === HERESY_RULE_CORPUS && mentioningFallback) {
     // Explicit Heresy mode only: a term that's used in rule text but isn't a rule's name ("snap shots").
     const mentioning = findHeresyRuleMentioning(keyword);
     if (mentioning) {
@@ -385,10 +412,10 @@ export function registerLookupKeyword(server: McpServer): void {
       const reply = (text: string) => ({ content: [{ type: "text" as const, text }] });
 
       if (game_mode === "heresy") {
-        const heresy = lookupHeresyRule(keyword);
-        // Explicit game_mode: never substitute 40K, but point at a clear 40K match.
+        const heresy = searchHeresyRule(keyword);
+        // Explicit game_mode: a 40K rule only when no Heresy rule is named like it and a 40K keyword is, exactly.
         const fortyK = lookup40kKeyword(keyword, undefined, { coreRules: false });
-        if (shouldCrossOver(heresy.score, fortyK.score)) {
+        if (heresy.score < STRONG_MATCH && fortyK.score >= 0.95) {
           // Answer with the rule, labelled: a voice model reads a bare pointer aloud instead of following it.
           return reply(withCrossSystemNote(fortyK.text, "", `Not in Horus Heresy. This is the Warhammer 40,000 rule.`));
         }

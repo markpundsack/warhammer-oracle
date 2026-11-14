@@ -134,11 +134,32 @@ describe("lookup_keyword with game_mode heresy (rules beyond special rules)", ()
     expect(await call("lookup_keyword", { keyword: "Seize the Initiative", game_mode: "heresy" })).toContain(HERESY_STAMP);
   });
 
-  it("falls back to the rule whose text uses a term that names no rule", async () => {
-    const text = await call("lookup_keyword", { keyword: "snap shots", game_mode: "heresy" });
+  it("finds a section by the words players use, not only its name", async () => {
+    const text = await call("lookup_keyword", { keyword: "glancing hits", game_mode: "heresy" });
     expect(text.startsWith(HERESY_STAMP)).toBe(true);
-    expect(text).toContain('No Heresy rule is named "snap shots"');
-    expect(text.toLowerCase()).toContain("snap shots");
+    expect(text).toContain("# Armour Penetration Test");
+    expect(text).toContain('No Heresy rule is named "glancing hits"');
+    expect(text).toContain("_Other Horus Heresy rules that may cover");
+  });
+
+  it("answers what players actually asked (2026-11-13 game) and their usual variants", async () => {
+    const cases: [string, string][] = [
+      ["Snap Shots", "# Snap Shots"],
+      ["snapshot", "# Snap Shots"],
+      ["Volley Fire", "# 4. Make Volley Attacks"],
+      ["volly fire", "# 4. Make Volley Attacks"],
+      ["Return Fire", "# Shooting Phase: Return Fire"],
+      ["over watch", "# Assault Phase: Overwatch"],
+      ["advance", "# Rush"],
+      ["hull points", "# Damage Characteristics"],
+      ["reaction points", "# Reaction Allotments"],
+      ["titan locations", "# Targeting a Titan"],
+      ["tank shock", "# Moving Through Other Units"],
+      ["sweeping advance", "# Aftermath Options"],
+    ];
+    for (const [kw, want] of cases) {
+      expect(await call("lookup_keyword", { keyword: kw, game_mode: "heresy" }), kw).toContain(want);
+    }
   });
 
   it("prefers the core rule over one army list's copy of a generic name", async () => {
