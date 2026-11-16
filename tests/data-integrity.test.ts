@@ -811,7 +811,7 @@ describe("Unit composition & wargear options (11th Edition)", () => {
 
   it("Land Raider lists its fixed weapons and optional extras", () => {
     const [wargear] = find("Land Raider", "Adeptus Astartes - Space Marines").wargear;
-    expect(wargear.default).toEqual(expect.arrayContaining(["Twin heavy bolter", "Godhammer Lascannon"]));
+    expect(wargear.default).toEqual(expect.arrayContaining(["Twin heavy bolter", "2x Godhammer Lascannon"]));
     expect(wargear.options.some((o) => o.startsWith("Can also take:") && o.includes("Hunter-killer missile"))).toBe(true);
   });
 
@@ -828,6 +828,17 @@ describe("Unit composition & wargear options (11th Edition)", () => {
       (u) => u.name === "Repulsor Executioner" && u.faction === "Adeptus Astartes - Black Templars",
     );
     expect(bt).toHaveLength(1);
+  });
+
+  it("11e stat lines carry the invulnerable save", () => {
+    expect(find("Captain", "Adeptus Astartes - Space Marines").profiles[0].invulnerableSave).toBe("4+");
+    expect(find("Land Raider", "Adeptus Astartes - Space Marines").profiles[0].invulnerableSave).toBeUndefined();
+  });
+
+  it("rule names keep the datasheet's value (Deadly Demise D6, not bare Deadly Demise)", () => {
+    const names = find("Land Raider", "Adeptus Astartes - Space Marines").abilities.map((a) => a.name);
+    expect(names).toContain("Deadly Demise D6");
+    expect(names).not.toContain("Deadly Demise");
   });
 });
 

@@ -364,7 +364,7 @@ describe("Heresy attack calculator from names", () => {
 
 describe("no-game_mode unit names across games", () => {
   it("an exact Heresy name beats a prefix of Legends-only 40K datasheets", async () => {
-    const text = await call("lookup_unit", { unit_name: "Sicaran" });
+    const text = await call("lookup_unit", { unit_name: "Predator" });
     expect(text.startsWith(HERESY_STAMP)).toBe(true);
     expect(text).toContain("40K only has Legends datasheets");
   });

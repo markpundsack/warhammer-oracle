@@ -23,11 +23,14 @@ import type {
 // === 40K Formatters ===
 
 function formatStatsTable(profiles: UnitProfile[]): string {
-  const header = "| Name | M | T | SV | W | LD | OC |";
-  const separator = "|---|---|---|---|---|---|---|";
+  // 11e datasheets carry the invulnerable save on the stat line; 10e ones don't.
+  const invuln = profiles.some((p) => p.invulnerableSave);
+  const header = `| Name | M | T | SV | W | LD | OC |${invuln ? " InSv |" : ""}`;
+  const separator = `|---|---|---|---|---|---|---|${invuln ? "---|" : ""}`;
   const rows = profiles.map(
     (p) =>
-      `| ${p.name} | ${p.movement} | ${p.toughness} | ${p.save} | ${p.wounds} | ${p.leadership} | ${p.objectiveControl} |`,
+      `| ${p.name} | ${p.movement} | ${p.toughness} | ${p.save} | ${p.wounds} | ${p.leadership} | ${p.objectiveControl} |` +
+      (invuln ? ` ${p.invulnerableSave ?? "-"} |` : ""),
   );
   return [header, separator, ...rows].join("\n");
 }

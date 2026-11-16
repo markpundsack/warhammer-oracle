@@ -212,6 +212,7 @@ function extractUnitProfiles(profiles: any[]): UnitProfile[] {
     .filter((p: any) => p["@_typeId"] === UNIT_PROFILE_TYPE_ID)
     .map((p: any): UnitProfile => {
       const chars = ensureArray(p.characteristics?.characteristic);
+      const invuln = getCharacteristic(chars, "InSv").trim();
       return {
         name: p["@_name"],
         movement: getCharacteristic(chars, "M"),
@@ -220,6 +221,8 @@ function extractUnitProfiles(profiles: any[]): UnitProfile[] {
         wounds: getCharacteristic(chars, "W"),
         leadership: getCharacteristic(chars, "LD"),
         objectiveControl: getCharacteristic(chars, "OC"),
+        // 11e's stat line carries InSv; 10e put invulnerable saves in an ability instead.
+        ...(invuln && invuln !== "-" ? { invulnerableSave: invuln } : {}),
       };
     })
     .filter((profile) => {
@@ -354,6 +357,26 @@ function extractAbilities(profiles: any[]): Ability[] {
  * denylist. Vexilla itself stays unresolved as a result (a narrower, known
  * gap) rather than risk that regression.
  */
+/**
+ * The name a unit's rule infoLink gives the shared rule. BSData keeps one shared
+ * "Deadly Demise" / "Feel No Pain" / "Firing Deck" rule and sets each unit's value
+ * with a name modifier on the link: append ("Deadly Demise" + "D3") or set
+ * ("Feel No Pain 5+"). Unconditional modifiers only: conditional ones depend on the
+ * unit's options, which a datasheet lookup can't know.
+ */
+export function linkedRuleName(base: string, link: any): string {
+  let name = base;
+  for (const m of ensureArray(link?.modifiers?.modifier)) {
+    if (m?.["@_field"] !== "name") continue;
+    if (ensureArray(m.conditions?.condition).length || ensureArray(m.conditionGroups?.conditionGroup).length) continue;
+    const value = String(m["@_value"] ?? "").trim();
+    if (!value) continue;
+    if (m["@_type"] === "append") name = `${name} ${value}`;
+    else if (m["@_type"] === "set") name = value;
+  }
+  return name;
+}
+
 function ruleLinksToAbilityProfiles(
   entry: any,
   ruleIndex: Map<string, any>,
@@ -376,7 +399,7 @@ function ruleLinksToAbilityProfiles(
       if (isHiddenIn(rule, env, true)) continue;
       profiles.push({
         "@_typeId": ABILITY_TYPE_ID,
-        "@_name": rule["@_name"] ?? link["@_name"] ?? "",
+        "@_name": linkedRuleName(rule["@_name"] ?? link["@_name"] ?? "", link),
         characteristics: {
           characteristic: [{ "@_name": "Description", "#text": rule.description }],
         },

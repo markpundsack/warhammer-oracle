@@ -85,9 +85,9 @@ describe("lookup_unit cross-system fallback", () => {
   });
 
   it("a 40K [Legends] datasheet counts as the same name (40K wins, with the hint)", async () => {
-    const text = await call("lookup_unit", { unit_name: "Leviathan Dreadnought" });
+    const text = await call("lookup_unit", { unit_name: "Kharybdis Assault Claw" });
     expect(text.startsWith(STAMP_40K)).toBe(true);
-    expect(text).toContain('_"Leviathan Dreadnought" is also a Horus Heresy (3rd edition) unit');
+    expect(text).toContain('_"Kharybdis Assault Claw" is also a Horus Heresy (3rd edition) unit');
   });
 
   it("a weak 40K fuzzy match does not beat nothing, and a weak Heresy match never wins", async () => {

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseCatalogue, parseGameSystem } from "../src/lib/xml-parser.js";
+import { linkedRuleName, parseCatalogue, parseGameSystem } from "../src/lib/xml-parser.js";
 
 // === Inline XML Fixtures ===
 
@@ -495,5 +495,20 @@ describe("parseCatalogue", () => {
     const melee = units[0].meleeWeapons;
 
     expect(melee[0].keywords).toEqual([]);
+  });
+});
+
+describe("linkedRuleName", () => {
+  const link = (...modifier: any[]) => ({ modifiers: { modifier } });
+
+  it("appends and sets unconditional name modifiers", () => {
+    expect(linkedRuleName("Deadly Demise", link({ "@_field": "name", "@_type": "append", "@_value": "D3" }))).toBe("Deadly Demise D3");
+    expect(linkedRuleName("Feel No Pain", link({ "@_field": "name", "@_type": "set", "@_value": "Feel No Pain 5+" }))).toBe("Feel No Pain 5+");
+  });
+
+  it("ignores conditional modifiers and other fields", () => {
+    const conditional = { "@_field": "name", "@_type": "append", "@_value": "4+", conditions: { condition: [{}] } };
+    expect(linkedRuleName("Explodes", link(conditional, { "@_field": "hidden", "@_type": "set", "@_value": "true" }))).toBe("Explodes");
+    expect(linkedRuleName("Scouts", undefined)).toBe("Scouts");
   });
 });

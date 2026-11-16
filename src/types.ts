@@ -14,6 +14,8 @@ export type UnitProfile = {
   wounds: string;
   leadership: string;
   objectiveControl: string;
+  /** 11e: the InSv characteristic BSData puts on the stat line (e.g. Terminators "4+"); absent when none. */
+  invulnerableSave?: string;
 };
 
 export type KillTeamOperativeProfile = {
