@@ -713,6 +713,20 @@ function containsModels(w: WNode, index: HeresyIndex, env: Env, depth: number): 
   return children(w, index, inner).some((c) => isModel(c) || c.type === "unit" || containsModels(c, index, inner, depth + 1));
 }
 
+/**
+ * A wargear bundle's name with what it holds: "Cavas Configuration" -> "Cavas Configuration (Plasma mortar)",
+ * the way New Recruit prints it, so a reader knows which weapons it brings. Only for an upgrade with no
+ * profile of its own whose visible children are all plain entries.
+ */
+function bundleName(w: WNode, index: HeresyIndex, env: Env): string {
+  if (w.kind !== "entry" || w.type !== "upgrade") return w.name;
+  if (holders(w).some((h) => arr(h.profiles).length || arr(h.infoLinks).some((l: Node) => l?.type === "profile"))) return w.name;
+  const kids = children(w, index, withAncestor(env, w));
+  if (!kids.length || kids.some((k) => k.kind !== "entry" || isModel(k) || k.type === "unit")) return w.name;
+  if (kids.some((k) => children(k, index, withAncestor(env, k)).length)) return w.name;
+  return `${w.name} (${[...new Set(kids.map((k) => k.name))].join(", ")})`;
+}
+
 function collectLoadout(w: WNode, index: HeresyIndex, env: Env, out: HeresyModelWargear, depth: number): void {
   if (depth > MAX_DEPTH) return;
   const inner = withAncestor(env, w);
@@ -726,27 +740,28 @@ function collectLoadout(w: WNode, index: HeresyIndex, env: Env, out: HeresyModel
       const alts = choiceAlternatives(c, index, inner, depth + 1);
       if (alts.length === 0) continue;
       const def = c.defaultId ? alts.find((a) => a.ids.includes(c.defaultId!)) : undefined;
+      const nm = (a: WNode) => bundleName(a, index, inner);
       if (alts.length === 1 && c.range.min >= 1) {
-        out.default.push(alts[0].name);
+        out.default.push(nm(alts[0]));
         continue;
       }
       if (def && c.range.min >= 1 && c.range.max === 1) {
-        out.default.push(def.name);
+        out.default.push(nm(def));
         const others = alts.filter((a) => a !== def);
-        if (others.length) out.options.push(`${def.name} can be replaced with ${others.length > 1 ? "one of: " : ""}${others.map((a) => `${a.name}${costNote(a)}`).join(", ")}`);
+        if (others.length) out.options.push(`${def.name} can be replaced with ${others.length > 1 ? "one of: " : ""}${others.map((a) => `${nm(a)}${costNote(a)}`).join(", ")}`);
         continue;
       }
       const label = c.name.replace(/[:\s]+$/, "");
       const choose = c.range.min >= 1 ? ` (choose ${rangeText(c.range)})` : /^may /i.test(label) ? "" : ` (may take ${rangeText(c.range)})`;
-      out.options.push(`${label}${choose}: ${alts.map((a) => `${a.name}${costNote(a)}`).join(", ")}`);
+      out.options.push(`${label}${choose}: ${alts.map((a) => `${nm(a)}${costNote(a)}`).join(", ")}`);
       continue;
     }
     if (c.range && c.range.min === 0) {
       const max = Number.isFinite(c.range.max) && c.range.max > 1 ? `up to ${c.range.max}x ` : "";
-      out.options.push(`May take ${max}${c.name}${costNote(c)}`);
+      out.options.push(`May take ${max}${bundleName(c, index, inner)}${costNote(c)}`);
       continue;
     }
-    out.default.push(c.name);
+    out.default.push(bundleName(c, index, inner));
   }
 }
 
