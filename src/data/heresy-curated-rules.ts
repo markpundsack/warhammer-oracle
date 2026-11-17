@@ -15,13 +15,14 @@ export const HERESY_CURATED_RULES: HeresySpecialRule[] = [
       "BS 10+ hits on 2+, BS 9 or 8 on 3+, BS 7 or 6 on 4+, BS 5 or 4 on 5+, BS 3 or 2 on 6+, BS 1 can't hit. Snap Shots never score Critical Hits from the table.\n\n" +
       "The rules make attacks Snap Shots when:\n" +
       "- making Volley Attacks during a Charge (only Assault weapons may fire); the Overwatch Reaction instead lets the target fire any weapon at full BS;\n" +
-      "- a Vehicle splits its weapons between Shooting Attacks at different targets: every attack in all of them is Snap Shots (Defensive weapons and Super-heavy vehicles are exempt);\n" +
-      "- a Super-heavy vehicle fires after Rushing;\n" +
+      "- a Vehicle splits its weapons between Shooting Attacks at different targets: every attack in all of them is Snap Shots (Defensive weapons are exempt, and so are Super-heavy, Stable and Titan models and Independent Fire);\n" +
+      "- a Light or Rapid unit shoots after Rushing;\n" +
+      "- the unit is Suppressed, Routed or Stupefied;\n" +
       "- making an Intercept Reaction (vehicles may only fire Defensive weapons);\n" +
-      "- firing a weapon with the Centreline arc of fire, unless another rule says otherwise;\n" +
-      "- shooting at a Titan's Head profile;\n" +
-      "- firing weapons on a Titan's Arms once the Arms are Crippled.\n\n" +
-      "Return Fire is a normal Shooting Attack at full BS: it isn't Snap Shots. Heavy (X) doesn't cause Snap Shots in Heresy; it adds +1 to a characteristic when the unit stayed Stationary.",
+      "- firing a Centreline weapon on a flyer's Strike Mission, unless another rule says otherwise;\n" +
+      "- shooting at a Titan's Head profile; firing weapons on a Titan's Crippled Arms or an Ordinatus's Crippled Gun;\n" +
+      "- some special rules: Power Hungry (the model's other weapons), Macro-auspex (unless the target is Titan, Knight, Super-heavy or Wounds 10+), Firing Point's extra attack, Nemesis and Shadow Walkers targets.\n\n" +
+      "Return Fire is a normal Shooting Attack at full BS: it isn't Snap Shots. Heavy (X) doesn't cause Snap Shots in Heresy; it adds +1 to a characteristic when the unit stayed Stationary. A Super-heavy that Rushed doesn't fire Snap Shots; it just loses its Stationary benefits.",
     source: "Skully summary of the Horus Heresy 3rd Edition core rules (Ranged Hit Tests, Charge Sub-Phase, Shooting Phase, Legio Titanicus)",
     gameSystem: "horus-heresy-3e",
     kind: "core rule",
