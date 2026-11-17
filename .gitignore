@@ -3,3 +3,6 @@ dist/
 *.tsbuildinfo
 .mcpregistry_github_token
 .mcpregistry_registry_token
+
+# GW FAQ & Errata: personal use only, copied in at deploy (scripts in the skully repo)
+src/data/private/*.json

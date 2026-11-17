@@ -1,0 +1,8 @@
+# Like .gitignore, but the deploy uploads src/data/private/*.json (GW's FAQ, personal use, never committed).
+.git
+node_modules/
+dist/
+*.tsbuildinfo
+.mcpregistry_github_token
+.mcpregistry_registry_token
+skully-deploy

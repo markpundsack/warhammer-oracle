@@ -3,12 +3,39 @@
  *
  * About fifty rulings; the scoring lives in faq-search.ts.
  */
-import { HERESY_FAQ } from "../data/heresy-faq.js";
+import { existsSync, readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { HERESY_FAQ as WAHAPEDIA_FAQ } from "../data/heresy-faq.js";
 import type { HeresyFaqEntry } from "../types.js";
 import { normalizeForMatch, registerFaqSource } from "./faq-attach.js";
 import { buildFaqSearch } from "./faq-search.js";
 import { heresyStamp } from "./heresy-format.js";
 
+/**
+ * GW's own FAQ & Errata, when the deployment supplies it. Its terms are personal use only, so it is
+ * never committed (src/data/private/ is gitignored): the deploy copies it in, and the Docker image
+ * carries it to /app/private. Errata read as a question: "Errata: <rule>".
+ */
+function officialFaq(): HeresyFaqEntry[] {
+  const here = dirname(fileURLToPath(import.meta.url));
+  // HERESY_FAQ_OFFICIAL names the file, or "none" (the tests: they don't depend on a file outside git).
+  const env = process.env.HERESY_FAQ_OFFICIAL;
+  const file = env !== undefined ? (existsSync(env) ? env : undefined)
+    : [join(here, "../../private/heresy-faq-official.json"), join(here, "../data/private/heresy-faq-official.json")]
+        .find((p) => existsSync(p));
+  if (!file) return [];
+  try {
+    return JSON.parse(readFileSync(file, "utf-8")) as HeresyFaqEntry[];
+  } catch {
+    return [];
+  }
+}
+
+const OFFICIAL = officialFaq();
+const asked = new Set(OFFICIAL.map((e) => normalizeForMatch(e.question)));
+// Wahapedia repeats many of GW's rulings; with GW's own text present, keep one copy.
+const HERESY_FAQ: HeresyFaqEntry[] = [...OFFICIAL, ...WAHAPEDIA_FAQ.filter((e) => !asked.has(normalizeForMatch(e.question)))];
 const search = buildFaqSearch(HERESY_FAQ, "heresy horus");
 
 export function searchHeresyFaq(query: string, limit = 3): { entry: HeresyFaqEntry; score: number }[] {
