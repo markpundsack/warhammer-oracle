@@ -346,7 +346,7 @@ describe("Heresy attack calculator from names", () => {
 
   it("speaks a single shot at a vehicle as a percentage, picking up Armourbane from the weapon", async () => {
     const text = await call("heresy_attack_calculator", { weapon: "lascannon", target: "Rhino" });
-    expect(text).toContain("**Answer:** A 44% chance of a Penetrating Hit, and no Glancing Hits.");
+    expect(text).toContain("**Answer:** A 44% chance of a Penetrating Hit, at 1 Damage.");
   });
 
   it("uses a named attacker's characteristics and the melee Strength modifier", async () => {

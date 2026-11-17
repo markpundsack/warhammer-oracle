@@ -251,7 +251,8 @@ describe("overkill", () => {
     const { spokenAnswer } = await import("../src/tools/heresy-attack-calculator.js");
     const big = { attackType: "ranged" as const, attacks: 10, ballisticSkill: 5, strength: 10, targetArmour: 11, damage: "2", targetHullPoints: 5, targetName: "a Rhino" };
     const text = spokenAnswer(big);
-    expect(text).toMatch(/Hull Points lost, enough to destroy it \(a Rhino has 5: about \d\.\d times over\)/);
+    expect(text).toMatch(/Hull Points lost, enough to destroy it( twice over| \w+ times over)?\./);
+    expect(text).not.toMatch(/\d\.\d times/);
     expect(spokenAnswer({ ...big, attacks: 1 })).not.toMatch(/destroy/);
   });
 });
@@ -261,7 +262,7 @@ describe("single-shot answers", () => {
     const { spokenAnswer, formatHeresyAttack } = await import("../src/tools/heresy-attack-calculator.js");
     const shot = { attackType: "ranged" as const, attacks: 1, ballisticSkill: 4, strength: 8, targetArmour: 11, damage: "6",
       specialRules: ["Melta (12)"], withinMeltaRange: true, targetHullPoints: 5, targetName: "a Rhino" };
-    expect(spokenAnswer(shot)).toMatch(/one does 12 Damage \(doubled by Melta\), enough to destroy it \(a Rhino has 5: about 2\.4 times over\)/);
+    expect(spokenAnswer(shot)).toMatch(/^An? \d+% chance of a Penetrating Hit, at 12 Damage: enough to destroy it twice over\.$/);
     expect(formatHeresyAttack(shot)).toMatch(/Damage 6, doubled by Melta to 12/);
     expect(spokenAnswer({ ...shot, withinMeltaRange: false })).toMatch(/an 11% chance of a Glancing Hit/);
   });

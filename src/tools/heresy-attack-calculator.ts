@@ -42,22 +42,25 @@ function dmgLabel(i: HeresyAttackInput, r: ReturnType<typeof calculateHeresyAtta
   return Number.isFinite(d) ? `${i.damage}, doubled by Melta to ${d * 2}` : `${i.damage}, doubled by Melta`;
 }
 
-/** A single shot: what one Penetrating Hit does to the target ("…, and one does 12 Damage: enough to destroy it…"). */
-function onePen(i: HeresyAttackInput, r: ReturnType<typeof calculateHeresyAttack>): string {
-  const per = r.averageDamage * (r.meltaDoubled ? 2 : 1);
-  if (!i.targetHullPoints || !per) return "";
-  const dmg = Number.isInteger(per) ? `${per} Damage` : `${n(per)} Damage on average`;
-  const melta = r.meltaDoubled ? " (doubled by Melta)" : "";
-  return per >= i.targetHullPoints ? `; one does ${dmg}${melta}${overkill(per, i)}` : "";
+/** A single shot's Damage per Penetrating Hit, for speech: "12", "D6" (Melta doubles it: "twice D6"). */
+function perHitText(i: HeresyAttackInput, r: ReturnType<typeof calculateHeresyAttack>): string {
+  const d = Number(i.damage);
+  if (Number.isFinite(d)) return String(r.meltaDoubled ? d * 2 : d);
+  return r.meltaDoubled ? `twice ${i.damage}` : i.damage;
 }
 
-/** "…, enough to destroy it (a Rhino has 5: about 1.3 times over)" when the expected loss reaches the target's Hull Points. */
+/** "twice over", "three times over": only from 1.5 times, to the nearest whole. */
+function timesOver(times: number): string {
+  if (times < 1.5) return "";
+  const k = Math.round(times);
+  return k === 2 ? " twice over" : ` ${["", "", "", "three", "four", "five", "six", "seven", "eight", "nine", "ten"][k] ?? k} times over`;
+}
+
+/** ", enough to destroy it" (", … twice over") when the loss reaches the target's Hull Points. */
 function overkill(lost: number, i: HeresyAttackInput): string {
   const hp = i.targetHullPoints;
   if (!hp || lost < hp) return "";
-  const what = i.titan ? "enough to Cripple that profile" : "enough to destroy it";
-  const times = lost / hp;
-  return `, ${what} (${i.targetName ?? "the target"} has ${hp}${times >= 1.05 ? `: about ${times.toFixed(1)} times over` : ""})`;
+  return `, ${i.titan ? "enough to Cripple that profile" : "enough to destroy it"}${timesOver(lost / hp)}`;
 }
 
 /** The result in one speakable sentence: odds as percentages for a single die, rounded counts otherwise. */
@@ -73,8 +76,12 @@ export function spokenAnswer(i: HeresyAttackInput): string {
       : "";
     if (sh && r.expectedDamage < 0.05 && glance < 0.05) return shieldText.replace(/^./, (c) => c.toUpperCase());
     if (i.attacks === 1 && !sh && !i.titan) {
-      const g = glance > 0 ? `, and ${an(percent(glance))} chance of a Glancing Hit` : ", and no Glancing Hits";
-      return pen > 0 ? `${cap(an(percent(pen)))} chance of a Penetrating Hit${g}${onePen(i, r)}.` : `No chance of a Penetrating Hit${g}.`;
+      // One shot: the chance and what a hit does; never an average (a Damage 6 hit takes 0 or 6, not 2.67).
+      const g = glance > 0 ? `, and ${an(percent(glance))} chance of a Glancing Hit` : "";
+      if (pen <= 0) return `No chance of a Penetrating Hit${g || ", and no Glancing Hits"}.`;
+      const per = Number(perHitText(i, r));
+      const kills = Number.isFinite(per) && i.targetHullPoints && per >= i.targetHullPoints ? `: ${overkill(per, i).slice(2)}` : "";
+      return `${cap(an(percent(pen)))} chance of a Penetrating Hit, at ${perHitText(i, r)} Damage${kills}${g}.`;
     }
     const hp = r.titanCriticalRolls !== undefined
       ? `${spokenCount(r.titanCriticalRolls, "roll", "rolls")} on the Titan Critical Damage Table (the profile is Crippled)`
