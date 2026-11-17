@@ -49,9 +49,9 @@ function perHitText(i: HeresyAttackInput, r: ReturnType<typeof calculateHeresyAt
   return r.meltaDoubled ? `twice ${i.damage}` : i.damage;
 }
 
-/** "twice over", "three times over": only from 1.5 times, to the nearest whole. */
+/** "twice over", "three times over": only from 1.9 times (so never less than "twice"), to the nearest whole. */
 function timesOver(times: number): string {
-  if (times < 1.5) return "";
+  if (times < 1.9) return "";
   const k = Math.round(times);
   return k === 2 ? " twice over" : ` ${["", "", "", "three", "four", "five", "six", "seven", "eight", "nine", "ten"][k] ?? k} times over`;
 }
@@ -140,6 +140,14 @@ export function formatHeresyAttack(i: HeresyAttackInput): string {
       lines.push(
         `- **Result:** about **${n(r.expectedDamage)} Hull Points** lost: ${n(r.unsaved)} unsaved Penetrating Hits (Damage ${dmgLabel(i, r)}), ` +
           `plus ${n(r.unsavedGlancing!)} Glancing Hits on the Titan Damage Table (1-4 Armour Scar: 1 Hull Point; 5-6 System Burnout).`,
+      );
+    } else if (i.attacks === 1 && !r.shields) {
+      // One shot: a hit does its Damage or nothing; the average is given as a per-shot rate, for players adding up several.
+      lines.push(
+        `- **Result:** ${percent(r.unsaved)} chance of an unsaved Penetrating Hit; each does ${perHitText(i, r)} Damage` +
+          `${r.meltaDoubled ? ` (${i.damage}, doubled by Melta)` : ""}${i.targetHullPoints ? ` of its ${i.targetHullPoints} Hull Points` : ""}` +
+          ` (averaged over many such shots: ${n(r.expectedDamage)} Hull Points each). ` +
+          (r.unsavedGlancing! > 0.005 ? `${percent(r.unsavedGlancing!)} chance of a Glancing Hit (a roll on the Vehicle Damage Table).` : "No Glancing Hits."),
       );
     } else {
       lines.push(

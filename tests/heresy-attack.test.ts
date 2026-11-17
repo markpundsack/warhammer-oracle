@@ -263,7 +263,8 @@ describe("single-shot answers", () => {
     const shot = { attackType: "ranged" as const, attacks: 1, ballisticSkill: 4, strength: 8, targetArmour: 11, damage: "6",
       specialRules: ["Melta (12)"], withinMeltaRange: true, targetHullPoints: 5, targetName: "a Rhino" };
     expect(spokenAnswer(shot)).toMatch(/^An? \d+% chance of a Penetrating Hit, at 12 Damage: enough to destroy it twice over\.$/);
-    expect(formatHeresyAttack(shot)).toMatch(/Damage 6, doubled by Melta to 12/);
+    expect(formatHeresyAttack(shot)).toMatch(/each does 12 Damage \(6, doubled by Melta\) of its 5 Hull Points/);
+    expect(formatHeresyAttack(shot)).toMatch(/averaged over many such shots: [\d.]+ Hull Points each/);
     expect(spokenAnswer({ ...shot, withinMeltaRange: false })).toMatch(/an 11% chance of a Glancing Hit/);
   });
 });
