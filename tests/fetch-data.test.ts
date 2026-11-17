@@ -446,3 +446,117 @@ describe("11e enhancements and their detachments", () => {
     expect(enhancements.map((e) => e.detachment)).toEqual(["Contagion Engines"]);
   });
 });
+
+describe("11e export review fixes", () => {
+  it("reads a Titan through the link of the catalogue's own allegiance (Emperor's Children), once per catalogue", async () => {
+    // Library - Titans links each Titan per side; the Chaos link is hidden for
+    // Emperor's Children (missing from BSData's list), the Imperial one isn't.
+    const titans = {
+      catalogue: {
+        id: "titans", name: "Library - Titans", library: true,
+        sharedSelectionEntries: [{ id: "reaver", name: "Reaver Titan", type: "model", profiles: [statLine("p-r", "Reaver Titan")],
+          categoryLinks: [{ id: "c1", name: "Vehicle", targetId: "cat-vehicle" }] }],
+        entryLinks: [
+          { id: "chaos-link", name: "Reaver Titan", targetId: "reaver", type: "selectionEntry", hidden: true,
+            categoryLinks: [{ id: "c2", name: "Faction: Titanicus Traitoris", targetId: "cat-tt" }, { id: "c3", name: "Chaos", targetId: "cat-chaos" },
+              { id: "c4", name: "Titanic Support", targetId: "cat-ts" }, { id: "c5", name: "Allies: Titanicus Traitoris", targetId: "cat-al", primary: true }] },
+          { id: "imp-link", name: "Reaver Titan", targetId: "reaver", type: "selectionEntry",
+            categoryLinks: [{ id: "c6", name: "Faction: Adeptus Titanicus", targetId: "cat-at" }, { id: "c7", name: "Imperium", targetId: "cat-imp" }] },
+        ],
+      },
+    };
+    const ec = { catalogue: { id: "ec", name: "Chaos - Emperor's Children", library: false,
+      catalogueLinks: [{ id: "cl", name: "Library - Titans", targetId: "titans", type: "catalogue" }] } };
+    const tt = { catalogue: { id: "tt", name: "Chaos - Titanicus Traitoris", library: false,
+      catalogueLinks: [{ id: "cl2", name: "Library - Titans", targetId: "titans", type: "catalogue" }],
+      entryLinks: [{ id: "tt-own", name: "Reaver Titan", targetId: "reaver", type: "selectionEntry",
+        categoryLinks: [{ id: "c8", name: "Faction: Titanicus Traitoris", targetId: "cat-tt" }, { id: "c9", name: "Chaos", targetId: "cat-chaos" }] }] } };
+    const at = { catalogue: { id: "at", name: "Imperium - Adeptus Titanicus", library: false,
+      catalogueLinks: [{ id: "cl3", name: "Library - Titans", targetId: "titans", type: "catalogue" }] } };
+    const gameSystem = { gameSystem: { id: "system", name: "Warhammer 40,000 11th Edition",
+      categoryEntries: [{ id: "cat-ts", name: "Titanic Support", hidden: false }, { id: "cat-al", name: "Allies: Titanicus Traitoris", hidden: false }] } };
+    const { units } = await run11e({ "Library - Titans.json": titans, "EC.json": ec, "TT.json": tt, "AT.json": at }, gameSystem);
+    const of = (faction: string) => units.filter((u) => u.faction === faction).map((u) => `${u.id}: ${u.keywords.join(", ")}`);
+    expect(of("Emperor's Children")).toEqual(["chaos-link: Vehicle, Titanicus Traitoris, Chaos"]);
+    expect(of("Titanicus Traitoris")).toEqual(["tt-own: Vehicle, Titanicus Traitoris, Chaos"]);
+    expect(of("Adeptus Titanicus")).toEqual(["imp-link: Vehicle, Adeptus Titanicus, Imperium"]);
+  });
+
+  it("drops list-building categories from keywords, keeping a hidden one a rule names (CRUCIBLE)", async () => {
+    const gameSystem = { gameSystem: { id: "system", name: "Warhammer 40,000 11th Edition",
+      sharedRules: [{ id: "r", name: "Bloody Champions", description: "Each ^^**Crucible**^^ model gets +1 Attack." }],
+      categoryEntries: [
+        { id: "k-al", name: "Allies: Unaligned Forces", hidden: false },
+        { id: "k-nk", name: "Non-Kroot", hidden: true },
+        { id: "k-cr", name: "Crucible", hidden: true },
+        { id: "k-ch", name: "Character", hidden: false },
+      ] } };
+    const cat = { catalogue: { id: "tau", name: "T'au Empire", library: false,
+      sharedSelectionEntries: [{ id: "u", name: "Ethereal", type: "model", profiles: [statLine("p", "Ethereal")],
+        categoryLinks: ["Character", "Crucible", "Non-Kroot", "Allies: Unaligned Forces", "Faction: T'au Empire"].map((name, i) => ({ id: `cl${i}`, name, targetId: `t${i}` })) }],
+      entryLinks: [{ id: "root-u", name: "Ethereal", targetId: "u", type: "selectionEntry" }] } };
+    const { units } = await run11e({ "T'au Empire.json": cat }, gameSystem);
+    expect(units[0].keywords).toEqual(["Character", "Crucible", "T'au Empire"]);
+  });
+
+  it("gives a datasheet with no faction keyword its catalogue's (X-101)", async () => {
+    const admech = { catalogue: { id: "am", name: "Imperium - Adeptus Mechanicus", library: false,
+      sharedSelectionEntries: [
+        { id: "x101", name: "X-101 [Legends]", type: "upgrade", profiles: [statLine("p-x", "X-101")], categoryLinks: [{ id: "k", name: "Character", targetId: "cat-char" }] },
+        { id: "skit", name: "Skitarii Rangers", type: "unit", profiles: [statLine("p-s", "Ranger")],
+          categoryLinks: [{ id: "k2", name: "Faction: Adeptus Mechanicus", targetId: "cat-am" }] },
+      ],
+      entryLinks: [
+        { id: "root-x", name: "X-101 [Legends]", targetId: "x101", type: "selectionEntry" },
+        { id: "root-s", name: "Skitarii Rangers", targetId: "skit", type: "selectionEntry" },
+      ] } };
+    const { units } = await run11e({ "Imperium - Adeptus Mechanicus.json": admech });
+    expect(units.map((u) => `${u.name}: ${u.keywords.join(", ")}`)).toEqual([
+      "X-101 [Legends]: Character, Adeptus Mechanicus",
+      "Skitarii Rangers: Adeptus Mechanicus",
+    ]);
+  });
+
+  it("prefers a datasheet's own weapon profile over a same-named linked one (Crucible champion's Combi-bolter)", async () => {
+    const own = { id: "p-own", name: "Combi-bolter", typeId: RANGED, typeName: "Ranged Weapons",
+      characteristics: weaponChars("24\"", "BS").map((c) => (c.name === "BS" ? { ...c, $text: "2+" } : c)) };
+    const csm = { catalogue: { id: "csm", name: "Chaos - Chaos Space Marines", library: false,
+      sharedProfiles: [{ id: "p-shared", name: "Combi-bolter", typeId: RANGED, typeName: "Ranged Weapons",
+        characteristics: weaponChars("24\"", "BS").map((c) => (c.name === "S" ? { ...c, $text: "5" } : c)) },
+        { id: "p-bp", name: "Bolt pistol", typeId: RANGED, typeName: "Ranged Weapons", characteristics: weaponChars("12\"", "BS") }],
+      sharedSelectionEntries: [
+        { id: "w-cb", name: "Combi-bolter", type: "upgrade", infoLinks: [{ id: "il", name: "Combi-bolter", targetId: "p-shared", type: "profile" }] },
+        { id: "w-bp", name: "Bolt pistol", type: "upgrade", infoLinks: [{ id: "il2", name: "Bolt pistol", targetId: "p-bp", type: "profile" }] },
+        { id: "champ", name: "Exalted Champion [Crucible]", type: "model", profiles: [statLine("p-c", "Exalted Champion")],
+          selectionEntries: [{ id: "w-own", name: "Combi-bolter", type: "upgrade", profiles: [own] }],
+          selectionEntryGroups: [{ id: "g-spec", name: "Specialisms", selectionEntries: [{ id: "bike", name: "Combat Bike", type: "upgrade",
+            entryLinks: [
+              { id: "l-cb", name: "Combi-bolter", targetId: "w-cb", type: "selectionEntry" },
+              { id: "l-bp", name: "Bolt pistol", targetId: "w-bp", type: "selectionEntry" },
+            ] }] }] },
+      ],
+      entryLinks: [{ id: "root-c", name: "Exalted Champion [Crucible]", targetId: "champ", type: "selectionEntry" }] } };
+    const { units } = await run11e({ "Chaos - Chaos Space Marines.json": csm });
+    expect(units[0].rangedWeapons.map((w) => `${w.name} BS${w.ballisticSkill} S${w.strength}`)).toEqual([
+      "Combi-bolter BS2+ S4",
+      "Bolt pistol BS3+ S4", // a linked weapon with no own namesake stays
+    ]);
+  });
+
+  it("files an enhancement under the detachment its group names when the group's condition names another", async () => {
+    const am = { catalogue: { id: "am", name: "Imperium - Astra Militarum", library: false,
+      sharedSelectionEntries: [detachmentGroup([detachment("det-emb", "Embarked Regiment"), detachment("det-tbr", "Tempestus Boarding Regiment")])],
+      sharedSelectionEntryGroups: [{ id: "g", name: "Enhancements", selectionEntryGroups: [
+        { id: "g-emb", name: "Embarked Regiment Enhancements", modifiers: unlessDetachment("det-emb"),
+          selectionEntries: [{ id: "e1", name: "Shipboard Veteran", type: "upgrade", profiles: [ability("p1", "Shipboard Veteran", "A.")] }] },
+        // Condition copied from the Embarked group (BSData at f015101).
+        { id: "g-tbr", name: "Tempestus Boarding Regiment Enhancements", modifiers: unlessDetachment("det-emb"),
+          selectionEntries: [{ id: "e2", name: "Covert Breach", type: "upgrade", profiles: [ability("p2", "Covert Breach", "B.")] }] },
+      ] }] } };
+    const { enhancements } = await run11e({ "Imperium - Astra Militarum.json": am });
+    expect(enhancements.map((e) => `${e.name} / ${e.detachment}`)).toEqual([
+      "Shipboard Veteran / Embarked Regiment",
+      "Covert Breach / Tempestus Boarding Regiment",
+    ]);
+  });
+});

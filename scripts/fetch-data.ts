@@ -264,6 +264,29 @@ async function fetchCatalogueRepo(
   const dynamicCategoryIds = collectDynamicCategoryIds([...gameSystemNodes, ...catalogues.map((c) => c.raw)]);
   console.log(`  Global profile index: ${globalProfileIndex.size} profiles`);
 
+  // Roster-building categories that aren't datasheet keywords (see
+  // listBuildingCategoryNames), and each catalogue's own faction keyword for
+  // datasheets the data gives none (see homeFactionKeywords).
+  const allNodes = [...gameSystemNodes, ...catalogues.map((c) => c.raw)];
+  const tagCategories = listBuildingCategoryNames(allNodes);
+  console.log(`  List-building categories left out of keywords: ${[...tagCategories].sort().join(", ")}`);
+  const factionKeywords = new Set(
+    allNodes.flatMap((n) => categoryEntries(n).map((ce) => ce.name).filter((name) => name.startsWith("Faction:")).map((name) => name.replace(/^Faction:\s*/, ""))),
+  );
+  const home = homeFactionKeywords(catalogues);
+  for (const keyword of home.values()) factionKeywords.add(keyword);
+  let factionKeywordsAdded = 0;
+  /** A parsed datasheet's keywords: list-building tags dropped, and the home catalogue's faction keyword added when it has none. */
+  const finishUnit = (unit: Unit, sourceEntryId: string | undefined): Unit => {
+    const keywords = unit.keywords.filter((k) => !tagCategories.has(k));
+    const homeFaction = sourceEntryId ? home.get(sourceEntryId) : undefined;
+    if (homeFaction && !keywords.some((k) => factionKeywords.has(k))) {
+      keywords.push(homeFaction);
+      factionKeywordsAdded++;
+    }
+    return { ...unit, keywords };
+  };
+
   // Build a lookup from catalogue ID → ParsedCatalogue for catalogueLink resolution
   const catalogueById = new Map<string, ParsedCatalogue>();
   for (const cat of catalogues) {
@@ -364,16 +387,20 @@ async function fetchCatalogueRepo(
       const id = entry["@_id"];
       if (id && nestedlyConsumedIds.has(id) && !rootEntryLinkTargetIds.has(id)) continue;
       const unit = parseEntryWithLinks(entry, faction, cat.id, globalSharedIndex, globalRuleIndex, globalProfileIndex, dynamicCategoryIds);
-      if (unit) catUnits.push(unit);
+      if (unit) catUnits.push(finishUnit(unit, id));
     }
 
     // 2b: Resolve top-level entryLinks → look up in global shared index.
     // Accepts both type="unit" and type="model" targets — see parseEntryWithLinks.
+    // A shared datasheet linked once per allegiance (Library - Titans) is read
+    // through the link matching this catalogue's (see allegianceLinks).
+    const allegiance = catalogueAllegiance(cat.name);
+    const linkHidden = (link: any) => isHiddenIn(link, { primaryCatalogueId: cat.id });
+    const emittedTargets = new Set<string>();
     const topEntryLinks = ensureArray(cat.raw.entryLinks?.entryLink);
-    for (const link of topEntryLinks) {
+    for (const link of allegianceLinks(topEntryLinks, allegiance, linkHidden, emittedTargets, cat.name)) {
       const targetId = link["@_targetId"];
-      const hidden = isHiddenIn(link, { primaryCatalogueId: cat.id });
-      if (hidden || !targetId) continue;
+      if (!targetId) continue;
 
       const target = globalSharedIndex.get(targetId);
       if (!target) continue;
@@ -382,7 +409,8 @@ async function fetchCatalogueRepo(
       if (unit) {
         // Use the link's id to avoid collisions with other factions using same shared entry
         const linkId = link["@_id"] || unit.id;
-        catUnits.push({ ...unit, id: linkId });
+        catUnits.push({ ...finishUnit(unit, targetId), id: linkId });
+        emittedTargets.add(targetId);
       }
     }
 
@@ -399,17 +427,16 @@ async function fetchCatalogueRepo(
       const linkedDirect = ensureArray(linkedCat.raw.selectionEntries?.selectionEntry);
       for (const entry of linkedDirect) {
         const unit = parseEntryWithLinks(entry, faction, cat.id, globalSharedIndex, globalRuleIndex, globalProfileIndex, dynamicCategoryIds);
-        if (unit) catUnits.push(unit);
+        if (unit) catUnits.push(finishUnit(unit, entry["@_id"]));
       }
 
       // Resolve the linked catalogue's own root-level entryLinks — this is how a
       // library's named single-model characters (e.g. The Changeling, Skulltaker)
       // reach the output; see parseEntryWithLinks.
       const linkedEntryLinks = ensureArray(linkedCat.raw.entryLinks?.entryLink);
-      for (const link of linkedEntryLinks) {
+      for (const link of allegianceLinks(linkedEntryLinks, allegiance, linkHidden, emittedTargets, cat.name)) {
         const targetId = link["@_targetId"];
-        const hidden = isHiddenIn(link, { primaryCatalogueId: cat.id });
-        if (hidden || !targetId) continue;
+        if (!targetId) continue;
 
         const target = globalSharedIndex.get(targetId);
         if (!target) continue;
@@ -417,7 +444,7 @@ async function fetchCatalogueRepo(
         const unit = parseEntryWithLinks(withLinkCategories(target, link), faction, cat.id, globalSharedIndex, globalRuleIndex, globalProfileIndex, dynamicCategoryIds);
         if (unit) {
           const linkId = link["@_id"] || unit.id;
-          catUnits.push({ ...unit, id: linkId });
+          catUnits.push({ ...finishUnit(unit, targetId), id: linkId });
         }
       }
     }
@@ -485,6 +512,7 @@ async function fetchCatalogueRepo(
     }
   }
 
+  console.log(`  Faction keyword added from the home catalogue to ${factionKeywordsAdded} datasheet copies with none`);
   console.log(`\n${gameSystem} Total: ${finalUnits.length} units, ${finalDetachments.length} detachments, ${finalEnhancements.length} enhancements, ${finalCrusadeHonours.length} Crusade Honours, ${allRules.length} shared rules`);
 
   // Log per-faction breakdown
@@ -677,11 +705,13 @@ function parseEntryWithLinks(
   if (type !== "unit" && type !== "model") return null;
 
   // Collect all profiles including from entryLinks (resolved against global index)
+  const linked = new Set<any>();
   let profiles = collectAllProfilesWithGlobalLinks(entry, globalIndex, ruleIndex, profileIndex, new Set(), {
     primaryCatalogueId,
     ancestors: [],
     dynamicCategoryIds,
-  });
+  }, false, [], linked);
+  profiles = preferOwnWeaponProfiles(profiles, linked);
 
   // Fallback for datasheets whose Unit stat line is only an <infoLink
   // type="profile"> to a shared Unit profile, never inline (~248 in 11e; some
@@ -695,6 +725,22 @@ function parseEntryWithLinks(
     primaryCatalogueId,
     dynamicCategoryIds,
   });
+}
+
+const WEAPON_PROFILE_TYPE_IDS = new Set(["f77d-b953-8fa4-b762", "8a40-4aaa-c780-9046"]); // Ranged, Melee Weapons
+
+/**
+ * Drops a weapon profile reached through an <infoLink type="profile"> (see
+ * weaponProfileLinks) when the datasheet also has a profile of that name and
+ * type of its own (written out, not linked). CSM's Crucible champions have
+ * their own Combi-bolter (BS2+ S4 AP0) and also reach the shared Heretic
+ * Astartes one (S5 AP-1) through the Combat Bike specialism; both were listed.
+ * Identical rows are left to the later dedupe.
+ */
+export function preferOwnWeaponProfiles(profiles: any[], linked: Set<any>): any[] {
+  const key = (p: any) => `${p["@_typeId"]}::${String(p["@_name"] ?? "").trim()}`;
+  const own = new Set(profiles.filter((p) => WEAPON_PROFILE_TYPE_IDS.has(p["@_typeId"]) && !linked.has(p)).map(key));
+  return profiles.filter((p) => !linked.has(p) || !own.has(key(p)));
 }
 
 /**
@@ -712,6 +758,151 @@ export function withLinkCategories(target: any, link: any): any {
   const added = extra.filter((cl: any) => !have.has(cl["@_targetId"] ?? cl["@_name"]));
   if (added.length === 0) return target;
   return { ...target, categoryLinks: { ...target.categoryLinks, categoryLink: [...own, ...added] } };
+}
+
+const ALLEGIANCE_KEYWORDS = ["Imperium", "Chaos"] as const;
+type Allegiance = (typeof ALLEGIANCE_KEYWORDS)[number];
+
+/** "Chaos - Emperor's Children" → "Chaos"; catalogues not named for an allegiance (Orks, libraries) have none. */
+export function catalogueAllegiance(catalogueName: string): Allegiance | undefined {
+  return ALLEGIANCE_KEYWORDS.find((a) => catalogueName.startsWith(`${a} - `));
+}
+
+function linkAllegiance(link: any): Allegiance | undefined {
+  const names = ensureArray(link?.categoryLinks?.categoryLink).map((cl: any) => cl["@_name"]);
+  return ALLEGIANCE_KEYWORDS.find((a) => names.includes(a));
+}
+
+/**
+ * The root entryLinks a catalogue reads, with each copy's allegiance matching
+ * the catalogue's. "Library - Titans" links every Titan twice, once per side
+ * (IMPERIUM + "Faction: Adeptus Titanicus", CHAOS + "Faction: Titanicus
+ * Traitoris"), each hidden by a list of catalogues; Emperor's Children is
+ * missing from the Chaos list (at f015101), so it saw only the Imperial copy.
+ * A visible link whose allegiance contradicts the catalogue's is replaced by
+ * its same-target sibling of the right allegiance (even one hidden here),
+ * unless the catalogue already has that datasheet (`emitted`, its own root
+ * links: Titanicus Traitoris). With no such sibling the link's own categories
+ * are dropped, so the copy carries no contradicting keywords. Logged.
+ */
+export function allegianceLinks(
+  links: any[],
+  allegiance: Allegiance | undefined,
+  hidden: (link: any) => boolean,
+  emitted: Set<string> = new Set(),
+  catalogueName = "",
+): any[] {
+  const out: any[] = [];
+  for (const link of links) {
+    if (hidden(link)) continue;
+    const side = linkAllegiance(link);
+    if (!allegiance || !side || side === allegiance) {
+      out.push(link);
+      continue;
+    }
+    const targetId = link["@_targetId"];
+    const sibling = links.find((l) => l !== link && l["@_targetId"] === targetId && linkAllegiance(l) === allegiance);
+    if ((sibling && !hidden(sibling)) || emitted.has(targetId)) continue; // read on its own / already there
+    if (sibling) {
+      console.log(`  ${catalogueName}: ${link["@_name"]} read through its ${allegiance} link (the ${side} one is the visible one)`);
+      out.push(sibling);
+    } else {
+      console.log(`  ${catalogueName}: ${link["@_name"]}'s ${side} link categories dropped (no ${allegiance} link)`);
+      const { categoryLinks: _drop, ...rest } = link;
+      out.push(rest);
+    }
+  }
+  return out;
+}
+
+/** A node's categoryEntries as plain records (10e XML and 11e JSON shapes). */
+function categoryEntries(node: any): { id: string; name: string; hidden: boolean; unhidden: boolean }[] {
+  const raw = node?.categoryEntries;
+  return ensureArray(raw?.categoryEntry ?? raw).map((ce: any) => ({
+    id: String(ce["@_id"] ?? ce.id ?? ""),
+    name: String(ce["@_name"] ?? ce.name ?? ""),
+    hidden: String(ce["@_hidden"] ?? ce.hidden) === "true",
+    // A modifier that shows it (Ynnari, when the army is Ynnari).
+    unhidden: ensureArray(ce.modifiers?.modifier).some(
+      (m: any) => m["@_field"] === "hidden" && String(m["@_value"]) === "false",
+    ),
+  }));
+}
+
+/** Every rules text in a node: descriptions and characteristic values. */
+function rulesTexts(node: any, out: string[] = []): string[] {
+  if (Array.isArray(node)) {
+    for (const n of node) rulesTexts(n, out);
+  } else if (node !== null && typeof node === "object") {
+    for (const [key, val] of Object.entries(node)) {
+      if ((key === "description" || key === "#text") && typeof val === "string") out.push(val);
+      else if (typeof val === "object") rulesTexts(val, out);
+    }
+  }
+  return out;
+}
+
+/**
+ * Category names that are list-building tags, not datasheet keywords:
+ * - allied-units headings: "Allies: Adeptus Titanicus", "Harlequin Allies";
+ * - hidden categories (BattleScribe never shows them) that no rules text
+ *   names: points-cap and roster helpers like "Non-Kroot", "Khorne
+ *   non-Battleline", "Non-Monster Character", "Voidfarer Character";
+ * - "Titanic Support", the Titans' one-per-army allied slot, which is neither
+ *   (shown, but no rule names it).
+ * A hidden category a rule names stays a keyword: CRUCIBLE, HERETIC ASTARTES
+ * VEHICLE, LEADER. A name is dropped only when every category of that name is a tag.
+ */
+export function listBuildingCategoryNames(nodes: any[]): Set<string> {
+  const corpus = nodes.flatMap((n) => rulesTexts(n)).join("\n");
+  const named = (name: string) => new RegExp(`\\b${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i").test(corpus);
+  const verdict = new Map<string, boolean>();
+  for (const ce of nodes.flatMap(categoryEntries)) {
+    if (!ce.name || ce.name.startsWith("Faction:")) continue;
+    const tag =
+      /\bAllies\b/.test(ce.name) || ce.name === "Titanic Support" || (ce.hidden && !ce.unhidden && !named(ce.name));
+    verdict.set(ce.name, (verdict.get(ce.name) ?? true) && tag);
+  }
+  return new Set([...verdict].filter(([, tag]) => tag).map(([name]) => name));
+}
+
+/**
+ * Datasheet id → the faction keyword of the catalogue that defines it, for
+ * datasheets the data gives no faction keyword (AdMech's X-101 [Legends] and
+ * Terrax-Pattern Termite, Space Marines' Drop Pod): the "Faction: X" category
+ * on nearly all (90%+) of that catalogue's own datasheets. Catalogues and
+ * libraries holding several factions' datasheets (Library - Astartes Heresy
+ * Legends) name none.
+ */
+export function homeFactionKeywords(catalogues: { raw: any }[]): Map<string, string> {
+  const out = new Map<string, string>();
+  for (const cat of catalogues) {
+    const entries = [
+      ...ensureArray(cat.raw.sharedSelectionEntries?.selectionEntry),
+      ...ensureArray(cat.raw.selectionEntries?.selectionEntry),
+    ].filter((e: any) => e["@_type"] === "unit" || e["@_type"] === "model");
+    const counts = new Map<string, number>();
+    let tagged = 0;
+    for (const e of entries) {
+      const factions = new Set(
+        ensureArray(e.categoryLinks?.categoryLink)
+          .map((cl: any) => String(cl["@_name"] ?? ""))
+          .filter((n) => n.startsWith("Faction:")),
+      );
+      if (factions.size > 0) tagged++;
+      for (const f of factions) counts.set(f, (counts.get(f) ?? 0) + 1);
+    }
+    const [top, n] = [...counts].sort((a, b) => b[1] - a[1])[0] ?? [];
+    if (!top || n! < 0.9 * tagged) continue;
+    const keyword = top.replace(/^Faction:\s*/, "");
+    for (const e of [
+      ...ensureArray(cat.raw.sharedSelectionEntries?.selectionEntry),
+      ...ensureArray(cat.raw.selectionEntries?.selectionEntry),
+    ]) {
+      if (e["@_id"] && !out.has(e["@_id"])) out.set(e["@_id"], keyword);
+    }
+  }
+  return out;
 }
 
 /**
@@ -820,14 +1011,18 @@ function collectAllProfilesWithGlobalLinks(
   env: VisibilityEnv = {},
   isGroup = false,
   selfIds: string[] = [],
+  // Weapon profiles reached through a profile infoLink: see preferOwnWeaponProfiles.
+  linked: Set<any> = new Set(),
 ): any[] {
   // `env.ancestors` are the selections enclosing `entry`; its own content is
   // read in that context, and its children with `entry` itself added (a
   // group isn't a selection, so its children share its context).
+  const profileLinks = weaponProfileLinks(entry, profileIndex, env);
+  for (const p of profileLinks) linked.add(p);
   const direct = [
     ...ensureArray(entry.profiles?.profile),
     ...infoGroupContents(entry, env).profiles,
-    ...weaponProfileLinks(entry, profileIndex, env),
+    ...profileLinks,
   ].filter((p: any) => !isHiddenIn(p, env, true));
   const ruleAbilities = ruleLinksToAbilityProfiles(entry, ruleIndex, profileIndex, env);
   const inner: VisibilityEnv = isGroup
@@ -865,12 +1060,13 @@ function collectAllProfilesWithGlobalLinks(
       inner,
       link["@_type"] === "selectionEntryGroup",
       [link["@_id"], targetId],
+      linked,
     );
   });
 
   const subEntries = ensureArray(entry.selectionEntries?.selectionEntry).filter((sub: any) => !isHiddenIn(sub, inner));
   const subEntryProfiles = subEntries.flatMap((sub: any) =>
-    collectAllProfilesWithGlobalLinks(sub, globalIndex, ruleIndex, profileIndex, visited, inner),
+    collectAllProfilesWithGlobalLinks(sub, globalIndex, ruleIndex, profileIndex, visited, inner, false, [], linked),
   );
 
   const groups = ensureArray(entry.selectionEntryGroups?.selectionEntryGroup).filter(
@@ -888,7 +1084,7 @@ function collectAllProfilesWithGlobalLinks(
     // the link itself is named "Mighty Champions", which doesn't match the
     // pattern; only the enclosing group's name, "Crusade", does).
     if (UNIVERSAL_OPTION_POOL_LINK_NAME_PATTERN.test(group["@_name"] ?? "")) return [];
-    return collectAllProfilesWithGlobalLinks(group, globalIndex, ruleIndex, profileIndex, visited, inner, true);
+    return collectAllProfilesWithGlobalLinks(group, globalIndex, ruleIndex, profileIndex, visited, inner, true, [], linked);
   });
 
   const all = [...direct, ...ruleAbilities, ...linkedProfiles, ...subEntryProfiles, ...groupProfiles];

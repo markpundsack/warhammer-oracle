@@ -2576,6 +2576,18 @@ export function collectEnhancements(
   const enhancements: ParsedEnhancement[] = [];
   const seenIds = new Set<string>();
   const isEnhancementContainer = (node: any) => /enhancement/i.test(node["@_name"] ?? "");
+  const key = (n: string) => n.toLowerCase().replace(/[^a-z0-9]/g, "");
+  const idsByName = new Map<string, string[]>();
+  for (const [id, name] of detachmentNames) idsByName.set(key(name), [...(idsByName.get(key(name)) ?? []), id]);
+  // The detachment an enclosing "[Detachment] Enhancements" group names, nearest first.
+  const namedByGroup = (ancestors: any[]): string | undefined => {
+    for (const a of [...ancestors].reverse()) {
+      const m = /^(.+?)\s*Enhancements\s*$/i.exec(String(a["@_name"] ?? "").trim());
+      const ids = m ? idsByName.get(key(m[1])) : undefined;
+      if (ids) return ids[0];
+    }
+    return undefined;
+  };
 
   const emit = (entry: any, ancestors: any[]): void => {
     if (entry["@_hidden"] === "true" || entry["@_type"] !== "upgrade") return;
@@ -2598,6 +2610,17 @@ export function collectEnhancements(
         break;
       }
     }
+    // A group named for one detachment whose condition names another: the
+    // condition was copied (Astra Militarum's "Tempestus Boarding Regiment
+    // Enhancements" is hidden unless Embarked Regiment, at f015101). The name
+    // wins; logged for an upstream report.
+    const namedId = namedByGroup(ancestors);
+    if (detachmentId && namedId && key(detachmentNames.get(namedId)!) !== key(detachmentNames.get(detachmentId)!)) {
+      console.log(
+        `  ${entry["@_name"]}: group names ${detachmentNames.get(namedId)}, condition names ${detachmentNames.get(detachmentId)}; using the group name`,
+      );
+      detachmentId = namedId;
+    }
     let detachment = detachmentId ? detachmentNames.get(detachmentId)! : "";
     if (!detachment) {
       // No condition names it: the entry's comment, an enclosing group's comment
@@ -2612,7 +2635,6 @@ export function collectEnhancements(
           .filter((n) => /enhancements\s*$/i.test(n) && !/^enhancements$/i.test(n.trim()))
           .map((n) => n.replace(/\s*Enhancements\s*$/i, "").trim()),
       ].filter(Boolean);
-      const key = (n: string) => n.toLowerCase().replace(/[^a-z0-9]/g, "");
       const known = new Set([...detachmentNames.values()].map(key));
       detachment = candidates.find((c) => known.has(key(c))) ?? candidates[0] ?? "Unknown";
     }
