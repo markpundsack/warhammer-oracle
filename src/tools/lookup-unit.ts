@@ -197,11 +197,13 @@ function formatAbilityVariantNote(exceptions: AbilityVariantException[]): string
     const diffs = [
       e.gained.length > 0 ? `also has ${e.gained.join(", ")}` : "",
       e.lost.length > 0 ? `does not have ${e.lost.join(", ")}` : "",
+      e.gainedKeywords?.length ? `also has keyword${e.gainedKeywords.length > 1 ? "s" : ""} ${e.gainedKeywords.join(", ")}` : "",
+      e.lostKeywords?.length ? `lacks keyword${e.lostKeywords.length > 1 ? "s" : ""} ${e.lostKeywords.join(", ")}` : "",
     ].filter(Boolean);
     return `- ${e.factions.join(", ")}: ${diffs.join("; ")}`;
   });
   return (
-    `_Shown as most factions field it. Same datasheet, different abilities in:_\n${lines.join("\n")}\n` +
+    `_Shown as most factions field it. Same datasheet, different abilities or keywords in:_\n${lines.join("\n")}\n` +
     `_Re-run \`lookup_unit\` with \`faction\` for that version._`
   );
 }

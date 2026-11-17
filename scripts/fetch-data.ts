@@ -20,7 +20,7 @@ import {
   parseKillTeamGameSystem,
   parseKillTeamCatalogue,
   parseDetachments,
-  parseEnhancements,
+  collectEnhancements,
   parseGenericCrusadeHonours,
   parseFactionCrusadeHonours,
   buildRuleIndex,
@@ -31,12 +31,15 @@ import {
   extractFaction,
   normalizeJsonNode,
   ruleLinksToAbilityProfiles,
+  weaponProfileLinks,
+  infoGroupContents,
+  referenceTables,
   withLinkedUnitProfile,
   isHiddenIn,
   isLinkHiddenIn,
   collectDynamicCategoryIds,
 } from "../src/lib/xml-parser.js";
-import type { VisibilityEnv } from "../src/lib/xml-parser.js";
+import type { VisibilityEnv, ParsedEnhancement } from "../src/lib/xml-parser.js";
 import { parseHeresyData } from "../src/lib/heresy-parser.js";
 import type { HeresySourceFile, HeresyParseResult } from "../src/lib/heresy-parser.js";
 import type { Unit, Detachment, Enhancement, CrusadeHonour, KillTeamOperative } from "../src/types.js";
@@ -49,6 +52,9 @@ const REPO_40K = "BSData/wh40k-10e";
 const REPO_40K_11E = "BSData/wh40k-11e";
 const REPO_KT = "BSData/wh40k-killteam";
 const REPO_HERESY = "BSData/horus-heresy-3rd-edition";
+
+/** BattleScribe's Unit (stat line) profile type, shared by wh40k-10e and wh40k-11e. */
+const UNIT_PROFILE_TYPE_ID = "c547-1836-d8a-ff4f";
 
 // ── GitHub API helpers ───────────────────────────────────────────────────
 
@@ -264,6 +270,15 @@ async function fetchCatalogueRepo(
     catalogueById.set(cat.id, cat);
   }
 
+  // Every detachment's name by id, across all catalogues and libraries, so an
+  // enhancement's "hidden unless <detachment>" condition names its detachment.
+  const detachmentNames = new Map<string, string>();
+  for (const cat of catalogues) {
+    for (const det of parseDetachments(cat.raw, "", globalSharedIndex, globalRuleIndex)) {
+      if (!detachmentNames.has(det.id)) detachmentNames.set(det.id, det.name);
+    }
+  }
+
   // ── Phase 2: For each non-library catalogue, resolve units, detachments, enhancements ──
   const allUnits: Unit[] = [];
   const allDetachments: Detachment[] = [];
@@ -282,17 +297,15 @@ async function fetchCatalogueRepo(
     const catDetachments = parseDetachments(cat.raw, faction, globalSharedIndex, globalRuleIndex);
     allDetachments.push(...catDetachments);
 
-    const catEnhancements = parseEnhancements(cat.raw, faction, globalSharedIndex);
-    allEnhancements.push(...catEnhancements);
-
     if (extractCrusade) {
       allCrusadeHonours.push(...parseFactionCrusadeHonours(cat.raw, faction));
     }
 
-    // Also check linked library catalogues for detachments/enhancements —
+    // Also check linked library catalogues for detachments —
     // but only the catalogue's OWN dedicated library (see libraryBelongsToFaction),
     // not every ally-unit library it links to for roster-building purposes.
     const catLinks = ensureArray(cat.raw.catalogueLinks?.catalogueLink);
+    const factionDetachmentIds = new Set(catDetachments.map((d) => d.id));
     for (const catLink of catLinks) {
       const targetCatId = catLink["@_targetId"];
       if (!targetCatId) continue;
@@ -302,14 +315,28 @@ async function fetchCatalogueRepo(
 
       const linkedDetachments = parseDetachments(linkedCat.raw, faction, globalSharedIndex, globalRuleIndex);
       allDetachments.push(...linkedDetachments);
-
-      const linkedEnhancements = parseEnhancements(linkedCat.raw, faction, globalSharedIndex);
-      allEnhancements.push(...linkedEnhancements);
+      for (const d of linkedDetachments) factionDetachmentIds.add(d.id);
 
       if (extractCrusade) {
         allCrusadeHonours.push(...parseFactionCrusadeHonours(linkedCat.raw, faction));
       }
     }
+
+    // Enhancements: one whose detachment the data names belongs to this
+    // faction exactly when the faction has that detachment, from whichever
+    // catalogue it links (Genestealer Cults' live in "Library - Tyranids",
+    // which isn't GSC's own library, so they were filed under Tyranids). One
+    // without a known detachment comes from this catalogue or its own library,
+    // as before.
+    const catEnhancements: ParsedEnhancement[] = [];
+    for (const source of [cat, ...catLinks.map((l: any) => catalogueById.get(l["@_targetId"]))]) {
+      if (!source) continue;
+      const own = source === cat || libraryBelongsToFaction(cat.name, source.name);
+      for (const enh of collectEnhancements(source.raw, faction, detachmentNames)) {
+        if (enh.detachmentId ? factionDetachmentIds.has(enh.detachmentId) : own) catEnhancements.push(enh);
+      }
+    }
+    allEnhancements.push(...catEnhancements.map(({ detachmentId: _id, ...e }) => e));
 
     if (catDetachments.length > 0 || catEnhancements.length > 0) {
       console.log(`    → ${catDetachments.length} detachments, ${catEnhancements.length} enhancements`);
@@ -351,7 +378,7 @@ async function fetchCatalogueRepo(
       const target = globalSharedIndex.get(targetId);
       if (!target) continue;
 
-      const unit = parseEntryWithLinks(target, faction, cat.id, globalSharedIndex, globalRuleIndex, globalProfileIndex, dynamicCategoryIds);
+      const unit = parseEntryWithLinks(withLinkCategories(target, link), faction, cat.id, globalSharedIndex, globalRuleIndex, globalProfileIndex, dynamicCategoryIds);
       if (unit) {
         // Use the link's id to avoid collisions with other factions using same shared entry
         const linkId = link["@_id"] || unit.id;
@@ -387,7 +414,7 @@ async function fetchCatalogueRepo(
         const target = globalSharedIndex.get(targetId);
         if (!target) continue;
 
-        const unit = parseEntryWithLinks(target, faction, cat.id, globalSharedIndex, globalRuleIndex, globalProfileIndex, dynamicCategoryIds);
+        const unit = parseEntryWithLinks(withLinkCategories(target, link), faction, cat.id, globalSharedIndex, globalRuleIndex, globalProfileIndex, dynamicCategoryIds);
         if (unit) {
           const linkId = link["@_id"] || unit.id;
           catUnits.push({ ...unit, id: linkId });
@@ -405,8 +432,13 @@ async function fetchCatalogueRepo(
       }
     }
 
+    // Reference tables from this catalogue and its own library (see referenceTables).
+    const tables = [cat, ...catLinks.map((l: any) => catalogueById.get(l["@_targetId"]))]
+      .filter((c): c is ParsedCatalogue => !!c && (c === cat || libraryBelongsToFaction(cat.name, c.name)))
+      .flatMap((c) => referenceTables(c.raw, (id) => globalSharedIndex.get(id)));
+
     console.log(`  ${cat.name} → ${dedupedUnits.length} units`);
-    allUnits.push(...dedupedUnits);
+    allUnits.push(...attachReferenceTables(dedupedUnits, tables));
   }
 
   // Global dedup by ID (in case multiple factions share exact same ID — unlikely but safe).
@@ -628,6 +660,15 @@ function parseEntryWithLinks(
   profileIndex: Map<string, any>,
   dynamicCategoryIds: Set<string>,
 ): Unit | null {
+  // A roster entry typed "upgrade" that carries its own Unit stat line is a
+  // single-model datasheet BSData mistyped: Adeptus Mechanicus' root-linked
+  // "X-101 [Legends]" (in 11e at f015101). Read it as the model it is.
+  if (
+    entry["@_type"] === "upgrade" &&
+    ensureArray(entry.profiles?.profile).some((p: any) => p["@_typeId"] === UNIT_PROFILE_TYPE_ID)
+  ) {
+    entry = { ...entry, "@_type": "model" };
+  }
   const type = entry["@_type"];
   // Also honours a datasheet hidden only in some catalogues, e.g. Space
   // Marines' Repulsor Executioner is "hidden if the primary catalogue is
@@ -653,6 +694,57 @@ function parseEntryWithLinks(
     profileIndex,
     primaryCatalogueId,
     dynamicCategoryIds,
+  });
+}
+
+/**
+ * A root-level entryLink is the roster selection, so its own categoryLinks are
+ * the unit's keywords too. BSData's Titans live once in "Library - Titans"
+ * with no faction keyword at all; each Titanicus catalogue's link adds its own
+ * ("Faction: Adeptus Titanicus" + IMPERIUM, "Faction: Titanicus Traitoris" +
+ * CHAOS). Returns the target unchanged when the link adds nothing.
+ */
+export function withLinkCategories(target: any, link: any): any {
+  const extra = ensureArray(link?.categoryLinks?.categoryLink);
+  if (extra.length === 0) return target;
+  const own = ensureArray(target.categoryLinks?.categoryLink);
+  const have = new Set(own.map((cl: any) => cl["@_targetId"] ?? cl["@_name"]));
+  const added = extra.filter((cl: any) => !have.has(cl["@_targetId"] ?? cl["@_name"]));
+  if (added.length === 0) return target;
+  return { ...target, categoryLinks: { ...target.categoryLinks, categoryLink: [...own, ...added] } };
+}
+
+/**
+ * Appends each reference table (see referenceTables) to the army rule that
+ * uses it: the ability named like the table ("Blessings of Khorne", "Martial
+ * Ka'tah"), or, when no ability has that name, the one that mentions it on the
+ * most of the faction's datasheets (Thousand Sons' "Cabal of Sorcerers" for
+ * "Rituals"). Units are returned as new objects; abilities are not shared.
+ */
+export function attachReferenceTables(units: Unit[], tables: { name: string; text: string }[]): Unit[] {
+  if (tables.length === 0) return units;
+  const lower = (s: string) => s.toLowerCase().trim();
+  const targets = new Map<string, string>(); // ability name → table text
+  for (const table of tables) {
+    const exact = units.some((u) => u.abilities.some((a) => lower(a.name) === lower(table.name)));
+    let target = exact ? table.name : undefined;
+    if (!target) {
+      const mention = new RegExp(`\\b${table.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i");
+      const counts = new Map<string, number>();
+      for (const u of units) for (const a of u.abilities) if (mention.test(a.description)) counts.set(a.name, (counts.get(a.name) ?? 0) + 1);
+      target = [...counts].sort((a, b) => b[1] - a[1])[0]?.[0];
+    }
+    if (target) targets.set(lower(target), `**${table.name}**\n\n${table.text}`);
+  }
+  return units.map((u) => {
+    if (!u.abilities.some((a) => targets.has(lower(a.name)))) return u;
+    return {
+      ...u,
+      abilities: u.abilities.map((a) => {
+        const text = targets.get(lower(a.name));
+        return text && !a.description.includes(text) ? { ...a, description: `${a.description}\n\n${text}` } : a;
+      }),
+    };
   });
 }
 
@@ -732,7 +824,11 @@ function collectAllProfilesWithGlobalLinks(
   // `env.ancestors` are the selections enclosing `entry`; its own content is
   // read in that context, and its children with `entry` itself added (a
   // group isn't a selection, so its children share its context).
-  const direct = ensureArray(entry.profiles?.profile).filter((p: any) => !isHiddenIn(p, env, true));
+  const direct = [
+    ...ensureArray(entry.profiles?.profile),
+    ...infoGroupContents(entry, env).profiles,
+    ...weaponProfileLinks(entry, profileIndex, env),
+  ].filter((p: any) => !isHiddenIn(p, env, true));
   const ruleAbilities = ruleLinksToAbilityProfiles(entry, ruleIndex, profileIndex, env);
   const inner: VisibilityEnv = isGroup
     ? env

@@ -89,8 +89,11 @@ describe("lookup_weapon tool", () => {
   it("judges the standard profile on current datasheets, not [Legends]/[Crucible] entries", async () => {
     // Legends/Crucible boltguns (A2, no Rapid Fire) are numerous enough to
     // outvote the real profile if every entry gets a vote.
+    // Since linked weapon profiles are followed, Heretic Astartes boltguns
+    // (A2 S5 AP-1, no keywords) count too, so no single profile is standard
+    // any more; the Legends/Crucible ones still must not decide it.
     const standard = standardSection(await lookup({ weapon_name: "boltgun" }));
-    expect(standard).toContain("**Standard profile**");
+    expect(standard).toMatch(/\*\*(Standard|Most common) profile\*\*/);
     expect(standard).toContain("current datasheet");
     expect(standard).toContain('| 24" | 1 | 4 | 0 | 1 | Rapid Fire 1 |');
   });

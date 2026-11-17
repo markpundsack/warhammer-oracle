@@ -25,6 +25,7 @@ const UNIT_PROFILE_TYPE_ID = "c547-1836-d8a-ff4f";
 const RANGED_WEAPON_TYPE_ID = "f77d-b953-8fa4-b762";
 const MELEE_WEAPON_TYPE_ID = "8a40-4aaa-c780-9046";
 const ABILITY_TYPE_ID = "9cc3-6d83-4dd3-9b64";
+const TRANSPORT_TYPE_ID = "74f8-5443-9d6d-1f1e";
 const POINTS_COST_TYPE_ID = "51b2-306e-1021-d207";
 // 11th Edition only (absent from BSData/wh40k-10e entirely) — a detachment's
 // "Detachment Points" cost, and the categoryLink naming its Force Disposition.
@@ -98,6 +99,7 @@ const ATTR_ALIAS_KEYS = new Set([
   "childId",
   "defaultSelectionEntryId",
   "repeats",
+  "typeName",
 ]);
 
 // BSData's 11e JSON represents repeatable elements as flat arrays (e.g.
@@ -119,6 +121,7 @@ const PLURAL_CONTAINER_KEYS: Record<string, string> = {
   rules: "rule",
   sharedRules: "rule",
   infoLinks: "infoLink",
+  infoGroups: "infoGroup",
   catalogueLinks: "catalogueLink",
   constraints: "constraint",
   modifiers: "modifier",
@@ -202,6 +205,111 @@ function extractFaction(catalogueName: string): string {
 // === Profile extractors ===
 
 /**
+ * What a profile is, by type. Besides the four standard 40K types, catalogues
+ * define their own profile types for a datasheet's named ability blocks:
+ * Angron's "Wrathful Presence", Be'lakor's "Shadow Form", Mortarion's "Lord of
+ * the Death Guard", the Silent King's "Triarch Abilities", Yarrick's "Hero of
+ * Hades Hive", Astra Militarum "Orders", World Eaters "Blessings of Khorne",
+ * Thousand Sons "Rituals". Those were dropped because only the standard
+ * Abilities type was read; they are abilities. A custom type shaped like a
+ * weapon (Necrons' "C'tan Powers": Range/A/BS/S/AP/D/Keywords) is a weapon.
+ * Transport capacity is not an ability.
+ */
+function profileKind(p: any): "unit" | "ranged" | "melee" | "ability" | "other" {
+  const typeId = p["@_typeId"];
+  if (typeId === UNIT_PROFILE_TYPE_ID) return "unit";
+  if (typeId === RANGED_WEAPON_TYPE_ID) return "ranged";
+  if (typeId === MELEE_WEAPON_TYPE_ID) return "melee";
+  if (typeId === ABILITY_TYPE_ID) return "ability";
+  if (typeId === TRANSPORT_TYPE_ID) return "other";
+  const names = new Set(
+    ensureArray(p.characteristics?.characteristic).map((c: any) => String(c["@_name"] ?? "").toLowerCase()),
+  );
+  if (names.has("range") && names.has("a") && names.has("d")) {
+    if (names.has("bs")) return "ranged";
+    if (names.has("ws")) return "melee";
+  }
+  if (names.size === 0) return "other";
+  return "ability";
+}
+
+/**
+ * An ability from a catalogue's own profile type, as name + description. The
+ * type name heads the ability ("Wrathful Presence: Overwhelming Wrath (Aura)")
+ * because the datasheet groups them under it; several characteristics
+ * ("Warp Charge", "Effect") are kept as labelled lines.
+ */
+function customAbility(p: any): Ability {
+  const typeName = String(p["@_typeName"] ?? "").trim();
+  const name = String(p["@_name"] ?? "").trim();
+  const chars = ensureArray(p.characteristics?.characteristic)
+    .map((c: any) => ({ label: String(c["@_name"] ?? "").trim(), text: String(c["#text"] ?? "").trim() }))
+    .filter((c) => c.text && c.text !== "-");
+  const description =
+    chars.length === 1 ? chars[0].text : chars.map((c) => `**${c.label}:** ${c.text}`).join("\n");
+  const headed =
+    typeName && typeName !== "Abilities" && !name.toLowerCase().includes(typeName.toLowerCase())
+      ? `${typeName}: ${name}`
+      : name;
+  return { name: headed, description };
+}
+
+/**
+ * A faction's reference tables: root-level non-unit entries holding the
+ * options an army rule picks from, as profiles of the catalogue's own type
+ * (World Eaters' "Blessings of Khorne Reference", Thousand Sons' "Rituals
+ * reference", Custodes' "Martial Ka'tah Reference"). No datasheet links them,
+ * so the army rule said "activate a Blessing of Khorne" with no list of them.
+ * Returns one table per profile type: its name and the options as text.
+ */
+export function referenceTables(catNode: any, resolveEntry: (id: string) => any): { name: string; text: string }[] {
+  const roots = [
+    ...ensureArray(catNode.selectionEntries?.selectionEntry),
+    ...ensureArray(catNode.entryLinks?.entryLink)
+      .filter((l: any) => !isHiddenIn(l))
+      .map((l: any) => resolveEntry(l["@_targetId"]))
+      .filter(Boolean),
+  ];
+  const tables = new Map<string, string[]>();
+  for (const entry of roots) {
+    const type = entry["@_type"];
+    if (type === "unit" || type === "model" || isHiddenIn(entry)) continue;
+    for (const p of ensureArray(entry.profiles?.profile)) {
+      if (p["@_typeId"] === ABILITY_TYPE_ID || profileKind(p) !== "ability") continue;
+      const typeName = String(p["@_typeName"] ?? "").trim();
+      if (!typeName) continue;
+      const { description } = customAbility(p);
+      if (!description) continue;
+      if (!tables.has(typeName)) tables.set(typeName, []);
+      tables.get(typeName)!.push(`**${String(p["@_name"] ?? "").trim()}**\n${description}`);
+    }
+  }
+  return [...tables].map(([name, items]) => ({ name, text: items.join("\n\n") }));
+}
+
+/**
+ * Profiles and infoLinks an entry holds in its <infoGroups>: a named block of
+ * an ability plus the rules it mentions, shown together on the datasheet, such
+ * as each Imperial Knight's Bondsman duty ("Paladin's Duty (Bondsman)") or the
+ * Acastus Porphyrion's "Bastion of Firepower". These were never read, so the
+ * abilities were missing. Nested groups are flattened; hidden ones are skipped.
+ */
+export function infoGroupContents(entry: any, env: VisibilityEnv = {}): { profiles: any[]; infoLinks: any[] } {
+  const profiles: any[] = [];
+  const infoLinks: any[] = [];
+  const visit = (node: any): void => {
+    for (const group of ensureArray(node.infoGroups?.infoGroup)) {
+      if (isHiddenIn(group, env)) continue;
+      profiles.push(...ensureArray(group.profiles?.profile));
+      infoLinks.push(...ensureArray(group.infoLinks?.infoLink));
+      visit(group);
+    }
+  };
+  visit(entry);
+  return { profiles, infoLinks };
+}
+
+/**
  * Deduped on the full stat line: a squad's loadout-variant model entries
  * ("Intercessor", "Intercessor w/ Grenade Launcher") each carry their own
  * copy of the same Unit profile, which surfaced as repeated identical rows.
@@ -233,9 +341,20 @@ function extractUnitProfiles(profiles: any[]): UnitProfile[] {
     });
 }
 
+/** Drop repeated identical rows: a weapon linked from several models (or inline on each) is one weapon. */
+function dedupeByContent<T>(rows: T[]): T[] {
+  const seen = new Set<string>();
+  return rows.filter((row) => {
+    const key = JSON.stringify(row);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 function extractRangedWeapons(profiles: any[]): RangedWeapon[] {
-  return profiles
-    .filter((p: any) => p["@_typeId"] === RANGED_WEAPON_TYPE_ID)
+  return dedupeByContent(profiles
+    .filter((p: any) => profileKind(p) === "ranged")
     .map((p: any) => {
       const chars = ensureArray(p.characteristics?.characteristic);
       return {
@@ -248,12 +367,12 @@ function extractRangedWeapons(profiles: any[]): RangedWeapon[] {
         damage: getCharacteristic(chars, "D"),
         keywords: parseWeaponKeywords(getCharacteristic(chars, "Keywords")),
       };
-    });
+    }));
 }
 
 function extractMeleeWeapons(profiles: any[]): MeleeWeapon[] {
-  return profiles
-    .filter((p: any) => p["@_typeId"] === MELEE_WEAPON_TYPE_ID)
+  return dedupeByContent(profiles
+    .filter((p: any) => profileKind(p) === "melee")
     .map((p: any) => {
       const chars = ensureArray(p.characteristics?.characteristic);
       return {
@@ -266,7 +385,7 @@ function extractMeleeWeapons(profiles: any[]): MeleeWeapon[] {
         damage: getCharacteristic(chars, "D"),
         keywords: parseWeaponKeywords(getCharacteristic(chars, "Keywords")),
       };
-    });
+    }));
 }
 
 /**
@@ -280,8 +399,9 @@ function extractMeleeWeapons(profiles: any[]): MeleeWeapon[] {
  */
 function extractAbilities(profiles: any[]): Ability[] {
   const abilities = profiles
-    .filter((p: any) => p["@_typeId"] === ABILITY_TYPE_ID)
+    .filter((p: any) => profileKind(p) === "ability")
     .map((p: any) => {
+      if (p["@_typeId"] !== ABILITY_TYPE_ID) return customAbility(p);
       const chars = ensureArray(p.characteristics?.characteristic);
       return {
         name: p["@_name"],
@@ -386,7 +506,11 @@ function ruleLinksToAbilityProfiles(
   const type = entry["@_type"];
   if (type !== "unit" && type !== "model") return [];
 
-  const links = ensureArray(entry.infoLinks?.infoLink).filter((l: any) => !isHiddenIn(l, env));
+  // An infoGroup's rule links are a glossary for the abilities it holds (Knight
+  // Paladin's "Paladin's Duty" group links Lethal Hits and Lance), not abilities
+  // the unit has, so only its profile links are read.
+  const groupLinks = infoGroupContents(entry, env).infoLinks.filter((l: any) => l["@_type"] === "profile");
+  const links = [...ensureArray(entry.infoLinks?.infoLink), ...groupLinks].filter((l: any) => !isHiddenIn(l, env));
   const profiles: any[] = [];
   for (const link of links) {
     const targetId = link["@_targetId"];
@@ -406,8 +530,12 @@ function ruleLinksToAbilityProfiles(
       });
     } else if (linkType === "profile" && profileIndex) {
       const target = profileIndex.get(targetId);
-      if (!target || target["@_typeId"] !== ABILITY_TYPE_ID) continue;
+      if (!target || profileKind(target) !== "ability") continue;
       if (isHiddenIn(target, env, true)) continue;
+      if (target["@_typeId"] !== ABILITY_TYPE_ID) {
+        profiles.push(target);
+        continue;
+      }
       const chars = ensureArray(target.characteristics?.characteristic);
       const description = getCharacteristic(chars, "Description");
       if (!description) continue;
@@ -421,6 +549,36 @@ function ruleLinksToAbilityProfiles(
     }
   }
   return profiles;
+}
+
+/**
+ * Weapon profiles an entry references by <infoLink type="profile"> instead of
+ * carrying inline. BSData/wh40k-11e keeps one shared Ranged/Melee profile per
+ * common weapon in a catalogue's sharedProfiles and links it from each weapon
+ * entry: CSM's shared "Bolt pistol" upgrade is just an infoLink to the "Bolt
+ * pistol" profile (plus a rule link to Pistol). Without this, every such weapon
+ * vanished from rangedWeapons/meleeWeapons while still listed in the unit's
+ * wargear (Legionaries had no Bolt pistol, Boltgun or Astartes chainsword).
+ *
+ * Unlike ruleLinksToAbilityProfiles this applies at any entry type: weapon
+ * items are type="upgrade". Only Ranged/Melee-typed targets are returned, so
+ * the ability-menu concern documented there (a Crucible character's shared
+ * "Abilities" pick-list) doesn't arise; weapon menus are already listed in
+ * full inline. Each link's own name modifiers don't apply: the profile name is
+ * the weapon's.
+ */
+export function weaponProfileLinks(entry: any, profileIndex: Map<string, any>, env: VisibilityEnv = {}): any[] {
+  const out: any[] = [];
+  for (const link of [...ensureArray(entry.infoLinks?.infoLink), ...infoGroupContents(entry, env).infoLinks]) {
+    if (link["@_type"] !== "profile" || isHiddenIn(link, env)) continue;
+    const target = profileIndex.get(link["@_targetId"]);
+    if (!target) continue;
+    const kind = profileKind(target);
+    if (kind !== "ranged" && kind !== "melee") continue;
+    if (isHiddenIn(target, env, true)) continue;
+    out.push(target);
+  }
+  return out;
 }
 
 /**
@@ -438,7 +596,11 @@ function ruleLinksToAbilityProfiles(
  * if given, additionally resolves profile-type infoLinks the same way.
  */
 function collectAllProfiles(entry: any, ruleIndex?: Map<string, any>, profileIndex?: Map<string, any>): any[] {
-  const direct = ensureArray(entry.profiles?.profile);
+  const direct = [
+    ...ensureArray(entry.profiles?.profile),
+    ...infoGroupContents(entry).profiles,
+    ...(profileIndex ? weaponProfileLinks(entry, profileIndex) : []),
+  ];
   const ruleAbilities = ruleIndex ? ruleLinksToAbilityProfiles(entry, ruleIndex, profileIndex) : [];
 
   const subEntries = ensureArray(entry.selectionEntries?.selectionEntry);
@@ -2277,7 +2439,17 @@ export function parseDetachments(
     }
   }
 
-  const entries = ensureArray(group.selectionEntries?.selectionEntry);
+  // Detachments can sit one group deeper: Custodes' Detachment group holds its
+  // seven own entries plus a "Shield Host Detachments (Max 1)" group of six
+  // more (Dread Host, Aquilan Shield, ...), which were missing.
+  const entries: any[] = [];
+  const gather = (node: any): void => {
+    entries.push(...ensureArray(node.selectionEntries?.selectionEntry));
+    for (const sub of ensureArray(node.selectionEntryGroups?.selectionEntryGroup)) {
+      if (sub["@_hidden"] !== "true") gather(sub);
+    }
+  };
+  gather(group);
   const detachments: Detachment[] = [];
 
   for (const entry of entries) {
@@ -2302,16 +2474,36 @@ export function parseDetachments(
 }
 
 /**
- * Extract enhancement description from Abilities profile.
+ * An enhancement's rules text: its Abilities profile, or, for an enhancement
+ * that is a weapon (Adeptus Mechanicus' TL-409), that weapon's profile.
  */
 function extractEnhancementDescription(entry: any): string {
   const profiles = ensureArray(entry.profiles?.profile);
   const abilityProfile = profiles.find(
     (p: any) => p["@_typeId"] === ABILITY_TYPE_ID
   );
-  if (!abilityProfile) return "";
-  const chars = ensureArray(abilityProfile.characteristics?.characteristic);
-  return getCharacteristic(chars, "Description");
+  if (abilityProfile) {
+    const chars = ensureArray(abilityProfile.characteristics?.characteristic);
+    return getCharacteristic(chars, "Description");
+  }
+  return profiles
+    .filter((p: any) => {
+      const kind = profileKind(p);
+      return kind === "ranged" || kind === "melee";
+    })
+    .map((p: any) => {
+      const chars = ensureArray(p.characteristics?.characteristic);
+      const kind = profileKind(p);
+      const skill = kind === "ranged" ? "BS" : "WS";
+      const stat = (n: string) => getCharacteristic(chars, n) || "-";
+      const keywords = getCharacteristic(chars, "Keywords").trim();
+      return (
+        `**${p["@_name"]}** (${kind} weapon): Range ${stat("Range")}, A ${stat("A")}, ${skill} ${stat(skill)}, ` +
+        `S ${stat("S")}, AP ${stat("AP")}, D ${stat("D")}` +
+        (keywords && keywords !== "-" ? `, [${keywords}]` : "")
+      );
+    })
+    .join("\n");
 }
 
 /**
@@ -2328,98 +2520,155 @@ function extractEnhancementPoints(entry: any): number | null {
 }
 
 /**
- * Find all enhancement groups in the catalogue node.
- * Enhancement groups are sharedSelectionEntryGroups whose name contains "Enhancements".
+ * Detachment ids a node requires: BSData hides an enhancement (or the group
+ * holding it) unless its detachment is in the army, as a hide modifier with a
+ * "<detachment> lessThan 1" (or "equalTo 0") condition. Only ids in
+ * `detachmentNames` count, so other roster conditions (the Matched Play force,
+ * a model count) are ignored.
+ */
+function requiredDetachmentIds(node: any, detachmentNames: Map<string, string>): string[] {
+  const ids = new Set<string>();
+  const visitConditions = (holder: any): void => {
+    for (const c of ensureArray(holder.conditions?.condition)) {
+      const childId = c["@_childId"];
+      const type = c["@_type"];
+      const value = Number(c["@_value"]);
+      if (!childId || !detachmentNames.has(childId)) continue;
+      if ((type === "lessThan" && value === 1) || (type === "equalTo" && value === 0)) ids.add(childId);
+    }
+    for (const g of ensureArray(holder.conditionGroups?.conditionGroup)) visitConditions(g);
+  };
+  const visitModifiers = (holder: any): void => {
+    for (const m of ensureArray(holder.modifiers?.modifier)) {
+      if (m["@_field"] === "hidden" && String(m["@_value"]) === "true") visitConditions(m);
+    }
+    for (const g of ensureArray(holder.modifierGroups?.modifierGroup)) visitModifiers(g);
+  };
+  visitModifiers(node);
+  return [...ids];
+}
+
+/** An Enhancement plus the id of the detachment it belongs to, when the data says. */
+export type ParsedEnhancement = Enhancement & { detachmentId?: string };
+
+/**
+ * Every enhancement in a catalogue node, wherever it sits: the shared
+ * "Enhancements" groups (nested "[Detachment] Enhancements" child groups or
+ * flat ones), and, since 11e, a datasheet's own "Enhancements" group holding
+ * its unit-level upgrades (Votann Sagitaur's Saturation Rounds, Necron
+ * Warriors' Enlivened Sentinels, a War Dog Huntsman's Soul-spoor Auspicator
+ * on the entryLink that adds the group). Those were missed because only
+ * top-level groups were read.
  *
- * Two patterns exist:
- * 1. Nested: A parent "Enhancements" group with child selectionEntryGroups
- *    named "[Detachment] Enhancements", each containing enhancement entries.
- * 2. Flat: A group named "[Detachment] Enhancements" (or "Enhancements")
- *    with enhancement entries directly inside, using <comment> for detachment association.
- * 3. Separate: Additional standalone "[Detachment] Enhancements" groups at
- *    the sharedSelectionEntryGroups level.
+ * The detachment comes from the data's own condition when there is one (see
+ * requiredDetachmentIds, nearest enclosing node first), named from
+ * `detachmentNames` (id → name). Otherwise it falls back to the entry's
+ * comment or the "[Detachment] Enhancements" group name, as before. The
+ * comment is often a short name ("Zealots", "Recon Elements") or missing
+ * (Agents of the Imperium), so those enhancements didn't link to their
+ * detachment.
+ */
+export function collectEnhancements(
+  catNode: any,
+  faction: string,
+  detachmentNames: Map<string, string> = new Map(),
+): ParsedEnhancement[] {
+  const enhancements: ParsedEnhancement[] = [];
+  const seenIds = new Set<string>();
+  const isEnhancementContainer = (node: any) => /enhancement/i.test(node["@_name"] ?? "");
+
+  const emit = (entry: any, ancestors: any[]): void => {
+    if (entry["@_hidden"] === "true" || entry["@_type"] !== "upgrade") return;
+    const id = entry["@_id"];
+    if (!id || seenIds.has(id)) return;
+    const description = extractEnhancementDescription(entry);
+    if (!description) return;
+    seenIds.add(id);
+
+    let detachmentId: string | undefined;
+    for (const node of [entry, ...[...ancestors].reverse()]) {
+      // An enhancement group nested in the detachment's own entry belongs to it.
+      if (node !== entry && detachmentNames.has(node["@_id"])) {
+        detachmentId = node["@_id"];
+        break;
+      }
+      const ids = requiredDetachmentIds(node, detachmentNames);
+      if (ids.length > 0) {
+        detachmentId = ids[0];
+        break;
+      }
+    }
+    let detachment = detachmentId ? detachmentNames.get(detachmentId)! : "";
+    if (!detachment) {
+      // No condition names it: the entry's comment, an enclosing group's comment
+      // (Death Guard's Contagion Engines group) or a "[Detachment] Enhancements"
+      // group name. A candidate that is a known detachment's name wins.
+      const nearest = [...ancestors].reverse();
+      const candidates = [
+        String(entry.comment ?? "").trim(),
+        ...nearest.map((a: any) => String(a.comment ?? "").trim()),
+        ...nearest
+          .map((a: any) => String(a["@_name"] ?? ""))
+          .filter((n) => /enhancements\s*$/i.test(n) && !/^enhancements$/i.test(n.trim()))
+          .map((n) => n.replace(/\s*Enhancements\s*$/i, "").trim()),
+      ].filter(Boolean);
+      const key = (n: string) => n.toLowerCase().replace(/[^a-z0-9]/g, "");
+      const known = new Set([...detachmentNames.values()].map(key));
+      detachment = candidates.find((c) => known.has(key(c))) ?? candidates[0] ?? "Unknown";
+    }
+
+    enhancements.push({
+      id,
+      name: entry["@_name"],
+      faction,
+      detachment,
+      description,
+      points: extractEnhancementPoints(entry),
+      gameSystem: "wh40k-10e" as const,
+      ...(detachmentId ? { detachmentId } : {}),
+    });
+  };
+
+  // `inEnhancements`: inside an enhancement container, where every upgrade
+  // entry is an enhancement. Elsewhere, only containers are looked for.
+  const visit = (node: any, ancestors: any[], inEnhancements: boolean): void => {
+    const here = inEnhancements || isEnhancementContainer(node);
+    const path = [...ancestors, node];
+    for (const entry of ensureArray(node.selectionEntries?.selectionEntry)) {
+      if (here) emit(entry, path);
+      else visit(entry, path, false);
+    }
+    for (const group of ensureArray(node.selectionEntryGroups?.selectionEntryGroup)) {
+      if (group["@_hidden"] === "true") continue;
+      visit(group, path, here);
+    }
+    for (const link of ensureArray(node.entryLinks?.entryLink)) {
+      // A link can carry its own inline entries (Chaos Knights' War Dog
+      // Huntsman adds Soul-spoor Auspicator to the Enhancements group it links).
+      if (link.selectionEntries || link.selectionEntryGroups) visit(link, path, here);
+    }
+  };
+
+  for (const group of ensureArray(catNode.sharedSelectionEntryGroups?.selectionEntryGroup)) visit(group, [], false);
+  for (const entry of [
+    ...ensureArray(catNode.sharedSelectionEntries?.selectionEntry),
+    ...ensureArray(catNode.selectionEntries?.selectionEntry),
+  ]) {
+    visit(entry, [], false);
+  }
+  return enhancements;
+}
+
+/**
+ * Enhancements in a catalogue node, without detachment ids (see collectEnhancements).
  */
 export function parseEnhancements(
   catNode: any,
   faction: string,
-  globalIndex?: Map<string, any>
+  _globalIndex?: Map<string, any>,
+  detachmentNames?: Map<string, string>,
 ): Enhancement[] {
-  const enhancements: Enhancement[] = [];
-  const seenIds = new Set<string>();
-
-  const sharedGroups = ensureArray(catNode.sharedSelectionEntryGroups?.selectionEntryGroup);
-
-  for (const group of sharedGroups) {
-    const groupName: string = group["@_name"] ?? "";
-    if (!groupName.toLowerCase().includes("enhancement")) continue;
-
-    // Check if this group has child selectionEntryGroups (nested pattern)
-    const childGroups = ensureArray(group.selectionEntryGroups?.selectionEntryGroup);
-
-    if (childGroups.length > 0) {
-      // Nested pattern: child groups are named "[Detachment] Enhancements"
-      for (const childGroup of childGroups) {
-        const childName: string = childGroup["@_name"] ?? "";
-        const detachmentName = childName.replace(/\s*Enhancements\s*$/, "").trim();
-        const entries = ensureArray(childGroup.selectionEntries?.selectionEntry);
-        for (const entry of entries) {
-          if (entry["@_hidden"] === "true") continue;
-          const id = entry["@_id"];
-          if (seenIds.has(id)) continue;
-          seenIds.add(id);
-
-          const description = extractEnhancementDescription(entry);
-          if (!description) continue;
-
-          enhancements.push({
-            id,
-            name: entry["@_name"],
-            faction,
-            detachment: detachmentName,
-            description,
-            points: extractEnhancementPoints(entry),
-            gameSystem: "wh40k-10e" as const,
-          });
-        }
-      }
-    }
-
-    // Also check for direct entries in this group (flat pattern, or standalone detachment group)
-    const directEntries = ensureArray(group.selectionEntries?.selectionEntry);
-    if (directEntries.length > 0) {
-      // Determine detachment from group name or entry's <comment>
-      const isGenericName = groupName === "Enhancements";
-      const groupDetachment = isGenericName
-        ? ""
-        : groupName.replace(/\s*Enhancements\s*$/, "").trim();
-
-      for (const entry of directEntries) {
-        if (entry["@_hidden"] === "true") continue;
-        const id = entry["@_id"];
-        if (seenIds.has(id)) continue;
-        seenIds.add(id);
-
-        const description = extractEnhancementDescription(entry);
-        if (!description) continue;
-
-        // Detachment association: use <comment> if available, else group name
-        const comment: string = entry.comment ?? "";
-        const detachment = comment || groupDetachment || "Unknown";
-
-        enhancements.push({
-          id,
-          name: entry["@_name"],
-          faction,
-          detachment,
-          description,
-          points: extractEnhancementPoints(entry),
-          gameSystem: "wh40k-10e" as const,
-        });
-      }
-    }
-  }
-
-  return enhancements;
+  return collectEnhancements(catNode, faction, detachmentNames).map(({ detachmentId: _id, ...e }) => e);
 }
 
 // === Crusade Honours (BSData/wh40k-11e only) ===

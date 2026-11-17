@@ -131,6 +131,10 @@ export type AbilityVariantException = {
   gained: string[];
   /** Abilities the shown copy has that this faction's copy doesn't. */
   lost: string[];
+  /** Keywords this faction's copy adds (Chaos Daemons' Shadow Legion Legionaries: SHADOW LEGION). Absent when none. */
+  gainedKeywords?: string[];
+  /** Keywords the shown copy has that this faction's copy doesn't. Absent when none. */
+  lostKeywords?: string[];
 };
 
 /**
@@ -141,6 +145,9 @@ export type AbilityVariantException = {
  * other chapter's has Combat Doctrines — so a bare "Intercessor Squad" would
  * otherwise force a twelve-way chapter question over one army rule. In that
  * case, answer with the copy most factions share and name the exceptions.
+ * Keywords count as per-army too: the roster link that imports a datasheet can
+ * add the importing army's keywords (Chaos Daemons' Shadow Legion copy of
+ * Legionaries gains SHADOW LEGION and UNDIVIDED).
  * Variants that differ in anything else (stats, points, weapons, wargear —
  * the Helbrute, the Sorcerer) stay a genuine ambiguity: returns null.
  */
@@ -148,7 +155,7 @@ export function resolveAbilityOnlyAmbiguity<T extends NamedFactioned & { abiliti
   variants: T[],
   contentOf: (item: T) => string,
 ): { pick: T; exceptions: AbilityVariantException[] } | null {
-  const withoutAbilities = new Set(variants.map((v) => contentOf({ ...v, abilities: [] })));
+  const withoutAbilities = new Set(variants.map((v) => contentOf({ ...v, abilities: [], keywords: [] })));
   if (withoutAbilities.size !== 1) return null;
 
   const groups = new Map<string, T[]>();
@@ -167,10 +174,16 @@ export function resolveAbilityOnlyAmbiguity<T extends NamedFactioned & { abiliti
     .filter((g) => g !== largest)
     .map((g) => {
       const names = new Set(g[0].abilities.map((a) => a.name));
+      const keywords = new Set(g[0].keywords);
+      const pickKeywords = new Set(pick.keywords);
+      const gainedKeywords = [...keywords].filter((k) => !pickKeywords.has(k));
+      const lostKeywords = [...pickKeywords].filter((k) => !keywords.has(k));
       return {
         factions: g.map((v) => v.faction),
         gained: [...names].filter((n) => !pickNames.has(n)),
         lost: [...pickNames].filter((n) => !names.has(n)),
+        ...(gainedKeywords.length > 0 ? { gainedKeywords } : {}),
+        ...(lostKeywords.length > 0 ? { lostKeywords } : {}),
       };
     });
   return { pick, exceptions };

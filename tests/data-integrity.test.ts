@@ -875,3 +875,88 @@ describe("Unit composition & wargear options (10th Edition)", () => {
     ]);
   });
 });
+
+describe("11e export: linked content BSData keeps out of line", () => {
+  const unit = (name: string, faction: string) => {
+    const u = UNITS_11E.find((x) => x.name === name && x.faction === faction);
+    expect(u, `${faction} / ${name}`).toBeDefined();
+    return u!;
+  };
+  const names = (list: { name: string }[]) => list.map((x) => x.name);
+
+  it("weapons reached through a profile infoLink are listed (CSM Legionaries' Bolt pistol, Boltgun, Astartes chainsword)", () => {
+    const leg = unit("Legionaries", "Chaos Space Marines");
+    expect(names(leg.rangedWeapons)).toEqual(expect.arrayContaining(["Bolt pistol", "Boltgun", "Flamer"]));
+    expect(names(leg.meleeWeapons)).toEqual(expect.arrayContaining(["Astartes chainsword", "Heavy melee weapon"]));
+    expect(names(unit("Bloodthirster", "Chaos Daemons").meleeWeapons)).toContain("➤ Axe of Khorne - strike");
+    expect(names(unit("Tesseract Vault", "Necrons").rangedWeapons)).toEqual(expect.arrayContaining(["Cosmic fire", "Time's arrow", "Antimatter meteor"]));
+  });
+
+  it("no unit lists the same weapon profile twice", () => {
+    for (const u of UNITS_11E) {
+      for (const list of [u.rangedWeapons, u.meleeWeapons]) {
+        const keys = list.map((w) => JSON.stringify(w));
+        expect(new Set(keys).size, `${u.faction} / ${u.name}`).toBe(keys.length);
+      }
+    }
+  });
+
+  it("catalogue-typed ability blocks and infoGroups reach the datasheet", () => {
+    const abilities = (name: string, faction: string) => names(unit(name, faction).abilities);
+    expect(abilities("Angron", "World Eaters")).toContain("Wrathful Presence: Overwhelming Wrath (Aura)");
+    expect(abilities("The Silent King", "Necrons")).toContain("Triarch Abilities: Relentless March (Aura)");
+    expect(abilities("Be'lakor", "Chaos Daemons")).toContain("Shadow Form: Shadow Lord (Aura, Psychic)");
+    expect(abilities("Mortarion", "Death Guard")).toContain("Lord of the Death Guard: Boon of Death");
+    expect(abilities("Commissar Yarrick", "Astra Militarum")).toContain("Hero of Hades Hive: Inspiring Hero (Aura)");
+    expect(abilities("Cadian Castellan", "Astra Militarum")).toContain("Orders");
+    expect(abilities("Knight Paladin", "Imperial Knights")).toContain("Paladin’s Duty (Bondsman)");
+    expect(abilities("Acastus Knight Porphyrion", "Imperial Knights")).toContain("Bastion of Firepower");
+    // An infoGroup's rule links are a glossary, not abilities.
+    expect(abilities("Knight Paladin", "Imperial Knights")).not.toContain("Lethal Hits");
+  });
+
+  it("army rules carry their reference tables (Blessings of Khorne, Rituals)", () => {
+    const rule = (name: string, faction: string, ability: string) =>
+      unit(name, faction).abilities.find((a) => a.name === ability)?.description ?? "";
+    expect(rule("Khorne Berzerkers", "World Eaters", "Blessings of Khorne")).toContain("**6. Cleaving Blows**");
+    expect(rule("Rubric Marines", "Thousand Sons", "Cabal of Sorcerers")).toContain("**Doombolt (Psychic)**");
+  });
+
+  it("Titans carry their army's faction keyword and IMPERIUM/CHAOS", () => {
+    for (const name of ["Warhound Titan", "Reaver Titan", "Warlord Titan", "Warbringer Nemesis Titan"]) {
+      expect(unit(name, "Adeptus Titanicus").keywords).toEqual(expect.arrayContaining(["Adeptus Titanicus", "Imperium"]));
+      expect(unit(name, "Titanicus Traitoris").keywords).toEqual(expect.arrayContaining(["Titanicus Traitoris", "Chaos"]));
+    }
+  });
+
+  it("the X-101 Legends datasheet BSData types as an upgrade is present", () => {
+    expect(unit("X-101 [Legends]", "Adeptus Mechanicus").profiles).toHaveLength(1);
+  });
+
+  it("every enhancement names a detachment its faction has", () => {
+    const detachments = new Set(DETACHMENTS_11E.map((d) => `${d.faction}::${d.name}`));
+    const orphans = ENHANCEMENTS_11E.filter((e) => !detachments.has(`${e.faction}::${e.detachment}`));
+    expect(orphans.map((e) => `${e.faction} / ${e.name} / ${e.detachment}`)).toEqual([]);
+  });
+
+  it("unit-level upgrade enhancements are present with their detachment", () => {
+    const enh = (name: string, faction: string) => ENHANCEMENTS_11E.find((e) => e.name === name && e.faction === faction)?.detachment;
+    expect(enh("Saturation Rounds", "Leagues of Votann")).toBe("Armoured Trailblazers");
+    expect(enh("Enlivened Sentinels", "Necrons")).toBe("Hand of the Dynasty");
+    expect(enh("Frenzied Ferocity", "Emperor's Children")).toBeDefined();
+    expect(enh("Plagueveil", "Death Guard")).toBe("Flyblown Host");
+    expect(enh("Gore-stained Veterans", "World Eaters")).toBe("Butchers of Khorne");
+    expect(enh("Writ of Compunction", "Adepta Sororitas")).toBe("Sacred Champions");
+    expect(enh("Stealth-screened Cybercanids", "Adeptus Mechanicus")).toBe("Cohort Acquisitus");
+    expect(enh("TL-409", "Adeptus Mechanicus")).toBe("Lords of the Forge");
+    expect(enh("Soul-spoor Auspicator", "Chaos Knights")).toBe("Hunting Warpack");
+  });
+
+  it("Genestealer Cults' enhancements are filed under Genestealer Cults, not Tyranids; Custodes keep their Shield Host detachments", () => {
+    expect(ENHANCEMENTS_11E.filter((e) => e.faction === "Genestealer Cults").length).toBeGreaterThan(20);
+    expect(ENHANCEMENTS_11E.some((e) => e.faction === "Tyranids" && e.detachment === "Brood Brother Auxilia")).toBe(false);
+    expect(DETACHMENTS_11E.filter((d) => d.faction === "Adeptus Custodes").map((d) => d.name)).toEqual(
+      expect.arrayContaining(["Dread Host", "Aquilan Shield", "Solar Watch"]),
+    );
+  });
+});

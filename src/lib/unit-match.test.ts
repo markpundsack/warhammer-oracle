@@ -406,3 +406,27 @@ describe("rankUnitMatchesWithFactionHint / pickUnitMatch", () => {
     expect(pick?.faction).toBe("Adeptus Astartes - Space Marines");
   });
 });
+
+describe("resolveAbilityOnlyAmbiguity with per-army keywords", () => {
+  it("treats a copy that only adds its army's keywords as the same datasheet, and names them", () => {
+    const legionaries = (faction: string, keywords: string[]) => ({
+      name: "Legionaries",
+      faction,
+      keywords: ["Heretic Astartes", "Infantry", ...keywords],
+      points: 95,
+      abilities: [{ name: "Dark Pacts", description: "Dark Pacts text" }],
+    });
+    const resolved = resolveAbilityOnlyAmbiguity(
+      [
+        legionaries("Chaos Daemons", ["Shadow Legion"]),
+        legionaries("Chaos Space Marines", []),
+        legionaries("Chaos Knights", []),
+      ],
+      datasheetContentKey,
+    );
+    expect(resolved?.pick.faction).toBe("Chaos Space Marines");
+    expect(resolved?.exceptions).toEqual([
+      { factions: ["Chaos Daemons"], gained: [], lost: [], gainedKeywords: ["Shadow Legion"] },
+    ]);
+  });
+});
