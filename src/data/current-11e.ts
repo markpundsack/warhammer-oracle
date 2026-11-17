@@ -15,6 +15,8 @@ import {
   type EnhancementOverride,
   type UnitAbilityOverride,
 } from "./codex-11e.js";
+import { STRATAGEMS } from "./stratagems.js";
+import { applyPackErrata } from "../lib/private-errata.js";
 
 /** Lower-cased letters and digits only, so "Shadow Keepers" matches "Shadowkeepers" and ’ matches '. */
 function key(s: string): string {
@@ -76,6 +78,11 @@ export function applyUnitAbilityOverrides(base: Unit[], overrides: UnitAbilityOv
   });
 }
 
-export const UNITS_11E: Unit[] = applyUnitAbilityOverrides(GENERATED_UNITS_11E, UNIT_ABILITY_OVERRIDES_11E);
-export const DETACHMENTS_11E: Detachment[] = applyDetachmentOverrides(GENERATED_DETACHMENTS_11E, DETACHMENT_OVERRIDES_11E);
-export const ENHANCEMENTS_11E: Enhancement[] = applyEnhancementOverrides(GENERATED_ENHANCEMENTS_11E, ENHANCEMENT_OVERRIDES_11E);
+// Faction-pack corrections, when the deployment supplies them (src/lib/private-errata.ts).
+export const UNITS_11E: Unit[] = applyPackErrata("units",
+  applyUnitAbilityOverrides(GENERATED_UNITS_11E, UNIT_ABILITY_OVERRIDES_11E));
+export const DETACHMENTS_11E: Detachment[] = applyPackErrata("detachments",
+  applyDetachmentOverrides(GENERATED_DETACHMENTS_11E, DETACHMENT_OVERRIDES_11E));
+export const ENHANCEMENTS_11E: Enhancement[] = applyPackErrata("enhancements",
+  applyEnhancementOverrides(GENERATED_ENHANCEMENTS_11E, ENHANCEMENT_OVERRIDES_11E));
+applyPackErrata("stratagems", STRATAGEMS);
