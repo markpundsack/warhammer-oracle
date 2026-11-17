@@ -26,6 +26,15 @@ function percent(p: number): string {
   return `${Math.round(p * 100)}%`;
 }
 
+/** "…, enough to destroy it (a Rhino has 5: about 1.3 times over)" when the expected loss reaches the target's Hull Points. */
+function overkill(lost: number, i: HeresyAttackInput): string {
+  const hp = i.targetHullPoints;
+  if (!hp || lost < hp) return "";
+  const what = i.titan ? "enough to Cripple that profile" : "enough to destroy it";
+  const times = lost / hp;
+  return `, ${what} (${i.targetName ?? "the target"} has ${hp}${times >= 1.05 ? `: about ${times.toFixed(1)} times over` : ""})`;
+}
+
 /** The result in one speakable sentence: odds as percentages for a single die, rounded counts otherwise. */
 export function spokenAnswer(i: HeresyAttackInput): string {
   const r = calculateHeresyAttack(i);
@@ -44,7 +53,7 @@ export function spokenAnswer(i: HeresyAttackInput): string {
     }
     const hp = r.titanCriticalRolls !== undefined
       ? `${spokenCount(r.titanCriticalRolls, "roll", "rolls")} on the Titan Critical Damage Table (the profile is Crippled)`
-      : `${spokenCount(r.expectedDamage, "Hull Point")} lost`;
+      : `${spokenCount(r.expectedDamage, "Hull Point")} lost${overkill(r.expectedDamage, i)}`;
     return `${shieldText}${spokenCount(pen, "Penetrating Hit")} and ${spokenCount(glance, "Glancing Hit")}: ${hp}.`.replace(/^./, (c) => c.toUpperCase());
   }
   const damage = spokenCount(r.expectedDamage, "point of damage", "points of damage");

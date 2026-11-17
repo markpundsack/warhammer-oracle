@@ -61,7 +61,7 @@ function stat(stats: { name: string; value: string }[], ...names: string[]): num
  * Primary and Exposed Armour (Exposed once that profile is Crippled); other vehicles and Knights
  * have one profile with an Armour Value per facing. Knights have only Front and Rear.
  */
-type Location = { name: string; av: number; label: string; crippled: boolean; titan: boolean };
+type Location = { name: string; av: number; label: string; crippled: boolean; titan: boolean; hp?: number };
 
 /**
  * The Armour Value(s) an attack tests against. Titans and Ordinatus have a profile per location with
@@ -86,7 +86,7 @@ function armourValues(unit: HeresyUnit, r: AttackRequest, notes: string[]): { lo
       const c = isCrippled(prof.name);
       const av = (c ? stat(prof.stats, "exposed armour", "exposed") : stat(prof.stats, "primary armour", "primary"))!;
       const hp = stat(prof.stats, "hp");
-      return { name: prof.name, av, crippled: c, titan, label: `${prof.name}: ${c ? "Crippled, Exposed" : "Primary"} Armour ${av}${hp !== undefined ? `, ${hp} Hull Points` : ""}` };
+      return { name: prof.name, av, crippled: c, titan, hp, label: `${prof.name}: ${c ? "Crippled, Exposed" : "Primary"} Armour ${av}${hp !== undefined ? `, ${hp} Hull Points` : ""}` };
     });
     if (locations.length > 1) notes.push("No location named: comparing every profile.");
     return { locations };
@@ -100,7 +100,7 @@ function armourValues(unit: HeresyUnit, r: AttackRequest, notes: string[]): { lo
   const av = stat(stats, `${facing} armour`, facing);
   if (av === undefined) return { locations: [], error: `No ${facing} armour value found for "${unit.name}".` };
   const hp = stat(stats, "hp", "hull points");
-  return { locations: [{ name: "", av, crippled: false, titan: false, label: `${facing} armour ${av}${hp !== undefined ? `, ${hp} Hull Points` : ""}` }] };
+  return { locations: [{ name: "", av, crippled: false, titan: false, hp, label: `${facing} armour ${av}${hp !== undefined ? `, ${hp} Hull Points` : ""}` }] };
 }
 
 /** "Void Shields (3)" → 3. */
@@ -181,6 +181,7 @@ export function resolveHeresyAttack(r: AttackRequest): Resolution {
       if (a.error || !a.locations.length) return { attacks: [], notes, error: a.error ?? `No armour value found for "${m.unit.name}".` };
       locations = a.locations;
       target.targetArmour = a.locations[0].av;
+      if (a.locations[0].hp !== undefined) Object.assign(target, { targetHullPoints: a.locations[0].hp, targetName: `a ${m.unit.name}` });
       const ws = num(vehicleAsModel(m.unit)?.weaponSkill);
       if (ws !== undefined) target.targetWeaponSkill = ws; // Knights fight back with a WS
       notes.push(`Target: ${m.unit.name}${a.locations.length === 1 ? `, ${a.locations[0].label}` : ""}.`);
@@ -296,7 +297,8 @@ function perLocation(attacks: ResolvedAttack[], locations: Location[], attackerK
     }
     for (const l of locs) {
       const head = /head/i.test(l.name);
-      const input: HeresyAttackInput = { ...a.input, targetArmour: l.av, ...(l.titan ? { titan: l.crippled ? ("crippled" as const) : ("intact" as const) } : {}) };
+      const input: HeresyAttackInput = { ...a.input, targetArmour: l.av, ...(l.titan ? { titan: l.crippled ? ("crippled" as const) : ("intact" as const) } : {}),
+        ...(l.hp !== undefined && !l.crippled ? { targetHullPoints: l.hp, targetName: `the ${l.name} profile` } : { targetHullPoints: undefined }) };
       if (l.titan && !melee && head) input.snapShots = true;
       if (l.titan && melee) input.targetWeaponSkill = head ? 4 : 1;
       out.push({ label: [a.label, locs.length > 1 || locations.length > 1 ? l.label : ""].filter(Boolean).join(" → "), input });

@@ -245,3 +245,13 @@ describe("Melta (X)", () => {
       .toBeCloseTo(calculateHeresyAttack(inf).expectedDamage);
   });
 });
+
+describe("overkill", () => {
+  it("says when the expected Hull Point loss destroys the target, keeping the decimals", async () => {
+    const { spokenAnswer } = await import("../src/tools/heresy-attack-calculator.js");
+    const big = { attackType: "ranged" as const, attacks: 10, ballisticSkill: 5, strength: 10, targetArmour: 11, damage: "2", targetHullPoints: 5, targetName: "a Rhino" };
+    const text = spokenAnswer(big);
+    expect(text).toMatch(/Hull Points lost, enough to destroy it \(a Rhino has 5: about \d\.\d times over\)/);
+    expect(spokenAnswer({ ...big, attacks: 1 })).not.toMatch(/destroy/);
+  });
+});

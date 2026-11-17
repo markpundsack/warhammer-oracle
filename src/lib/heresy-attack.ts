@@ -182,6 +182,10 @@ export type HeresyAttackInput = {
   noArmourbane?: boolean;
   /** A Melta (X) weapon's target vehicle is within X": Armourbane, and Penetrating Hits do double Damage. */
   withinMeltaRange?: boolean;
+  /** The target's Hull Points (an intact profile's, for a Titan), to say when the expected loss destroys it. */
+  targetHullPoints?: number;
+  /** How to name the target in that sentence: "a Rhino", "its Legs". */
+  targetName?: string;
   /**
    * A Titan profile: a Glancing Hit on an intact profile rolls on the Titan Damage Table (1-4: lose 1 Hull Point);
    * on a Crippled one it counts as Penetrating at Damage -1, and Damage becomes rolls on the Critical Damage Table.
