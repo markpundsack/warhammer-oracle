@@ -15,7 +15,7 @@ export const HERESY_CURATED_RULES: HeresySpecialRule[] = [
       "BS 10+ hits on 2+, BS 9 or 8 on 3+, BS 7 or 6 on 4+, BS 5 or 4 on 5+, BS 3 or 2 on 6+, BS 1 can't hit. Snap Shots never score Critical Hits from the table.\n\n" +
       "The rules make attacks Snap Shots when:\n" +
       "- making Volley Attacks during a Charge (only Assault weapons may fire); the Overwatch Reaction instead lets the target fire any weapon at full BS;\n" +
-      "- a model makes more than one Shooting Attack in a phase at different targets: every attack after the first is Snap Shots (Super-heavy vehicles are exempt);\n" +
+      "- a Vehicle splits its weapons between Shooting Attacks at different targets: every attack in all of them is Snap Shots (Defensive weapons and Super-heavy vehicles are exempt);\n" +
       "- a Super-heavy vehicle fires after Rushing;\n" +
       "- making an Intercept Reaction (vehicles may only fire Defensive weapons);\n" +
       "- firing a weapon with the Centreline arc of fire, unless another rule says otherwise;\n" +
