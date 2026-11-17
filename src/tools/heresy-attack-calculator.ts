@@ -59,7 +59,12 @@ export function spokenAnswer(i: HeresyAttackInput): string {
 
 export function formatHeresyAttack(i: HeresyAttackInput): string {
   const r = calculateHeresyAttack(i);
-  const lines: string[] = [heresyStamp(), "# Horus Heresy attack", `**Answer:** ${spokenAnswer(i)}`, ""];
+  // Melta (X) against a vehicle, range not given: answer for both sides of X.
+  const meltaX = i.targetArmour !== undefined && i.attackType === "ranged" && i.withinMeltaRange === undefined ? r.rules.melta : undefined;
+  const answer = meltaX !== undefined
+    ? `Beyond ${meltaX}": ${spokenAnswer(i)} Within ${meltaX}" (Melta: Armourbane, double Damage): ${spokenAnswer({ ...i, withinMeltaRange: true })}`
+    : spokenAnswer(i);
+  const lines: string[] = [heresyStamp(), "# Horus Heresy attack", `**Answer:** ${answer}`, ""];
   const hitHow =
     i.attackType === "ranged"
       ? `BS ${i.ballisticSkill ?? 4}${i.snapShots ? " (Snap Shots)" : ""}`
@@ -121,7 +126,7 @@ export function formatHeresyAttack(i: HeresyAttackInput): string {
   const ignored = r.rules.ignored.length ? `the weapon's ${r.rules.ignored.join(", ")}; ` : "";
   lines.push(
     "",
-    "_Expected values. Modelled: Rending, Critical Hit, Breaching, Shred, Armourbane, Shield-breaker (when listed in special_rules); void shields and ion shields on the target. " +
+    "_Expected values. Modelled: Rending, Critical Hit, Breaching, Shred, Armourbane, Melta, Shield-breaker (when listed in special_rules); void shields and ion shields on the target. " +
       `Not modelled: ${ignored}other special rules, characteristic modifiers and re-rolls. Melee Strength is the bearer's Strength after the weapon's modifier._`,
   );
   return lines.join("\n");
@@ -160,6 +165,7 @@ export function registerHeresyAttackCalculator(server: McpServer): void {
       attacks: z.number().min(1).optional().describe("Number of Hit Test dice, when the querent gives shots ('ten shots')"),
       ballistic_skill: z.number().min(1).max(12).optional().describe("Ranged: the firer's BS (default 4)"),
       snap_shots: z.boolean().optional().describe("Ranged: the attack is made as Snap Shots"),
+      within_melta_range: z.boolean().optional().describe("Ranged, Melta (X) weapon vs a vehicle: the target is within X\" (Armourbane, and Penetrating Hits do double Damage). Omit if unknown: the answer gives both"),
       weapon_skill: z.number().min(1).max(12).optional().describe("Melee: the attacker's WS (default 4)"),
       target_weapon_skill: z.number().min(1).max(12).optional().describe("Melee: the defender's WS (default 4)"),
       strength: z
@@ -185,7 +191,7 @@ export function registerHeresyAttackCalculator(server: McpServer): void {
         .optional()
         .describe(
           "The weapon's special rules exactly as its profile lists them, e.g. ['Breaching (6+)', 'Heavy (FP)']. " +
-            "Rending (X), Critical Hit (X), Breaching (X), Shred (X) and Armourbane are modelled; others are named as not modelled.",
+            "Rending (X), Critical Hit (X), Breaching (X), Shred (X), Armourbane and Melta (X) are modelled; others are named as not modelled.",
         ),
     },
     async (a) => {
@@ -203,6 +209,7 @@ export function registerHeresyAttackCalculator(server: McpServer): void {
         attacks: a.attacks,
         ballisticSkill: a.ballistic_skill,
         snapShots: a.snap_shots,
+        withinMeltaRange: a.within_melta_range,
         weaponSkill: a.weapon_skill,
         targetWeaponSkill: a.target_weapon_skill,
         strength: a.strength,

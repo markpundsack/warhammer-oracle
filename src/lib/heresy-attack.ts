@@ -119,6 +119,8 @@ export type ModelledRules = {
   armourbane?: boolean;
   /** Shield-breaker (X): collapses X void shields instead of 1. */
   shieldBreaker?: number;
+  /** Melta (X): within X" of a vehicle target, Armourbane and Penetrating Hits' Damage doubled. */
+  melta?: number;
   /** Rules given but not modelled (Template, Heavy, Pinning, …), for the "not modelled" note. */
   ignored: string[];
 };
@@ -130,6 +132,11 @@ export function parseWeaponRules(rules: string[] = []): ModelledRules {
     const sb = r.match(/^shield-?breaker\s*\(\s*(\d+)\s*\)$/i);
     if (sb) {
       out.shieldBreaker = Number(sb[1]);
+      continue;
+    }
+    const mt = r.match(/^melta\s*\(\s*(\d+)\s*"?\s*\)$/i);
+    if (mt) {
+      out.melta = Number(mt[1]);
       continue;
     }
     const m = r.match(/^(rending|critical hit|breaching|shred)\s*\(\s*(\d)\s*\+?\s*\)$/i);
@@ -173,6 +180,8 @@ export type HeresyAttackInput = {
   titanVoidShields?: number;
   /** A flare shield: no Armourbane against this target. */
   noArmourbane?: boolean;
+  /** A Melta (X) weapon's target vehicle is within X": Armourbane, and Penetrating Hits do double Damage. */
+  withinMeltaRange?: boolean;
   /**
    * A Titan profile: a Glancing Hit on an intact profile rolls on the Titan Damage Table (1-4: lose 1 Hull Point);
    * on a Crippled one it counts as Penetrating at Damage -1, and Damage becomes rolls on the Critical Damage Table.
@@ -281,7 +290,8 @@ export function calculateHeresyAttack(i: HeresyAttackInput): HeresyAttackResult 
     // Rending and Shred do nothing against vehicles; a Critical Hit's auto-wound is a Wound Test rule, so its hits
     // still make Armour Penetration Tests here (the +1 Damage is kept).
     const { glance, pen } = penetration(i.strength, i.targetArmour!);
-    const armourbane = rules.armourbane && !i.noArmourbane;
+    const melta = i.attackType === "ranged" && rules.melta !== undefined && !!i.withinMeltaRange;
+    const armourbane = (rules.armourbane || melta) && !i.noArmourbane;
     const glanceP = armourbane ? 0 : glance;
     const penP = armourbane ? glance + pen : pen;
     const ranged = i.attackType === "ranged";
@@ -322,7 +332,7 @@ export function calculateHeresyAttack(i: HeresyAttackInput): HeresyAttackResult 
     return {
       hitTarget, criticalOn: critX, hits, criticalHits: n * crit, rendingHits: 0, breachingWounds: 0, bonusDamageWounds: critPens, rules,
       glancing, penetrating, save, penSave, unsaved, unsavedGlancing, averageDamage,
-      expectedDamage: unsaved * averageDamage + critPens + (titanGlanceHp ?? 0),
+      expectedDamage: (unsaved * averageDamage + critPens) * (melta ? 2 : 1) + (titanGlanceHp ?? 0),
       ...(titanGlanceHp !== undefined ? { titanGlanceHp } : {}),
       ...(shields ? { shields } : {}),
     };

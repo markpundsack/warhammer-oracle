@@ -222,3 +222,26 @@ describe("Titan locations", () => {
     expect(knight).toContain("**Arms: Primary Armour");
   });
 });
+
+describe("Melta (X)", () => {
+  const base = { attackType: "ranged" as const, attacks: 1, ballisticSkill: 4, strength: 8, targetArmour: 12, damage: "2", specialRules: ["Melta (6)"] };
+  it("within range: Armourbane and double Damage on Penetrating Hits", () => {
+    const out = calculateHeresyAttack(base);
+    const melta = calculateHeresyAttack({ ...base, withinMeltaRange: true });
+    const bane = calculateHeresyAttack({ ...base, specialRules: ["Armourbane"] });
+    expect(out.rules.melta).toBe(6);
+    expect(melta.penetrating).toBeCloseTo(bane.penetrating!);
+    expect(melta.glancing).toBe(0);
+    expect(melta.expectedDamage).toBeCloseTo(bane.expectedDamage * 2);
+    expect(out.expectedDamage).toBeLessThan(melta.expectedDamage);
+  });
+  it("range not given: the answer covers both sides of X", () => {
+    const text = formatHeresyAttack(base);
+    expect(text).toMatch(/Beyond 6": .* Within 6" \(Melta/);
+  });
+  it("melee or non-vehicle targets: no effect", () => {
+    const inf = { attackType: "ranged" as const, attacks: 1, ballisticSkill: 4, strength: 8, toughness: 4, damage: "2", specialRules: ["Melta (6)"] };
+    expect(calculateHeresyAttack({ ...inf, withinMeltaRange: true }).expectedDamage)
+      .toBeCloseTo(calculateHeresyAttack(inf).expectedDamage);
+  });
+});
