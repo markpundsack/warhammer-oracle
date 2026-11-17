@@ -255,3 +255,14 @@ describe("overkill", () => {
     expect(spokenAnswer({ ...big, attacks: 1 })).not.toMatch(/destroy/);
   });
 });
+
+describe("single-shot answers", () => {
+  it("say what one Penetrating Hit does, with Melta doubled", async () => {
+    const { spokenAnswer, formatHeresyAttack } = await import("../src/tools/heresy-attack-calculator.js");
+    const shot = { attackType: "ranged" as const, attacks: 1, ballisticSkill: 4, strength: 8, targetArmour: 11, damage: "6",
+      specialRules: ["Melta (12)"], withinMeltaRange: true, targetHullPoints: 5, targetName: "a Rhino" };
+    expect(spokenAnswer(shot)).toMatch(/one does 12 Damage \(doubled by Melta\), enough to destroy it \(a Rhino has 5: about 2\.4 times over\)/);
+    expect(formatHeresyAttack(shot)).toMatch(/Damage 6, doubled by Melta to 12/);
+    expect(spokenAnswer({ ...shot, withinMeltaRange: false })).toMatch(/an 11% chance of a Glancing Hit/);
+  });
+});

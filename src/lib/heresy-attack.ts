@@ -216,6 +216,8 @@ export type HeresyAttackResult = {
   unsaved: number;
   unsavedGlancing?: number;
   averageDamage: number;
+  /** Melta (X) applied: each Penetrating Hit's Damage is doubled. */
+  meltaDoubled?: boolean;
   expectedDamage: number;
   modelsKilled?: number;
   /** Titans: Hull Points the Glancing Hits are expected to take (Armour Scar), or Critical Damage Table rolls once Crippled. */
@@ -335,7 +337,7 @@ export function calculateHeresyAttack(i: HeresyAttackInput): HeresyAttackResult 
     const titanGlanceHp = i.titan === "intact" ? unsavedGlancing * (4 / 6) : undefined;
     return {
       hitTarget, criticalOn: critX, hits, criticalHits: n * crit, rendingHits: 0, breachingWounds: 0, bonusDamageWounds: critPens, rules,
-      glancing, penetrating, save, penSave, unsaved, unsavedGlancing, averageDamage,
+      glancing, penetrating, save, penSave, unsaved, unsavedGlancing, averageDamage, ...(melta ? { meltaDoubled: true } : {}),
       expectedDamage: (unsaved * averageDamage + critPens) * (melta ? 2 : 1) + (titanGlanceHp ?? 0),
       ...(titanGlanceHp !== undefined ? { titanGlanceHp } : {}),
       ...(shields ? { shields } : {}),

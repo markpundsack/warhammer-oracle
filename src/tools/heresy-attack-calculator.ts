@@ -22,8 +22,33 @@ function spokenCount(x: number, singular: string, plural = `${singular}s`): stri
   return `about ${x.toFixed(1)} ${plural}`;
 }
 
+/** "an 11%", "an 8%", "a 56%": the article as the number is spoken. */
+function an(pct: string): string {
+  return /^(8|11|18)(\D|$)|^8\d/.test(pct) ? `an ${pct}` : `a ${pct}`;
+}
+
+function cap(t: string): string {
+  return t.replace(/^./, (c) => c.toUpperCase());
+}
+
 function percent(p: number): string {
   return `${Math.round(p * 100)}%`;
+}
+
+/** "6, doubled by Melta to 12" */
+function dmgLabel(i: HeresyAttackInput, r: ReturnType<typeof calculateHeresyAttack>): string {
+  if (!r.meltaDoubled) return i.damage;
+  const d = Number(i.damage);
+  return Number.isFinite(d) ? `${i.damage}, doubled by Melta to ${d * 2}` : `${i.damage}, doubled by Melta`;
+}
+
+/** A single shot: what one Penetrating Hit does to the target ("…, and one does 12 Damage: enough to destroy it…"). */
+function onePen(i: HeresyAttackInput, r: ReturnType<typeof calculateHeresyAttack>): string {
+  const per = r.averageDamage * (r.meltaDoubled ? 2 : 1);
+  if (!i.targetHullPoints || !per) return "";
+  const dmg = Number.isInteger(per) ? `${per} Damage` : `${n(per)} Damage on average`;
+  const melta = r.meltaDoubled ? " (doubled by Melta)" : "";
+  return per >= i.targetHullPoints ? `; one does ${dmg}${melta}${overkill(per, i)}` : "";
 }
 
 /** "…, enough to destroy it (a Rhino has 5: about 1.3 times over)" when the expected loss reaches the target's Hull Points. */
@@ -48,8 +73,8 @@ export function spokenAnswer(i: HeresyAttackInput): string {
       : "";
     if (sh && r.expectedDamage < 0.05 && glance < 0.05) return shieldText.replace(/^./, (c) => c.toUpperCase());
     if (i.attacks === 1 && !sh && !i.titan) {
-      const g = glance > 0 ? `, and a ${percent(glance)} chance of a Glancing Hit` : ", and no Glancing Hits";
-      return pen > 0 ? `A ${percent(pen)} chance of a Penetrating Hit${g}.` : `No chance of a Penetrating Hit${g}.`;
+      const g = glance > 0 ? `, and ${an(percent(glance))} chance of a Glancing Hit` : ", and no Glancing Hits";
+      return pen > 0 ? `${cap(an(percent(pen)))} chance of a Penetrating Hit${g}${onePen(i, r)}.` : `No chance of a Penetrating Hit${g}.`;
     }
     const hp = r.titanCriticalRolls !== undefined
       ? `${spokenCount(r.titanCriticalRolls, "roll", "rolls")} on the Titan Critical Damage Table (the profile is Crippled)`
@@ -106,12 +131,12 @@ export function formatHeresyAttack(i: HeresyAttackInput): string {
       );
     } else if (r.titanGlanceHp !== undefined) {
       lines.push(
-        `- **Result:** about **${n(r.expectedDamage)} Hull Points** lost: ${n(r.unsaved)} unsaved Penetrating Hits (Damage ${i.damage}), ` +
+        `- **Result:** about **${n(r.expectedDamage)} Hull Points** lost: ${n(r.unsaved)} unsaved Penetrating Hits (Damage ${dmgLabel(i, r)}), ` +
           `plus ${n(r.unsavedGlancing!)} Glancing Hits on the Titan Damage Table (1-4 Armour Scar: 1 Hull Point; 5-6 System Burnout).`,
       );
     } else {
       lines.push(
-        `- **Result:** about **${n(r.expectedDamage)} Hull Points** lost from ${n(r.unsaved)} unsaved Penetrating Hits (Damage ${i.damage}), ` +
+        `- **Result:** about **${n(r.expectedDamage)} Hull Points** lost from ${n(r.unsaved)} unsaved Penetrating Hits (Damage ${dmgLabel(i, r)}), ` +
           `plus ${n(r.unsavedGlancing!)} Glancing Hits, each a roll on the Vehicle Damage Table.`,
       );
     }
