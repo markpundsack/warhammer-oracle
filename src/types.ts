@@ -35,6 +35,8 @@ export type RangedWeapon = {
   armourPenetration: string;
   damage: string;
   keywords: string[];
+  /** Faction weapon abilities' own texts ("Conversion", "Hooked"); core ones (Rapid Fire, Anti…) are in the shared rules. */
+  rules?: { name: string; description: string }[];
 };
 
 export type MeleeWeapon = {
@@ -46,6 +48,8 @@ export type MeleeWeapon = {
   armourPenetration: string;
   damage: string;
   keywords: string[];
+  /** Faction weapon abilities' own texts ("Conversion", "Hooked"); core ones (Rapid Fire, Anti…) are in the shared rules. */
+  rules?: { name: string; description: string }[];
 };
 
 export type KillTeamWeapon = {

@@ -32,6 +32,7 @@ import {
   normalizeJsonNode,
   ruleLinksToAbilityProfiles,
   weaponProfileLinks,
+  noteWeaponRules,
   infoGroupContents,
   referenceTables,
   withLinkedUnitProfile,
@@ -43,6 +44,10 @@ import type { VisibilityEnv, ParsedEnhancement } from "../src/lib/xml-parser.js"
 import { parseHeresyData } from "../src/lib/heresy-parser.js";
 import type { HeresySourceFile, HeresyParseResult } from "../src/lib/heresy-parser.js";
 import type { Unit, Detachment, Enhancement, CrusadeHonour, KillTeamOperative } from "../src/types.js";
+
+/** The game system's own rules (core weapon abilities), by id and lower-case name: exported once as shared rules,
+ * never per weapon (noteWeaponRules). */
+const GAME_SYSTEM_RULE_IDS = new Set<string>();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -193,7 +198,11 @@ async function fetchCatalogueRepo(
         continue;
       }
       allRules.push({ name: r["@_name"], description: r.description });
-      if (r["@_id"]) globalRuleIndex.set(r["@_id"], r);
+      if (r["@_id"]) {
+        globalRuleIndex.set(r["@_id"], r);
+        GAME_SYSTEM_RULE_IDS.add(r["@_id"]);
+        GAME_SYSTEM_RULE_IDS.add(String(r["@_name"]).trim().toLowerCase());
+      }
     }
     console.log(
       `    → ${directRules.length + sharedRules.length - skipped} rules from ${gs["@_name"]}` +
@@ -1024,6 +1033,7 @@ function collectAllProfilesWithGlobalLinks(
     ...infoGroupContents(entry, env).profiles,
     ...profileLinks,
   ].filter((p: any) => !isHiddenIn(p, env, true));
+  noteWeaponRules(entry, direct, ruleIndex, env, GAME_SYSTEM_RULE_IDS);
   const ruleAbilities = ruleLinksToAbilityProfiles(entry, ruleIndex, profileIndex, env);
   const inner: VisibilityEnv = isGroup
     ? env
