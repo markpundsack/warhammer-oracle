@@ -18,6 +18,7 @@ import {
   extractWargear,
   isHiddenIn,
   ruleLinksToAbilityProfiles,
+  buildRuleIndex,
   xmlParser,
 } from "./xml-parser.js";
 
@@ -179,6 +180,66 @@ describe("parseCatalogue (40K)", () => {
 
     // Unit size (no composition sub-entries in this minimal fixture — defaults to 1)
     expect(unit.unitSize).toEqual({ min: 1, max: 1 });
+  });
+  it("gives a weapon the texts of the faction weapon abilities its entry defines, by the keyword that names them", () => {
+    const xml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<catalogue id="c" name="Imperium - Imperial Knights" gameSystemId="sys1" xmlns="http://www.battlescribe.net/schema/catalogueSchema">
+  <sharedRules>
+    <rule id="r-hooked" name="Hooked (Kroot)" hidden="false"><description>Hooked text.</description></rule>
+  </sharedRules>
+  <selectionEntries>
+    <selectionEntry id="u" name="Knight" type="model" hidden="false">
+      <profiles>
+        <profile id="pu" name="Knight" typeId="c547-1836-d8a-ff4f"><characteristics>
+          <characteristic name="M">10"</characteristic><characteristic name="T">11</characteristic>
+          <characteristic name="SV">3+</characteristic><characteristic name="W">22</characteristic>
+          <characteristic name="LD">6+</characteristic><characteristic name="OC">10</characteristic>
+        </characteristics></profile>
+      </profiles>
+      <selectionEntries>
+        <selectionEntry id="w1" name="Conversion beam cannon" type="upgrade" hidden="false">
+          <rules><rule id="r-conv" name="Conversion" hidden="false"><description>If the target is more than 24" away, a 4+ hit is a Critical Hit.</description></rule></rules>
+          <profiles>
+            <profile id="pw1" name="Conversion beam cannon" typeId="f77d-b953-8fa4-b762"><characteristics>
+              <characteristic name="Range">72"</characteristic><characteristic name="A">3</characteristic>
+              <characteristic name="BS">3+</characteristic><characteristic name="S">12</characteristic>
+              <characteristic name="AP">-3</characteristic><characteristic name="D">4</characteristic>
+              <characteristic name="Keywords">Conversion, Sustained Hits D3</characteristic>
+            </characteristics></profile>
+          </profiles>
+        </selectionEntry>
+        <selectionEntry id="w2" name="Kroot bolt thrower" type="upgrade" hidden="false">
+          <infoLinks><infoLink id="l1" name="Hooked" hidden="false" targetId="r-hooked" type="rule"/></infoLinks>
+          <profiles>
+            <profile id="pw2" name="Kroot bolt thrower" typeId="f77d-b953-8fa4-b762"><characteristics>
+              <characteristic name="Range">24"</characteristic><characteristic name="A">1</characteristic>
+              <characteristic name="BS">4+</characteristic><characteristic name="S">8</characteristic>
+              <characteristic name="AP">-2</characteristic><characteristic name="D">2</characteristic>
+              <characteristic name="Keywords">Hooked</characteristic>
+            </characteristics></profile>
+            <profile id="pw3" name="Kroot rifle" typeId="f77d-b953-8fa4-b762"><characteristics>
+              <characteristic name="Range">24"</characteristic><characteristic name="A">1</characteristic>
+              <characteristic name="BS">4+</characteristic><characteristic name="S">4</characteristic>
+              <characteristic name="AP">0</characteristic><characteristic name="D">1</characteristic>
+              <characteristic name="Keywords">Rapid Fire 1</characteristic>
+            </characteristics></profile>
+          </profiles>
+        </selectionEntry>
+      </selectionEntries>
+    </selectionEntry>
+  </selectionEntries>
+</catalogue>`;
+    const cat = xmlParser.parse(xml).catalogue;
+    const entry = cat.selectionEntries.selectionEntry[0];
+    const unit = parseEntryNode(entry, "Imperial Knights", collectAllProfiles(entry, buildRuleIndex(cat)));
+    const byName = Object.fromEntries(unit!.rangedWeapons.map((w) => [w.name, w]));
+    expect(byName["Conversion beam cannon"].rules).toEqual([
+      { name: "Conversion", description: 'If the target is more than 24" away, a 4+ hit is a Critical Hit.' },
+    ]);
+    // a qualified rule name ("Hooked (Kroot)") is named as the keyword names it
+    expect(byName["Kroot bolt thrower"].rules).toEqual([{ name: "Hooked", description: "Hooked text." }]);
+    // a profile whose keywords don't name the rule doesn't get it, and no empty field is added
+    expect(byName["Kroot rifle"].rules).toBeUndefined();
   });
 });
 

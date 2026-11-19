@@ -366,6 +366,7 @@ function extractRangedWeapons(profiles: any[]): RangedWeapon[] {
         armourPenetration: getCharacteristic(chars, "AP"),
         damage: getCharacteristic(chars, "D"),
         keywords: parseWeaponKeywords(getCharacteristic(chars, "Keywords")),
+        ...weaponRules(p),
       };
     }));
 }
@@ -384,6 +385,7 @@ function extractMeleeWeapons(profiles: any[]): MeleeWeapon[] {
         armourPenetration: getCharacteristic(chars, "AP"),
         damage: getCharacteristic(chars, "D"),
         keywords: parseWeaponKeywords(getCharacteristic(chars, "Keywords")),
+        ...weaponRules(p),
       };
     }));
 }
@@ -582,6 +584,58 @@ export function weaponProfileLinks(entry: any, profileIndex: Map<string, any>, e
 }
 
 /**
+ * Weapon abilities a faction defines for its own weapons ("Conversion", "Hooked", "Plasma Warhead"): BSData writes
+ * each as a rule on the weapon's own entry (inline, or an infoLink to a catalogue rule), next to the profile whose
+ * Keywords name it. The game system's core rules (Rapid Fire, Anti…) are exported once on their own, so they're
+ * skipped here, and so is an entry's own copy of one (Genestealer Cults' demolition charges print "One Shot" again):
+ * `skip` holds their ids and lower-case names. Keyed by the profile node, read by extractRangedWeapons/extractMeleeWeapons.
+ */
+const WEAPON_RULES = new WeakMap<object, { name: string; description: string }[]>();
+
+export function noteWeaponRules(
+  entry: any,
+  profiles: any[],
+  ruleIndex?: Map<string, any>,
+  env: VisibilityEnv = {},
+  skip?: Set<string>,
+): void {
+  const rules: { name: string; description: string }[] = [];
+  const add = (r: any) => {
+    const name = String(r?.["@_name"] ?? "").trim();
+    if (r?.description && name && !skip?.has(name.toLowerCase())) rules.push({ name, description: String(r.description).trim() });
+  };
+  for (const r of ensureArray(entry.rules?.rule)) if (!isHiddenIn(r, env)) add(r);
+  for (const link of ensureArray(entry.infoLinks?.infoLink)) {
+    if (link["@_type"] !== "rule" || isHiddenIn(link, env) || skip?.has(link["@_targetId"])) continue;
+    add(ruleIndex?.get(link["@_targetId"]));
+  }
+  if (!rules.length) return;
+  for (const p of profiles) {
+    const kind = profileKind(p);
+    if (kind !== "ranged" && kind !== "melee") continue;
+    const kws = parseWeaponKeywords(getCharacteristic(ensureArray(p.characteristics?.characteristic), "Keywords"))
+      .map((k) => k.toLowerCase());
+    // A rule may carry a qualifier its keyword doesn't ("Conversion (Thunderkyn)" for the keyword "Conversion"): it is
+    // named as the keyword names it.
+    const named = (n: string) => kws.some((k) => k === n.toLowerCase() || k.startsWith(`${n.toLowerCase()} `));
+    const mine = rules.flatMap((r) => {
+      if (named(r.name)) return [r];
+      const base = r.name.replace(/\s*\([^)]*\)$/, "");
+      return base !== r.name && named(base) ? [{ ...r, name: base }] : [];
+    });
+    if (!mine.length) continue;
+    const have = WEAPON_RULES.get(p) ?? [];
+    for (const r of mine) if (!have.some((h) => h.name === r.name && h.description === r.description)) have.push(r);
+    WEAPON_RULES.set(p, have);
+  }
+}
+
+function weaponRules(p: any): { rules?: { name: string; description: string }[] } {
+  const rules = WEAPON_RULES.get(p);
+  return rules?.length ? { rules } : {};
+}
+
+/**
  * Collect all profiles from an entry's own profiles plus every descendant
  * selectionEntry/selectionEntryGroup, at any nesting depth — e.g. weapon
  * profiles for units like Obliterators live 3 levels down (unit -> model
@@ -601,6 +655,7 @@ function collectAllProfiles(entry: any, ruleIndex?: Map<string, any>, profileInd
     ...infoGroupContents(entry).profiles,
     ...(profileIndex ? weaponProfileLinks(entry, profileIndex) : []),
   ];
+  noteWeaponRules(entry, direct, ruleIndex);
   const ruleAbilities = ruleIndex ? ruleLinksToAbilityProfiles(entry, ruleIndex, profileIndex) : [];
 
   const subEntries = ensureArray(entry.selectionEntries?.selectionEntry);
